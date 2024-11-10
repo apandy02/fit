@@ -28,7 +28,8 @@ class FitnessTracker(ABC):
 
 
 class Whoop(FitnessTracker):
-    """Make requests to the WHOOP API.
+    """
+    Make requests to the WHOOP API.
 
     Attributes:
         session (authlib.OAuth2Session): Requests session for accessing the WHOOP API.
@@ -38,9 +39,6 @@ class Whoop(FitnessTracker):
     Constants:
         AUTH_URL (str): Base URL for authentication requests.
         REQUEST_URL (str): Base URL for API requests.
-
-    Raises:
-        ValueError: If `start_date` is after `end_date`.
     """
     AUTH_URL = "https://api-7.whoop.com"
     REQUEST_URL = "https://api.prod.whoop.com/developer"
@@ -63,12 +61,12 @@ class Whoop(FitnessTracker):
         self._username = username
         self._password = password
 
-        self.session = OAuth2Session(
+        self._session = OAuth2Session(
             token_endpont=f"{self.AUTH_URL}/oauth/token",
             token_endpoint_auth_method="password_json",
         )
 
-        self.session.register_client_auth_method(("password_json", self._auth_password_json))
+        self._session.register_client_auth_method(("password_json", self._auth_password_json))
 
         self.user_id = ""
         super().__init__()
@@ -82,7 +80,7 @@ class Whoop(FitnessTracker):
         Args:
             kwargs (dict[str, Any], optional): Additional arguments for `fetch_token()`.
         """
-        self.session.fetch_token(
+        self._session.fetch_token(
             url=f"{self.AUTH_URL}/oauth/token",
             username=self._username,
             password=self._password,
@@ -91,7 +89,7 @@ class Whoop(FitnessTracker):
         )
 
         if not self.user_id:
-            self.user_id = str(self.session.token.get("user", {}).get("id", ""))
+            self.user_id = str(self._session.token.get("user", {}).get("id", ""))
 
     def _auth_password_json(self, _client, _method, uri, headers, body):
         body = json.dumps(dict(extract_params(body)))
@@ -102,14 +100,13 @@ class Whoop(FitnessTracker):
     def _make_request(
         self, method: str, url_slug: str, **kwargs: Any
     ) -> dict[str, Any]:
-        response = self.session.request(
+        response = self._session.request(
             method=method,
             url=f"{self.REQUEST_URL}/{url_slug}",
             **kwargs,
         )
 
         response.raise_for_status()
-
         return response.json()
     
     def resting_heart_rate(self):
