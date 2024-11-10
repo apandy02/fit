@@ -35,6 +35,9 @@ class Whoop(FitnessTracker):
         user_id (str): User ID of the owner of the session. Will default to an empty
             string before the session is authenticated and then replaced by the correct
             user ID once a token is fetched.
+    Constants:
+        AUTH_URL (str): Base URL for authentication requests.
+        REQUEST_URL (str): Base URL for API requests.
 
     Raises:
         ValueError: If `start_date` is after `end_date`.
@@ -65,15 +68,14 @@ class Whoop(FitnessTracker):
             token_endpoint_auth_method="password_json",
         )
 
-        self.session.register_client_auth_method("password_json", self._auth_password_json)
+        self.session.register_client_auth_method(("password_json", self._auth_password_json))
 
         self.user_id = ""
         super().__init__()
 
-    
     def _authenticate(self, **kwargs) -> None:
         """Authenticate OAuth2Session by fetching token.
-
+    
         If `user_id` is `None`, it will be set according to the `user_id` returned with
         the token.
 
@@ -107,8 +109,23 @@ class Whoop(FitnessTracker):
         return self._make_request(
             method="GET", url_slug=f"v1/cycle/{cycle_id}/recovery"
         )
+    
+    def get_body_measurement(self) -> dict[str, Any]:
+        """Make request to Get Body Measurement endpoint.
 
-    def _get_cycle(self):
+        Get the user's body measurements.
+
+        Returns:
+            dict[str, Any]: Response JSON data loaded into an object. Example:
+                {
+                    "height_meter": 1.8288,
+                    "weight_kilogram": 90.7185,
+                    "max_heart_rate": 200
+                }
+        """
+        return self._make_request(method="GET", url_slug="v1/user/measurement/body")
+
+    def get_cycle(self):
         """
         Get the current cycle from Whoop API.
 
@@ -118,16 +135,11 @@ class Whoop(FitnessTracker):
         params = {
             "limit": "1"
         }
-        
-        response = self.session.get(
-            f"{self.API_URL}/developer/v1/cycle",
+        return self._make_request(
+            method="GET",
+            url_slug="v1/cycle",
             params=params
         )
-
-        if response.status_code == 200:
-            return response.json()
-        else:
-            raise Exception(f"Received {response.status_code} status from Whoop")
 
     def _make_request(
         self, method: str, url_slug: str, **kwargs: Any
