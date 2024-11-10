@@ -99,6 +99,19 @@ class Whoop(FitnessTracker):
 
         return uri, headers, body
     
+    def _make_request(
+        self, method: str, url_slug: str, **kwargs: Any
+    ) -> dict[str, Any]:
+        response = self.session.request(
+            method=method,
+            url=f"{self.REQUEST_URL}/{url_slug}",
+            **kwargs,
+        )
+
+        response.raise_for_status()
+
+        return response.json()
+    
     def resting_heart_rate(self):
         pass
 
@@ -140,16 +153,3 @@ class Whoop(FitnessTracker):
             url_slug="v1/cycle",
             params=params
         )
-
-    def _make_request(
-        self, method: str, url_slug: str, **kwargs: Any
-    ) -> dict[str, Any]:
-        response = self.session.request(
-            method=method,
-            url=f"{self.REQUEST_URL}/{url_slug}",
-            **kwargs,
-        )
-
-        response.raise_for_status()
-
-        return response.json()
