@@ -56,21 +56,17 @@ class Whoop(FitnessTracker):
             method="GET", url_slug=f"v1/cycle/{cycle_id}/recovery"
         )
 
-    def _authenticate(self, **kwargs) -> None:
+    def _authenticate(self) -> None:
         """Authenticate OAuth2Session by fetching token.
     
         If `user_id` is `None`, it will be set according to the `user_id` returned with
         the token.
-
-        Args:
-            kwargs (dict[str, Any], optional): Additional arguments for `fetch_token()`.
         """
         self._session.fetch_token(
             url=f"{self.AUTH_URL}/oauth/token",
             username=self._username,
             password=self._password,
             grant_type="password",
-            **kwargs,
         )
 
         if not self.user_id:
