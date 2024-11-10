@@ -15,7 +15,7 @@ class FitnessTracker(ABC):
         """Fetch the most recent resting heart rate data."""
 
     @abstractmethod
-    def calories_burned(self) -> int:
+    def calories_burned(self) -> float:
         """Fetch calories burned for the most recent day."""
     
     @abstractmethod
