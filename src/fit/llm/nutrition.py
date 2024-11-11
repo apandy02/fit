@@ -11,6 +11,7 @@ class Goals(Enum):
     MAINTENANCE = "maintain current weight and composition"
 
 
+
 @dataclass
 class NutritionalInfo(BaseModel):
     """A dataclass that contains the macro nutrients in grams for a food."""
@@ -18,7 +19,6 @@ class NutritionalInfo(BaseModel):
     carbs: float = Field(description="the amount of carbs in grams")
     fat: float = Field(description="the amount of fat in grams")
     calories: float = Field(description="the amount of calories in the food")
-
 
 
 class NutritionTracker:

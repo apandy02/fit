@@ -3,7 +3,7 @@ from authlib.integrations.requests_client import OAuth2Session
 import json
 from typing import Any
 
-from fit.trackers.trackers import FitnessTracker
+from fit.trackers.tracker import FitnessTracker
 from fit.utils.conversions import kj_to_kcal
 
 class Whoop(FitnessTracker):
