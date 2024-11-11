@@ -39,7 +39,7 @@ AI Fitness Copilot is a comprehensive application designed to assist users in ac
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher
 - Virtual environment tool (Optional but recommended)
 
 ### Installation
