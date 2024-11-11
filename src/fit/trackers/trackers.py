@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import logging
 
 
 class FitnessTracker(ABC):
@@ -8,7 +9,7 @@ class FitnessTracker(ABC):
             self._authenticate()
         
         except Exception as e:
-            print(f"Error authenticating: {e}")
+            logging.error(f"Error authenticating: {e}")
 
     @abstractmethod
     def resting_heart_rate(self) -> float:
