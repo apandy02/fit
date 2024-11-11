@@ -2,7 +2,6 @@ import ell
 from dataclasses import dataclass
 from pydantic import BaseModel, Field
 
-ell.init(verbose=True)
 
 @dataclass
 class MacroNutrients(BaseModel):
@@ -10,6 +9,7 @@ class MacroNutrients(BaseModel):
     protein: float = Field(description="the amount of protein in grams")    
     carbs: float = Field(description="the amount of carbs in grams")
     fat: float = Field(description="the amount of fat in grams")
+
 
 class FoodAssistant:
     """A class that uses LLMs to help with nutrition tracking."""
