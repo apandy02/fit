@@ -23,17 +23,15 @@ AI Fitness Copilot is a comprehensive application designed to assist users in ac
 │   │   └── utils
 │   │       ├── __init__.py
 │   │       └── conversions.py
-│   └── llm
+│   └── nutrition
 │       ├── __init__.py
-│       └── nutrition.py
+│       ├── data.py
+│       └── assistants.py
 ```
 
-- `src/fit/fitness_trackers.py`: Contains the base class and interfaces for fitness trackers.
-- `src/fit/trackers.py`: Implementation of different tracker integrations.
-- `src/fit/whoop.py`: Specific implementation for Whoop tracker API.
-- `src/fit/utils/conversions.py`: Utility functions for data conversions.
-- `src/fit/llm/nutrition.py`: Implementation of the nutrition tracking and recommendation system.
-- `pyproject.toml`: Project configuration and dependencies.
+- `src/fit/trackers/`: Contains all fitness tracker related code, including base classes and specific implementations for different devices
+- `src/fit/utils/`: Contains utility functions and helper methods used across the project
+- `src/fit/nutrition/`: Contains the nutrition tracking and recommendation system powered by LLMs
 
 ## Getting Started
 
