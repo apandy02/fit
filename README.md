@@ -40,7 +40,7 @@ AI Fitness Copilot is a comprehensive application designed to assist users in ac
 ### Prerequisites
 
 - Python 3.10 or higher
-- Virtual environment tool (Optional but recommended)
+- [uv](https://docs.astral.sh/uv/getting-started/installation/) for fast and easy package management
 
 ### Installation
 
