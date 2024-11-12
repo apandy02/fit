@@ -56,7 +56,7 @@ assistant = FoodAssistant()
 
 # Example daily stats
 daily_burn = 2500  # calories
-current_intake = NutritionalInfo(
+current_intake = NutritionalInfo.model_construct(
     calories=1200,
     protein=60,
     carbs=150,
