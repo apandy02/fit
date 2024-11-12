@@ -81,7 +81,9 @@ class Whoop(FitnessTracker):
         return uri, headers, body
 
     def _get_current_cycle(self):
-        """Get the current cycle from Whoop API."""
+        """Get the current cycle from Whoop API. The "cycle" is the fundamental 
+        time unit for the whoop, and is necessary to make subsequent queries. (by id)
+        """
         params = {
             "limit": "1"
         }
@@ -91,7 +93,7 @@ class Whoop(FitnessTracker):
             params=params
         )
         return results['records'][0]
-    
+
     def _make_request(
             self, method: str, url_slug: str, **kwargs: Any
         ) -> dict[str, Any]:
