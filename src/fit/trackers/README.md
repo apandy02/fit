@@ -31,12 +31,6 @@ print(f"Current resting heart rate: {heart_rate} bpm")
 # Get calories burned
 calories = whoop.calories_burned()
 print(f"Calories burned today: {calories} kcal")
-
-# Get detailed recovery information
-current_cycle = whoop._get_current_cycle()
-cycle_id = current_cycle["id"]
-recovery_data = whoop.get_recovery(cycle_id)
-print(f"Recovery score: {recovery_data['score']}")
 ```
 
 Note: Replace `your_email@example.com` and `your_password` with your actual Whoop credentials.
