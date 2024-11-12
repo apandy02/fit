@@ -47,13 +47,13 @@ AI Fitness Copilot is a comprehensive application designed to assist users in ac
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/yourusername/ai-fitness-copilot.git
+   git clone git@github.com:aryamanpandya99/fit.git
    ```
 
 2. **Navigate to the Project Directory**
 
    ```bash
-   cd ai-fitness-copilot
+   cd fit
    ```
 
 4. **Install Dependencies**
