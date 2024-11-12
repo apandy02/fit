@@ -12,7 +12,7 @@ The following is the structure of the subdirectory:
 
 ## Language Model Tooling
 
-This project uses `ell` for language model interactions. Ell provides a clean interface through decorators and message handling that enables:
+This project uses `ell` for language model interaction and abstraction. Ell provides a clean interface through decorators and message handling that enables:
 
 - Simple text-based LLM calls via `@ell.simple`
 - Structured outputs with `@ell.complex` 
