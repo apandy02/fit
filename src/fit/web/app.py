@@ -19,11 +19,14 @@ def init_db():
                 datetime_entered=str,
                 meal_time=str,
                 user_description=str,
+
                 llm_summary=str,
                 calories=float,
                 protein=float,
                 carbs=float,
                 fat=float,
+
+                fiber=float,
                 vitamin_a=float,
                 vitamin_c=float,
                 vitamin_d=float,
@@ -31,7 +34,7 @@ def init_db():
                 iron=float,
                 potassium=float,
                 sodium=float,
-                fiber=float
+                
             )
         )
 
@@ -56,15 +59,12 @@ nutrition_tracker = NutritionTracker()
 def get():
     return Titled("AI Fitness Tracker",
         Article(
-            # Image upload form
             Form(hx_post="/analyze_image", hx_target="#image-result")(
                 H2("Upload Food Image"),
                 Input(type="file", name="food_image", accept="image/*"),
                 Button("Analyze Image", type="submit", cls='primary'),
                 Div(id="image-result")
             ),
-            
-            # Natural language form
             Form(hx_post="/analyze_text", hx_target="#text-result")(
                 H2("Describe Your Meal"),
                 Textarea(
@@ -82,7 +82,6 @@ def NutritionCard(nutrition_info):
     """Helper function to create a consistent nutrition display card"""
     return Card(
         Header(H3(nutrition_info.summary)),
-        # Macros section
         Section(
             H4("Macronutrients"),
             Ul(
@@ -93,7 +92,6 @@ def NutritionCard(nutrition_info):
                 Li(f"Fiber: {nutrition_info.fiber}g"),
             )
         ),
-        # Vitamins section
         Section(
             H4("Vitamins"),
             Ul(
@@ -102,7 +100,6 @@ def NutritionCard(nutrition_info):
                 Li(f"Vitamin D: {nutrition_info.vitamin_d} IU"),
             )
         ),
-        # Minerals section
         Section(
             H4("Minerals"),
             Ul(
@@ -119,10 +116,9 @@ async def analyze_image(food_image: UploadFile):
     """Handle image upload and analysis"""
     nutrition_info = nutrition_tracker.image_macros(food_image)
     
-    # Store in database
     MEALS_TABLE.insert(
         datetime_entered=datetime.now().isoformat(),
-        meal_time=datetime.now().isoformat(),  # User could specify meal time in future
+        meal_time=datetime.now().isoformat(),  # change to user specified later 
         user_description="Image Upload",
         llm_summary=nutrition_info.summary,
         calories=nutrition_info.calories,
@@ -147,10 +143,9 @@ async def analyze_text(meal_description: str):
     nutrition_info = nutrition_tracker.natural_language_macros(meal_description)
     print(nutrition_info)
     
-    # Store in database
     MEALS_TABLE.insert(
         datetime_entered=datetime.now().isoformat(),
-        meal_time=datetime.now().isoformat(),  # User could specify meal time in future
+        meal_time=datetime.now().isoformat(), # change to user specified later 
         user_description=meal_description,
         llm_summary=nutrition_info.summary,
         calories=nutrition_info.calories,
@@ -166,7 +161,7 @@ async def analyze_text(meal_description: str):
         sodium=nutrition_info.sodium,
         fiber=nutrition_info.fiber
     )
-    
+    return # TODO: Debug primary key error
     return NutritionCard(nutrition_info)
 
 serve() 
