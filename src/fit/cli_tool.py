@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-from fit.llm.nutritionist import NutritionTracker
+from fit.llm.nutrition import NutritionTracker
 from fit.trackers.whoop import Whoop
 
 
@@ -21,6 +21,9 @@ def main():
 
     # Add main logic here
     nutritionist = NutritionTracker(model=args.model)
-    whoop = Whoop()
+    whoop = Whoop(username=args.username, password=args.password)
+
+
+
 if __name__ == "__main__":
     main()
