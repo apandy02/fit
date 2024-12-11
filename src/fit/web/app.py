@@ -35,7 +35,8 @@ def init_db():
                 potassium=float,
                 sodium=float,
                 
-            )
+            ),
+            pk='datetime_entered' # TODO: change to a more suitable primary key
         )
 
     measurements_table = db.t.measurements  
@@ -45,7 +46,8 @@ def init_db():
                 datetime=str,
                 height=float,
                 weight=float,
-            )
+            ),
+            pk='datetime' # TODO: change to a more suitable primary key
         )
 
     return meals_table, measurements_table
@@ -161,7 +163,7 @@ async def analyze_text(meal_description: str):
         sodium=nutrition_info.sodium,
         fiber=nutrition_info.fiber
     )
-    return # TODO: Debug primary key error
+
     return NutritionCard(nutrition_info)
 
 serve() 
