@@ -1,16 +1,15 @@
-from fasthtml.common import *
-from fit.nutrition.data import NutritionalInfo
+import fasthtml.common as fh
 from fit.nutrition.assistants import NutritionTracker
 from datetime import datetime
 
-app, rt = fast_app()
+app, rt = fh.fast_app()
 DB_PATH = "data/nutrition.db"
 
 def init_db():
     """
     Initialize the database and create tables if they don't exist.
     """
-    db = database(DB_PATH)
+    db = fh.database(DB_PATH)
 
     meals_table = db.t.meals
     if meals_table not in db.t:
@@ -59,62 +58,57 @@ nutrition_tracker = NutritionTracker()
 
 @rt("/")
 def get():
-    return Titled("AI Fitness Tracker",
-        Article(
-            Form(hx_post="/analyze_image", hx_target="#image-result")(
-                H2("Upload Food Image"),
-                Input(type="file", name="food_image", accept="image/*"),
-                Button("Analyze Image", type="submit", cls='primary'),
-                Div(id="image-result")
+    return fh.Titled("AI Fitness Tracker",
+        fh.Article(
+            fh.Form(hx_post="/analyze_image", hx_target="#image-result")(
+                fh.H2("Upload Food Image"),
+                fh.Input(type="file", name="food_image", accept="image/*"),
+                fh.Button("Analyze Image", type="submit", cls='primary'),
+                fh.Div(id="image-result")
             ),
-            Form(hx_post="/analyze_text", hx_target="#text-result")(
-                H2("Describe Your Meal"),
-                Textarea(
+            fh.Form(hx_post="/analyze_text", hx_target="#text-result")(
+                fh.H2("Describe Your Meal"),
+                fh.Textarea(
                     name="meal_description",
                     placeholder="Example: I had a grilled chicken sandwich with lettuce, tomato and mayo",
                     rows=3
                 ),
-                Button("Analyze Description", type="submit", cls='primary'),
-                Div(id="text-result")
+                fh.Button("Analyze Description", type="submit", cls='primary'),
+                fh.Div(id="text-result")
             )
         )
     )
 
 def NutritionCard(nutrition_info):
     """Helper function to create a consistent nutrition display card"""
-    return Card(
-        Header(H3(nutrition_info.summary)),
-        Section(
-            H4("Macronutrients"),
-            Ul(
-                Li(f"Calories: {nutrition_info.calories} kcal"),
-                Li(f"Protein: {nutrition_info.protein}g"),
-                Li(f"Carbs: {nutrition_info.carbs}g"),
-                Li(f"Fat: {nutrition_info.fat}g"),
-                Li(f"Fiber: {nutrition_info.fiber}g"),
+    return fh.Card(
+        fh.Header(fh.H3(nutrition_info.summary)),
+        fh.Section(
+            fh.H4("Macronutrients"),
+            fh.Ul(
+                fh.Li(f"Calories: {nutrition_info.calories} kcal"),
+                fh.Li(f"Protein: {nutrition_info.protein}g"),
+                fh.Li(f"Carbs: {nutrition_info.carbs}g"),
+                fh.Li(f"Fat: {nutrition_info.fat}g"),
+                fh.Li(f"Fiber: {nutrition_info.fiber}g"),
             )
         ),
-        Section(
-            H4("Vitamins"),
-            Ul(
-                Li(f"Vitamin A: {nutrition_info.vitamin_a} IU"),
-                Li(f"Vitamin C: {nutrition_info.vitamin_c} mg"),
-                Li(f"Vitamin D: {nutrition_info.vitamin_d} IU"),
-            )
-        ),
-        Section(
-            H4("Minerals"),
-            Ul(
-                Li(f"Calcium: {nutrition_info.calcium} mg"),
-                Li(f"Iron: {nutrition_info.iron} mg"),
-                Li(f"Potassium: {nutrition_info.potassium} mg"),
-                Li(f"Sodium: {nutrition_info.sodium} mg"),
+        fh.Section(
+            fh.H4("Micronutrients"),
+            fh.Ul(
+                fh.Li(f"Vitamin A: {nutrition_info.vitamin_a} mg"),
+                fh.Li(f"Vitamin C: {nutrition_info.vitamin_c} mg"),
+                fh.Li(f"Vitamin D: {nutrition_info.vitamin_d} mg"),
+                fh.Li(f"Calcium: {nutrition_info.calcium} mg"),
+                fh.Li(f"Iron: {nutrition_info.iron} mg"),
+                fh.Li(f"Potassium: {nutrition_info.potassium} mg"),
+                fh.Li(f"Sodium: {nutrition_info.sodium} mg"),
             )
         )
     )
 
 @rt
-async def analyze_image(food_image: UploadFile):
+async def analyze_image(food_image: fh.UploadFile):
     """Handle image upload and analysis"""
     nutrition_info = nutrition_tracker.image_macros(food_image)
     
@@ -166,4 +160,4 @@ async def analyze_text(meal_description: str):
 
     return NutritionCard(nutrition_info)
 
-serve() 
+fh.serve() 
