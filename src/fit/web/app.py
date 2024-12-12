@@ -2,16 +2,16 @@ import fasthtml.common as fh
 import fit.web.food as food
 import fit.web.personal as personal
 import fit.web.progress as progress
-from fit.web.common import page_outline
 
 
 tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
+plotly = fh.Script(src="https://cdn.plot.ly/plotly-2.32.0.min.js")
 dlink = fh.Link(
     rel="stylesheet",
     href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.css",
 )
 modal_css = fh.Link(rel="stylesheet", href="/static/public/modal.css")
-app = fh.FastHTML(hdrs=(tlink, dlink, fh.picolink, modal_css))
+app = fh.FastHTML(hdrs=(tlink, plotly, dlink, fh.picolink, modal_css))
 
 # Food routes
 app.get("/food")(food.get)

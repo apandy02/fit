@@ -1,55 +1,48 @@
 import fasthtml.common as fh
 from datetime import datetime
-from fit.web.common import MEASUREMENTS_TABLE, page_outline
+import json
+from fit.web.common import page_outline, DB
 
 def get():
     """Return the progress tracking page content"""
-    # Get weight data from measurements table
-    # TODO: Fix this
-    measurements = MEASUREMENTS_TABLE.execute(
+    measurements = DB.execute(
         "SELECT datetime, weight FROM measurements ORDER BY datetime"
     ).fetchall()
     
-    # Format data for plotting
-    dates = [m["datetime"].split("T")[0] for m in measurements]  # Get just the date part
-    weights = [m["weight"] for m in measurements]
+    dates = [m[0].split("T")[0] for m in measurements]
+    weights = [m[1] for m in measurements]
     
-    # Create the plot
-    plot = fh.Plot(
-        data=[
-            {
-                "x": dates,
-                "y": weights,
-                "type": "scatter",
-                "mode": "lines+markers",
-                "name": "Weight",
-                "marker": {"color": "rgb(59, 130, 246)"},  # Blue color
-                "line": {"color": "rgb(59, 130, 246)"}
-            }
-        ],
-        layout={
-            "title": "Weight Progress Over Time",
-            "xaxis": {
-                "title": "Date",
-                "tickangle": -45,
-                "automargin": True
-            },
-            "yaxis": {
-                "title": "Weight (lbs)",
-                "automargin": True
-            },
-            "margin": {"t": 50, "b": 100},  # Add margin for rotated x labels
-            "height": 500,
-            "width": "100%",
-            "paper_bgcolor": "rgba(0,0,0,0)",
-            "plot_bgcolor": "rgba(0,0,0,0)",
-            "font": {"color": "rgb(55, 65, 81)"}  # Gray text
-        }
-    )
+    # Create plot data
+    plot_data = json.dumps([{
+        "x": dates,
+        "y": weights,
+        "type": "scatter",
+        "mode": "lines+markers",
+        "name": "Weight",
+        "line": {"color": "rgb(59, 130, 246)"},
+        "marker": {"color": "rgb(59, 130, 246)"}
+    }])
+
+    plot_layout = json.dumps({
+        "title": "Weight Progress Over Time",
+        "xaxis": {
+            "title": "Date",
+            "tickangle": -45,
+            "automargin": True
+        },
+        "yaxis": {
+            "title": "Weight (lbs)",
+            "automargin": True
+        },
+        "margin": {"t": 50, "b": 100},
+        "height": 500,
+        "paper_bgcolor": "rgba(0,0,0,0)",
+        "plot_bgcolor": "rgba(0,0,0,0)",
+        "font": {"color": "rgb(55, 65, 81)"}
+    })
     
     content = fh.Article(
         fh.Div(
-            # Header section
             fh.Card(
                 fh.Header(
                     fh.H3("Your Progress", cls="text-2xl font-bold text-center mb-2"),
@@ -59,17 +52,25 @@ def get():
                     ),
                     cls="mb-6"
                 ),
-                # Plot section
+                # Plot container and script
                 fh.Div(
-                    plot,
+                    fh.Div(id="weight-plot", cls="w-full"),
+                    fh.Script(
+                        f"""
+                        Plotly.newPlot(
+                            'weight-plot',
+                            {plot_data},
+                            {plot_layout},
+                            {{responsive: true}}
+                        );
+                        """
+                    ),
                     cls="p-4 bg-white rounded-lg shadow-lg"
                 ),
-                # Stats section
                 fh.Div(
                     fh.Div(
                         fh.H4("Statistics", cls="text-lg font-semibold mb-4"),
                         fh.Grid(
-                            # Latest weight
                             fh.Card(
                                 fh.H5("Current Weight", cls="text-sm text-gray-600"),
                                 fh.P(
@@ -78,7 +79,6 @@ def get():
                                 ),
                                 cls="p-4 text-center"
                             ),
-                            # Weight change
                             fh.Card(
                                 fh.H5("Total Change", cls="text-sm text-gray-600"),
                                 fh.P(
@@ -87,7 +87,6 @@ def get():
                                 ),
                                 cls="p-4 text-center"
                             ),
-                            # Number of measurements
                             fh.Card(
                                 fh.H5("Measurements", cls="text-sm text-gray-600"),
                                 fh.P(

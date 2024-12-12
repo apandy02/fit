@@ -46,10 +46,10 @@ def init_db():
             pk='datetime' # TODO: change to a more suitable primary key
         )
 
-    return meals_table, measurements_table
+    return db, (meals_table, measurements_table)
 
 
-MEALS_TABLE, MEASUREMENTS_TABLE = init_db()
+DB, (MEALS_TABLE, MEASUREMENTS_TABLE) = init_db()
 
 nutrition_tracker = NutritionTracker()
 
