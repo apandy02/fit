@@ -17,13 +17,11 @@ def init_db():
                 datetime_entered=str,
                 meal_time=str,
                 user_description=str,
-
                 llm_summary=str,
                 calories=float,
                 protein=float,
                 carbs=float,
                 fat=float,
-
                 fiber=float,
                 vitamin_a=float,
                 vitamin_c=float,
