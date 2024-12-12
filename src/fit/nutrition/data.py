@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pydantic import BaseModel, Field
 
 class Goals(Enum):
-    """An enum that contains the user's macro goals for the day."""
+    """An enum that contains the user's nutrition and fitness goals."""
     LOSE_WEIGHT = "lose weight"
     GAIN_MUSCLE = "gain muscle"
     MAINTENANCE = "maintain current weight and composition"
@@ -13,13 +13,12 @@ class Goals(Enum):
 class NutritionalInfo(BaseModel):
     """A dataclass that contains the nutritional information for a food."""
     summary: str = Field(description="a summary of the food description (no longer than 10 words)")
-    # Macros
+    calories: float = Field(description="the amount of calories in the food")
     protein: float = Field(description="the amount of protein in grams")    
     carbs: float = Field(description="the amount of carbs in grams")
     fat: float = Field(description="the amount of fat in grams")
-    calories: float = Field(description="the amount of calories in the food")
+    
     fiber: float = Field(description="the amount of fiber in grams")
-    # Micros
     vitamin_a: float = Field(description="the amount of vitamin A in IU")
     vitamin_c: float = Field(description="the amount of vitamin C in mg")
     vitamin_d: float = Field(description="the amount of vitamin D in IU")
