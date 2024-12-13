@@ -1,6 +1,6 @@
 import fasthtml.common as fh
 from fit.web.common import page_outline
-from fit.trackers.manager import load_secrets, get_active_tracker_type, get_active_tracker
+from fit.trackers.manager import load_secrets, get_active_tracker_type
 
 def active_tracker_info():
     """Return information about the currently active tracker"""
