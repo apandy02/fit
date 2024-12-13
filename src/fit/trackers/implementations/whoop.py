@@ -3,7 +3,7 @@ from authlib.integrations.requests_client import OAuth2Session
 import json
 from typing import Any
 
-from fit.trackers.tracker import FitnessTracker
+from fit.trackers.base import FitnessTracker
 from fit.utils.conversions import kj_to_kcal
 
 class Whoop(FitnessTracker):
@@ -64,16 +64,26 @@ class Whoop(FitnessTracker):
     
         If `user_id` is `None`, it will be set according to the `user_id` returned with
         the token.
+
+        Raises:
+            requests.exceptions.HTTPError: If authentication fails due to invalid credentials
+            ValueError: If user ID cannot be retrieved from token response
         """
-        self._session.fetch_token(
-            url=f"{self.AUTH_URL}/oauth/token",
-            username=self._username,
-            password=self._password,
-            grant_type="password",
-        )
+        try:
+            self._session.fetch_token(
+                url=f"{self.AUTH_URL}/oauth/token", 
+                username=self._username,
+                password=self._password,
+                grant_type="password",
+            )
+        except Exception as e:
+            raise RuntimeError(f"Failed to authenticate with Whoop: {str(e)}")
 
         if not self.user_id:
-            self.user_id = str(self._session.token.get("user", {}).get("id", ""))
+            user_id = self._session.token.get("user", {}).get("id")
+            if not user_id:
+                raise ValueError("Could not retrieve user ID from authentication response")
+            self.user_id = str(user_id)
 
     def _auth_password_json(self, _client, _method, uri, headers, body):
         body = json.dumps(dict(extract_params(body)))

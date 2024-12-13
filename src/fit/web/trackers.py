@@ -1,55 +1,13 @@
 import fasthtml.common as fh
-import json
-import os
-from pathlib import Path
 from fit.web.common import page_outline
-
-SECRETS_PATH = "data/secrets.json"
-CONFIG_PATH = "data/config.json"
-
-def load_secrets():
-    """Load existing secrets if they exist"""
-    if os.path.exists(SECRETS_PATH):
-        with open(SECRETS_PATH, 'r') as f:
-            return json.load(f)
-    return {}
-
-def load_config():
-    """Load config if it exists"""
-    if os.path.exists(CONFIG_PATH):
-        with open(CONFIG_PATH, 'r') as f:
-            return json.load(f)
-    return {"active_tracker": None}
-
-def save_secrets(tracker_type: str, username: str, password: str):
-    """Save tracker credentials to secrets file"""
-    secrets = load_secrets()
-    Path("data").mkdir(exist_ok=True)
-    
-    secrets[tracker_type] = {
-        "username": username,
-        "password": password
-    }
-    with open(SECRETS_PATH, 'w') as f:
-        json.dump(secrets, f, indent=2)
-    os.chmod(SECRETS_PATH, 0o600)  # Read/write for owner only
-
-def save_config(active_tracker: str):
-    """Save active tracker choice to config file"""
-    config = load_config()
-    Path("data").mkdir(exist_ok=True)
-    
-    config["active_tracker"] = active_tracker
-    with open(CONFIG_PATH, 'w') as f:
-        json.dump(config, f, indent=2)
+from fit.trackers.manager import load_secrets, get_active_tracker_type, get_active_tracker
 
 def active_tracker_info():
     """Return information about the currently active tracker"""
     secrets = load_secrets()
-    config = load_config()
-    active_tracker = config.get("active_tracker")
+    active_type = get_active_tracker_type()
     
-    if not active_tracker or active_tracker not in secrets:
+    if not active_type or active_type not in secrets:
         return fh.Card(
             fh.P(
                 "No active tracker configured",
@@ -58,7 +16,7 @@ def active_tracker_info():
             cls="bg-white shadow-lg rounded-lg p-6"
         )
     
-    active_info = secrets[active_tracker]
+    active_info = secrets[active_type]
     return fh.Card(
         fh.Header(
             fh.H3("Active Tracker", cls="text-xl font-bold text-center mb-2"),
@@ -67,7 +25,7 @@ def active_tracker_info():
         fh.Div(
             fh.P(
                 fh.Span("Type: ", cls="font-semibold"),
-                active_tracker.replace('_', ' ').title(),
+                active_type.replace('_', ' ').title(),
                 cls="mb-2"
             ),
             fh.P(
@@ -82,13 +40,12 @@ def active_tracker_info():
 
 def credentials_section():
     """Return the credentials management section"""
-    config = load_config()
-    active_tracker = config.get("active_tracker")
-    has_active = active_tracker is not None
+    active_type = get_active_tracker_type()
+    has_active = active_type is not None
     
     return fh.Card(
         fh.Header(
-            fh.H3("Register a New Tracker", cls="text-xl font-bold text-center mb-2"),
+            fh.H3("Add New Tracker", cls="text-xl font-bold text-center mb-2"),
             fh.P(
                 "Connect a fitness tracker account",
                 cls="text-gray-600 text-center"
@@ -167,12 +124,10 @@ def credentials_section():
 def change_tracker_section():
     """Return the section for changing active tracker"""
     secrets = load_secrets()
-    config = load_config()
-    active_tracker = config.get("active_tracker")
+    active_type = get_active_tracker_type()
     
     # Only show if there are multiple trackers or if there are trackers but none active
-    if len(secrets) == 0 or (len(secrets) == 1 and active_tracker is not None):
-        print(len(secrets), active_tracker)
+    if len(secrets) == 0 or (len(secrets) == 1 and active_type is not None):
         return ""
     
     return fh.Card(
@@ -192,11 +147,11 @@ def change_tracker_section():
             fh.Div(
                 fh.Label("Select Tracker", cls="label"),
                 fh.Select(
-                    *[
+                    [
                         fh.Option(
                             f"{tracker_type.replace('_', ' ').title()} ({info['username']})",
                             value=tracker_type,
-                            selected=tracker_type == active_tracker
+                            selected=tracker_type == active_type
                         )
                         for tracker_type, info in secrets.items()
                     ],
@@ -221,8 +176,8 @@ def get():
     content = fh.Article(
         fh.Div(
             active_tracker_info(),
-            change_tracker_section(),
             credentials_section(),
+            change_tracker_section(),
             cls="max-w-lg mx-auto p-6 space-y-6"
         )
     )
@@ -231,11 +186,11 @@ def get():
 async def connect_tracker(tracker_type: str, username: str, password: str, set_active: bool = False, first_tracker: str = "false"):
     """Handle tracker connection"""
     try:
-        save_secrets(tracker_type, username, password)
+        save_credentials(tracker_type, username, password)
         
         # Set as active if it's the first tracker or if requested
         if first_tracker == "true" or set_active:
-            save_config(tracker_type)
+            set_active_tracker(tracker_type)
             active_msg = " and set as active tracker"
         else:
             active_msg = ""
@@ -261,7 +216,7 @@ async def connect_tracker(tracker_type: str, username: str, password: str, set_a
 async def set_active_tracker(active_tracker: str):
     """Handle setting the active tracker"""
     try:
-        save_config(active_tracker)
+        set_active_tracker(active_tracker)
         return fh.Div(
             fh.P(
                 f"Successfully set {active_tracker.replace('_', ' ').title()} as active tracker!",

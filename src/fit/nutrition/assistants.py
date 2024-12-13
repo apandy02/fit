@@ -2,7 +2,7 @@ import ell
 from fit.nutrition.data import NutritionalInfo, Goals
 
 
-class NutritionTracker:
+class NutritionLogger:
     """A class that uses LLMs to help with nutrition tracking."""
     def __init__(self, model: str = "gpt-4o-2024-08-06"):
         """

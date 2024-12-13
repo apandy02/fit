@@ -1,5 +1,8 @@
+import os
+import json
 import fasthtml.common as fh
-from fit.nutrition.assistants import NutritionTracker
+from fit.nutrition.assistants import NutritionLogger
+from fit.trackers.manager import get_active_tracker
 
 DB_PATH = "data/nutrition.db"
 
@@ -49,8 +52,8 @@ def init_db():
 
 
 DB, (MEALS_TABLE, MEASUREMENTS_TABLE) = init_db()
-
-nutrition_tracker = NutritionTracker()
+nutrition_tracker = NutritionLogger()
+active_tracker = get_active_tracker()
 
 def page_outline(selidx, title, *c):
     """
