@@ -1,10 +1,11 @@
 import fasthtml.common as fh
-from fit.web.common import page_outline, tracker_manager
+from fit.web.common import page_outline
+from fit.trackers.manager import load_secrets, get_active_tracker_type, get_active_tracker
 
 def active_tracker_info():
     """Return information about the currently active tracker"""
-    secrets = tracker_manager.load_secrets()
-    active_type = tracker_manager.get_active_tracker_type()
+    secrets = load_secrets()
+    active_type = get_active_tracker_type()
     
     if not active_type or active_type not in secrets:
         return fh.Card(
@@ -39,7 +40,7 @@ def active_tracker_info():
 
 def credentials_section():
     """Return the credentials management section"""
-    active_type = tracker_manager.get_active_tracker_type()
+    active_type = get_active_tracker_type()
     has_active = active_type is not None
     
     return fh.Card(
@@ -122,8 +123,8 @@ def credentials_section():
 
 def change_tracker_section():
     """Return the section for changing active tracker"""
-    secrets = tracker_manager.load_secrets()
-    active_type = tracker_manager.get_active_tracker_type()
+    secrets = load_secrets()
+    active_type = get_active_tracker_type()
     
     # Only show if there are multiple trackers or if there are trackers but none active
     if len(secrets) == 0 or (len(secrets) == 1 and active_type is not None):
@@ -185,11 +186,11 @@ def get():
 async def connect_tracker(tracker_type: str, username: str, password: str, set_active: bool = False, first_tracker: str = "false"):
     """Handle tracker connection"""
     try:
-        tracker_manager.save_credentials(tracker_type, username, password)
+        save_credentials(tracker_type, username, password)
         
         # Set as active if it's the first tracker or if requested
         if first_tracker == "true" or set_active:
-            tracker_manager.set_active_tracker(tracker_type)
+            set_active_tracker(tracker_type)
             active_msg = " and set as active tracker"
         else:
             active_msg = ""
@@ -215,7 +216,7 @@ async def connect_tracker(tracker_type: str, username: str, password: str, set_a
 async def set_active_tracker(active_tracker: str):
     """Handle setting the active tracker"""
     try:
-        tracker_manager.set_active_tracker(active_tracker)
+        set_active_tracker(active_tracker)
         return fh.Div(
             fh.P(
                 f"Successfully set {active_tracker.replace('_', ' ').title()} as active tracker!",

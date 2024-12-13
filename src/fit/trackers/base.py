@@ -6,6 +6,7 @@ class FitnessTracker(ABC):
     """Abstract base class for fitness trackers."""
     def __init__(self):
         try:
+            print("Authenticating...")
             self._authenticate()
         
         except Exception as e:
