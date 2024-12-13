@@ -1,4 +1,3 @@
-
 import fasthtml.common as fh
 from fit.nutrition.assistants import NutritionTracker
 
@@ -53,45 +52,39 @@ DB, (MEALS_TABLE, MEASUREMENTS_TABLE) = init_db()
 
 nutrition_tracker = NutritionTracker()
 
-def page_outline(selidx, title, *c, logged_in: bool = False):
+def page_outline(selidx, title, *c):
     """
     Return the common page outline for the frontend.
     """
-    if not logged_in:
-        get_started_btn = fh.A(
-            "Get started",
-            href="/register",
-            cls="btn bg-emerald-700 opacity-90 hover:bg-emerald-500 text-white border-none",
-        )
-    else:
-        get_started_btn = ()
-
     return (
         fh.Title(title),
         fh.Body(
             fh.Html(data_theme="winter"),
             fh.Div(
                 fh.Div(
-                    
-                    get_started_btn,
-                    cls="w-full px-4 flex items-center",
+                    fh.A(
+                        "Food",
+                        href="/food",
+                        cls="btn btn-ghost text-white",
+                    ),
+                    fh.A(
+                        "Personal",
+                        href="/personal", 
+                        cls="btn btn-ghost text-white",
+                    ),
+                    fh.A(
+                        "Progress",
+                        href="/progress",
+                        cls="btn btn-ghost text-white",
+                    ),
+                    fh.A(
+                        "Trackers",
+                        href="/trackers",
+                        cls="btn btn-ghost text-white",
+                    ),
+                    cls="flex justify-center items-center flex-1",
                 ),
-                fh.A(
-                    "Food",
-                    href="/food",
-                    cls="btn btn-ghost text-white",
-                ),
-                fh.A(
-                    "Personal",
-                    href="/personal", 
-                    cls="btn btn-ghost text-white",
-                ),
-                fh.A(
-                    "Progress",
-                    href="/progress",
-                    cls="btn btn-ghost text-white",
-                ),
-                cls="navbar bg-slate-950 bg-opacity-100 rounded-m h-[5vh]",
+                cls="navbar bg-slate-950 bg-opacity-100 rounded-m h-[5vh] flex justify-center",
             ),
             fh.Div(
                 fh.Div(*c, cls="min-h-[calc(100vh-8vh)] pb-[3vh]"),

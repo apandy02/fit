@@ -1,5 +1,4 @@
 import fasthtml.common as fh
-from datetime import datetime
 import json
 from fit.web.common import page_outline, DB
 
@@ -12,7 +11,6 @@ def get():
     dates = [m[0].split("T")[0] for m in measurements]
     weights = [m[1] for m in measurements]
     
-    # Create plot data
     plot_data = json.dumps([{
         "x": dates,
         "y": weights,

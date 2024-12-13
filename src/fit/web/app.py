@@ -2,6 +2,7 @@ import fasthtml.common as fh
 import fit.web.food as food
 import fit.web.personal as personal
 import fit.web.progress as progress
+import fit.web.trackers as trackers
 
 
 tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
@@ -24,5 +25,10 @@ app.post("/update_personal")(personal.update_personal)
 
 # Progress routes
 app.get("/progress")(progress.get)
+
+# Tracker routes
+app.get("/trackers")(trackers.get)
+app.post("/connect_tracker")(trackers.connect_tracker)
+app.post("/set_active_tracker")(trackers.set_active_tracker)
 
 fh.serve() 
