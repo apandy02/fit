@@ -2,7 +2,7 @@
 
 import argparse
 from fit.llm.nutrition import NutritionTracker
-from fit.trackers.whoop import Whoop
+from fit.trackers.implementations.whoop import Whoop
 
 
 def parse_args():
