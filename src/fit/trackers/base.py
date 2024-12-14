@@ -13,12 +13,13 @@ class FitnessTracker(ABC):
             logging.error(f"Error authenticating: {e}")
 
     @abstractmethod
-    def resting_heart_rate(self) -> float:
+    def resting_heart_rate_today(self) -> float:
         """Fetch the most recent resting heart rate data."""
 
     @abstractmethod
-    def calories_burned(self) -> float:
+    def calories_burned_today(self) -> float:
         """Fetch calories burned for the most recent day."""
+    
     
     @abstractmethod
     def _authenticate(self):

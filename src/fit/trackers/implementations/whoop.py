@@ -43,13 +43,13 @@ class Whoop(FitnessTracker):
 
         super().__init__()
     
-    def resting_heart_rate(self) -> float:
+    def resting_heart_rate_today(self) -> float:
         cycle_dict = self._get_current_cycle()
         cycle_id = cycle_dict["id"]
         recovery_dict = self.get_recovery(cycle_id)
         return recovery_dict["score"]["resting_heart_rate"]
 
-    def calories_burned(self) -> float:
+    def calories_burned_today(self) -> float:
         cycle_dict = self._get_current_cycle()
         calories = kj_to_kcal(cycle_dict["score"]["kilojoule"])
         return calories
