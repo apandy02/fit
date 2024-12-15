@@ -5,8 +5,9 @@ import fasthtml.common as fh
 
 from fit.nutrition.data import Goals
 from fit.nutrition.targets import calculate_all_targets
-from fit.web.common import (MEALS_TABLE, active_tracker, nutrition_logger,
-                            page_outline)
+from fit.web.common import (DB, active_tracker,
+                            nutrition_logger, page_outline)
+from fit.web.databases import get_daily_cumulative_nutrition, insert_meal
 
 
 def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, burned: float = None):
@@ -317,6 +318,8 @@ def get():
     
     calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
     goals = calculate_all_targets(calories_burned, Goals.MAINTAIN) # goal hardcoded for now
+
+    macros = get_daily_cumulative_nutrition(DB, datetime.date(datetime.today()))
     
     data = {
         "calories": {"consumed": 1800, "goal": goals["calories"], "burned": calories_burned},
@@ -325,6 +328,9 @@ def get():
         "fat": {"consumed": 60, "goal": goals["fat"]},
         "water": {"consumed": 40, "goal": 64}  # in oz
     }
+
+    
+    print(macros)
 
     content = fh.Article(
         fh.Div(
@@ -393,24 +399,7 @@ async def analyze_image(food_image: fh.UploadFile):
     """Handle image upload and analysis"""
     nutrition_info = nutrition_logger.image_macros(food_image)
     
-    MEALS_TABLE.insert(
-        datetime_entered=datetime.now().isoformat(),
-        meal_time=datetime.now().isoformat(),
-        user_description="Image Upload",
-        llm_summary=nutrition_info.summary,
-        calories=nutrition_info.calories,
-        protein=nutrition_info.protein,
-        carbs=nutrition_info.carbs,
-        fat=nutrition_info.fat,
-        vitamin_a=nutrition_info.vitamin_a,
-        vitamin_c=nutrition_info.vitamin_c,
-        vitamin_d=nutrition_info.vitamin_d,
-        calcium=nutrition_info.calcium,
-        iron=nutrition_info.iron,
-        potassium=nutrition_info.potassium,
-        sodium=nutrition_info.sodium,
-        fiber=nutrition_info.fiber
-    )
+    insert_meal(DB, "Image Upload", nutrition_info)
     
     return NutritionCard(nutrition_info)
 
@@ -419,24 +408,8 @@ async def analyze_text(meal_description: str):
     """Handle meal description analysis"""
     nutrition_info = nutrition_logger.natural_language_macros(meal_description)
     
-    MEALS_TABLE.insert(
-        datetime_entered=datetime.now().isoformat(),
-        meal_time=datetime.now().isoformat(),
-        user_description=meal_description,
-        llm_summary=nutrition_info.summary,
-        calories=nutrition_info.calories,
-        protein=nutrition_info.protein,
-        carbs=nutrition_info.carbs,
-        fat=nutrition_info.fat,
-        vitamin_a=nutrition_info.vitamin_a,
-        vitamin_c=nutrition_info.vitamin_c,
-        vitamin_d=nutrition_info.vitamin_d,
-        calcium=nutrition_info.calcium,
-        iron=nutrition_info.iron,
-        potassium=nutrition_info.potassium,
-        sodium=nutrition_info.sodium,
-        fiber=nutrition_info.fiber
-    )
+    insert_meal(DB, meal_description, nutrition_info)
 
     return NutritionCard(nutrition_info)
+
 

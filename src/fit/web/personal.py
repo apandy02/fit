@@ -3,7 +3,7 @@ from datetime import datetime
 import fasthtml.common as fh
 
 from fit.nutrition.data import Goals
-from fit.web.common import MEASUREMENTS_TABLE, page_outline
+from fit.web.common import DB, page_outline
 
 
 def get():
@@ -88,7 +88,8 @@ async def update_personal(weight: float, height_feet: int, height_inches: int, f
     total_height = (height_feet * 12) + height_inches
     
     # Store in database
-    MEASUREMENTS_TABLE.insert(
+    measurements_table = DB.measurements
+    measurements_table.insert(
         datetime=datetime.now().isoformat(),
         height=total_height,
         weight=weight
