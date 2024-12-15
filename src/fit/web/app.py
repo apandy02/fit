@@ -1,9 +1,9 @@
 import fasthtml.common as fh
+
 import fit.web.food as food
 import fit.web.personal as personal
 import fit.web.progress as progress
 import fit.web.trackers as trackers
-
 
 tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
 plotly = fh.Script(src="https://cdn.plot.ly/plotly-2.32.0.min.js")

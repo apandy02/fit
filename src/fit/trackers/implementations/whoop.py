@@ -1,10 +1,13 @@
-from authlib.common.urls import extract_params
-from authlib.integrations.requests_client import OAuth2Session
+import datetime
 import json
 from typing import Any
 
+from authlib.common.urls import extract_params
+from authlib.integrations.requests_client import OAuth2Session
+
 from fit.trackers.base import FitnessTracker
 from fit.utils.conversions import kj_to_kcal
+
 
 class Whoop(FitnessTracker):
     """Fitness tracker subclass for WHOOP devices.
@@ -43,14 +46,19 @@ class Whoop(FitnessTracker):
 
         super().__init__()
     
-    def resting_heart_rate_today(self) -> float:
-        cycle_dict = self._get_current_cycle()
+    def get_daily_resting_heart_rate(self, day: datetime.date) -> float:
+        cycle_dict = self._max_overlap_cycle(day, self._get_cycles_for_day(day))
         cycle_id = cycle_dict["id"]
         recovery_dict = self.get_recovery(cycle_id)
         return recovery_dict["score"]["resting_heart_rate"]
 
-    def calories_burned_today(self) -> float:
-        cycle_dict = self._get_current_cycle()
+    def get_daily_calories_burned(self, day: datetime.date) -> float:
+        cycles = self._get_cycles_for_day(day)
+        cycle_dict = self._max_overlap_cycle(cycles, day)
+        
+        if cycle_dict is None:
+            raise ValueError(f"No cycle found for day {day}")
+        
         calories = kj_to_kcal(cycle_dict["score"]["kilojoule"])
         return calories
 
@@ -58,6 +66,11 @@ class Whoop(FitnessTracker):
         return self._make_request(
             method="GET", url_slug=f"v1/cycle/{cycle_id}/recovery"
         )
+
+    def _get_cycles_for_day(self, day: datetime.date) -> list[dict[str, Any]]:
+        start_dt = datetime.datetime.combine(day, datetime.time.min)
+        end_dt = datetime.datetime.combine(day, datetime.time.max)
+        return self._get_cycle_collection(start_date=start_dt, end_date=end_dt)
 
     def _authenticate(self) -> None:
         """Authenticate OAuth2Session by fetching token.
@@ -90,19 +103,6 @@ class Whoop(FitnessTracker):
         headers["Content-Type"] = "application/json"
         return uri, headers, body
 
-    def _get_current_cycle(self):
-        """Get the current cycle from Whoop API. The "cycle" is the fundamental 
-        time unit for the whoop, and is necessary to make subsequent queries. (by id)
-        """
-        params = {
-            "limit": "1"
-        }
-        results = self._make_request(
-            method="GET",
-            url_slug="v1/cycle",
-            params=params
-        )
-        return results['records'][0]
 
     def _make_request(
             self, method: str, url_slug: str, **kwargs: Any
@@ -115,3 +115,89 @@ class Whoop(FitnessTracker):
         response.raise_for_status()
         return response.json()
 
+    def _get_cycle_collection(
+        self,
+        start_date: datetime.date,
+        end_date: datetime.date,
+    ) -> list[dict[str, Any]]:
+        """Make request to Get Cycle Collection endpoint.
+
+        Get all physiological cycles for a user. Results are sorted by start time in
+        descending order.
+
+        Returns:
+            list[dict[str, Any]]: Response JSON data loaded into an object. Example:
+                [
+                    {
+                        "id": 93845,
+                        "user_id": 10129,
+                        "created_at": "2022-04-24T11:25:44.774Z",
+                        "updated_at": "2022-04-24T14:25:44.774Z",
+                        "start": "2022-04-24T02:25:44.774Z",
+                        "end": "2022-04-24T10:25:44.774Z",
+                        "timezone_offset": "-05:00",
+                        "score_state": "SCORED",
+                        "score": {
+                            "strain": 5.2951527,
+                            "kilojoule": 8288.297,
+                            "average_heart_rate": 68,
+                            "max_heart_rate": 141
+                        }
+                    },
+                    ...
+                ]
+        """
+        start = start_date.isoformat() + "Z"
+        end = end_date.isoformat(timespec="seconds") + "Z"
+        return self._make_paginated_request(
+            method="GET",
+            url_slug="v1/cycle",
+            params={"start": start, "end": end, "limit": 25},
+        )
+    
+    def _make_paginated_request(
+        self, method, url_slug, **kwargs
+    ) -> list[dict[str, Any]]:
+        params = kwargs.pop("params", {})
+        response_data: list[dict[str, Any]] = []
+
+        while True:
+            response = self._make_request(
+                method=method,
+                url_slug=url_slug,
+                params=params,
+                **kwargs,
+            )
+
+            response_data += response["records"]
+
+            if next_token := response["next_token"]:
+                params["nextToken"] = next_token
+
+            else:
+                break
+
+        return response_data
+    
+    def _max_overlap_cycle(self, day: datetime.date, cycles: list[dict[str, Any]]) -> dict[str, Any]:
+        max_overlap = 0
+        cycle_dict = None
+        
+        day_start = datetime.datetime.combine(day, datetime.time.min)
+        day_end = datetime.datetime.combine(day, datetime.time.max)
+        
+        for cycle in cycles:
+            cycle_start = datetime.datetime.fromisoformat(cycle["start"].replace("Z", "+00:00"))
+            cycle_end = datetime.datetime.fromisoformat(cycle["end"].replace("Z", "+00:00"))
+            
+            overlap_start = max(day_start, cycle_start)
+            overlap_end = min(day_end, cycle_end)
+            
+            if overlap_end > overlap_start:  # If there is overlap
+                overlap_duration = (overlap_end - overlap_start).total_seconds()
+                if overlap_duration > max_overlap:
+                    max_overlap = overlap_duration
+                    cycle_dict = cycle
+        
+        return cycle_dict
+    

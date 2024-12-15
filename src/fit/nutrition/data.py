@@ -1,6 +1,8 @@
-from enum import Enum
 from dataclasses import dataclass
+from enum import Enum
+
 from pydantic import BaseModel, Field
+
 
 class Goals(Enum):
     """An enum that contains the user's nutrition and fitness goals."""

@@ -1,7 +1,10 @@
-import fasthtml.common as fh
 from datetime import datetime
+
+import fasthtml.common as fh
+
 from fit.nutrition.data import Goals
 from fit.web.common import MEASUREMENTS_TABLE, page_outline
+
 
 def get():
     """Return the personal information page content"""

@@ -1,7 +1,10 @@
-import fasthtml.common as fh
 import json
 from datetime import datetime
+
+import fasthtml.common as fh
+
 from fit.web.common import MEALS_TABLE, nutrition_tracker, page_outline
+
 
 def create_empty_plot(title: str, y_axis_title: str):
     """Create an empty plot with consistent styling"""

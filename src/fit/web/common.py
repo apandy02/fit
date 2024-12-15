@@ -1,6 +1,8 @@
-import os
 import json
+import os
+
 import fasthtml.common as fh
+
 from fit.nutrition.assistants import NutritionLogger
 from fit.trackers.manager import get_active_tracker
 

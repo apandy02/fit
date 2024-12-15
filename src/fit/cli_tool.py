@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+
 from fit.llm.nutrition import NutritionTracker
 from fit.trackers.implementations.whoop import Whoop
 

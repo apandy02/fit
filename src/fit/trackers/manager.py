@@ -1,7 +1,7 @@
 import json
 import os
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 from fit.trackers.base import FitnessTracker
 from fit.trackers.implementations.whoop import Whoop

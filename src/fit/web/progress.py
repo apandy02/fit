@@ -1,6 +1,9 @@
-import fasthtml.common as fh
 import json
-from fit.web.common import page_outline, DB
+
+import fasthtml.common as fh
+
+from fit.web.common import DB, page_outline
+
 
 def get():
     """Return the progress tracking page content"""

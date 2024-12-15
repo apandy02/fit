@@ -1,5 +1,6 @@
-import ell 
-from fit.nutrition.data import NutritionalInfo, Goals
+import ell
+
+from fit.nutrition.data import Goals, NutritionalInfo
 
 
 class NutritionLogger:
