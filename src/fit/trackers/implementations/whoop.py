@@ -10,6 +10,7 @@ from fit.utils.conversions import kj_to_kcal
 
 
 class Whoop(FitnessTracker):
+    # TODO: cleanup class 
     """Fitness tracker subclass for WHOOP devices.
 
     Attributes:
@@ -47,15 +48,13 @@ class Whoop(FitnessTracker):
         super().__init__()
     
     def get_daily_resting_heart_rate(self, day: datetime.date) -> float:
-        cycle_dict = self._max_overlap_cycle(day, self._get_cycles_for_day(day))
+        cycle_dict = self._max_overlap_cycle(day=day, cycles=self._get_cycles_for_day(day))
         cycle_id = cycle_dict["id"]
         recovery_dict = self.get_recovery(cycle_id)
         return recovery_dict["score"]["resting_heart_rate"]
 
     def get_daily_calories_burned(self, day: datetime.date) -> float:
-        cycles = self._get_cycles_for_day(day)
-        cycle_dict = self._max_overlap_cycle(cycles, day)
-        
+        cycle_dict = self._max_overlap_cycle(day=day, cycles=self._get_cycles_for_day(day))
         if cycle_dict is None:
             raise ValueError(f"No cycle found for day {day}")
         
@@ -180,6 +179,9 @@ class Whoop(FitnessTracker):
         return response_data
     
     def _max_overlap_cycle(self, day: datetime.date, cycles: list[dict[str, Any]]) -> dict[str, Any]:
+        if len(cycles) == 1:
+            return cycles[0]
+        
         max_overlap = 0
         cycle_dict = None
         
@@ -188,8 +190,14 @@ class Whoop(FitnessTracker):
         
         for cycle in cycles:
             cycle_start = datetime.datetime.fromisoformat(cycle["start"].replace("Z", "+00:00"))
-            cycle_end = datetime.datetime.fromisoformat(cycle["end"].replace("Z", "+00:00"))
+            cycle_start = self.adjust_datetime_by_offset(cycle_start, cycle["timezone_offset"])
             
+            if "end" not in cycle or cycle["end"] is None:
+                return cycle # if no end, then it's the current cycle. TODO: improve the fault tolerance here
+            
+            cycle_end = datetime.datetime.fromisoformat(cycle["end"].replace("Z", "+00:00"))
+            cycle_end = self.adjust_datetime_by_offset(cycle_end, cycle["timezone_offset"])
+
             overlap_start = max(day_start, cycle_start)
             overlap_end = min(day_end, cycle_end)
             
@@ -201,3 +209,9 @@ class Whoop(FitnessTracker):
         
         return cycle_dict
     
+    def adjust_datetime_by_offset(self, dt, offset_str):
+        """Adjusts a datetime object by a timezone offset string (e.g., '-5:00')."""
+        hours, minutes = map(int, offset_str.split(':'))
+        offset_sign = -1 if hours < 0 else 1
+        offset = datetime.timedelta(hours=abs(hours), minutes=abs(minutes)) * offset_sign
+        return dt + offset

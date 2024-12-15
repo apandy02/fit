@@ -1,6 +1,7 @@
-from abc import ABC, abstractmethod
-import logging
 import datetime
+import logging
+from abc import ABC, abstractmethod
+
 
 class FitnessTracker(ABC):
     """

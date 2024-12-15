@@ -1,5 +1,3 @@
-import json
-import os
 
 import fasthtml.common as fh
 
