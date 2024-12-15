@@ -1,8 +1,6 @@
 import fasthtml.common as fh
-
-from fit.trackers.manager import get_active_tracker_type, load_secrets
 from fit.web.common import page_outline
-
+from fit.trackers.manager import load_secrets, get_active_tracker_type, save_secrets
 
 def active_tracker_info():
     """Return information about the currently active tracker"""
@@ -188,9 +186,8 @@ def get():
 async def connect_tracker(tracker_type: str, username: str, password: str, set_active: bool = False, first_tracker: str = "false"):
     """Handle tracker connection"""
     try:
-        save_credentials(tracker_type, username, password)
+        save_secrets(tracker_type, username, password)
         
-        # Set as active if it's the first tracker or if requested
         if first_tracker == "true" or set_active:
             set_active_tracker(tracker_type)
             active_msg = " and set as active tracker"
