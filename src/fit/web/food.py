@@ -2,9 +2,11 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
-from fit.web.common import MEALS_TABLE, nutrition_logger, page_outline, active_tracker
-from fit.nutrition.targets import calculate_all_targets
+
 from fit.nutrition.data import Goals
+from fit.nutrition.targets import calculate_all_targets
+from fit.web.common import (MEALS_TABLE, active_tracker, nutrition_logger,
+                            page_outline)
 
 
 def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, burned: float = None):
