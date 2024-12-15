@@ -2,7 +2,9 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
-from fit.web.common import MEALS_TABLE, nutrition_tracker, page_outline
+from fit.web.common import MEALS_TABLE, nutrition_logger, page_outline, active_tracker
+from fit.nutrition.targets import calculate_all_targets
+from fit.nutrition.data import Goals
 
 
 def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, burned: float = None):
@@ -310,14 +312,18 @@ def create_metrics_grid(data):
 def get():
     """Return the nutritional overview page content"""
     # Example data - replace with actual data from your database
+    
+    calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
+    goals = calculate_all_targets(calories_burned, Goals.MAINTAIN) # goal hardcoded for now
+    
     data = {
-        "calories": {"consumed": 1800, "goal": 2000, "burned": 400},
-        "protein": {"consumed": 80, "goal": 120},
-        "carbs": {"consumed": 200, "goal": 250},
-        "fat": {"consumed": 60, "goal": 70},
+        "calories": {"consumed": 1800, "goal": goals["calories"], "burned": calories_burned},
+        "protein": {"consumed": 80, "goal": goals["protein"]},
+        "carbs": {"consumed": 200, "goal": goals["carbs"]},
+        "fat": {"consumed": 60, "goal": goals["fat"]},
         "water": {"consumed": 40, "goal": 64}  # in oz
     }
-    
+
     content = fh.Article(
         fh.Div(
             create_page_header(),
@@ -383,7 +389,7 @@ def NutritionCard(nutrition_info):
 
 async def analyze_image(food_image: fh.UploadFile):
     """Handle image upload and analysis"""
-    nutrition_info = nutrition_tracker.image_macros(food_image)
+    nutrition_info = nutrition_logger.image_macros(food_image)
     
     MEALS_TABLE.insert(
         datetime_entered=datetime.now().isoformat(),
@@ -409,7 +415,7 @@ async def analyze_image(food_image: fh.UploadFile):
 
 async def analyze_text(meal_description: str):
     """Handle meal description analysis"""
-    nutrition_info = nutrition_tracker.natural_language_macros(meal_description)
+    nutrition_info = nutrition_logger.natural_language_macros(meal_description)
     
     MEALS_TABLE.insert(
         datetime_entered=datetime.now().isoformat(),

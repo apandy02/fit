@@ -8,7 +8,7 @@ class Goals(Enum):
     """An enum that contains the user's nutrition and fitness goals."""
     LOSE_WEIGHT = "lose weight"
     GAIN_MUSCLE = "gain muscle"
-    MAINTENANCE = "maintain current weight and composition"
+    MAINTAIN = "maintain current weight and composition"
 
 
 @dataclass

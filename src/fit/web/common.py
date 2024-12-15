@@ -51,7 +51,7 @@ def init_db():
 
 
 DB, (MEALS_TABLE, MEASUREMENTS_TABLE) = init_db()
-nutrition_tracker = NutritionLogger()
+nutrition_logger = NutritionLogger()
 active_tracker = get_active_tracker()
 
 def page_outline(selidx, title, *c):
