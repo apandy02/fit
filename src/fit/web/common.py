@@ -1,6 +1,5 @@
 
 import fasthtml.common as fh
-
 from fit.nutrition.assistants import NutritionLogger
 from fit.trackers.manager import get_active_tracker
 from fit.web.databases import init_db

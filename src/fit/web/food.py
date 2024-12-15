@@ -2,11 +2,9 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
-
 from fit.nutrition.data import Goals
 from fit.nutrition.targets import calculate_all_targets
-from fit.web.common import (DB, active_tracker,
-                            nutrition_logger, page_outline)
+from fit.web.common import DB, active_tracker, nutrition_logger, page_outline
 from fit.web.databases import get_daily_cumulative_nutrition, insert_meal
 
 
