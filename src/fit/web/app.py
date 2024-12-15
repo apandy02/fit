@@ -1,5 +1,4 @@
 import fasthtml.common as fh
-
 import fit.web.food as food
 import fit.web.personal as personal
 import fit.web.progress as progress

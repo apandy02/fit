@@ -1,7 +1,9 @@
 import json
 from datetime import datetime
+
 import fasthtml.common as fh
 from fit.web.common import MEALS_TABLE, nutrition_tracker, page_outline
+
 
 def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, burned: float = None):
     """Create a plot with the provided data"""

@@ -1,7 +1,6 @@
 import json
 
 import fasthtml.common as fh
-
 from fit.web.common import DB, page_outline
 
 
