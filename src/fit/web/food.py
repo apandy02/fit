@@ -11,7 +11,7 @@ from fit.web.databases import get_daily_cumulative_nutrition, insert_meal
 def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, burned: float = None):
     """Create a plot with the provided data"""
     data = []
-    
+
     # Add consumed bar
     data.append({
         "type": "bar",
@@ -282,7 +282,7 @@ def create_metrics_grid(data):
             # Row 2
             fh.Div(
                 metric_card(
-                    "Carbohydrate", "Carbs (g)", "carbs-plot",
+                    "Carbohydrates", "Carbs (g)", "carbs-plot",
                     data["carbs"]["consumed"],
                     data["carbs"]["goal"]
                 ),
@@ -317,18 +317,15 @@ def get():
     calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
     goals = calculate_all_targets(calories_burned, Goals.MAINTAIN) # goal hardcoded for now
 
-    macros = get_daily_cumulative_nutrition(DB, datetime.date(datetime.today()))
+    daily_consumption = get_daily_cumulative_nutrition(DB, datetime.date(datetime.today()))
     
     data = {
-        "calories": {"consumed": 1800, "goal": goals["calories"], "burned": calories_burned},
-        "protein": {"consumed": 80, "goal": goals["protein"]},
-        "carbs": {"consumed": 200, "goal": goals["carbs"]},
-        "fat": {"consumed": 60, "goal": goals["fat"]},
+        "calories": {"consumed": daily_consumption["calories"], "goal": goals["calories"], "burned": calories_burned},
+        "protein": {"consumed": daily_consumption["protein"], "goal": goals["protein"]},
+        "carbs": {"consumed": daily_consumption["carbs"], "goal": goals["carbs"]},
+        "fat": {"consumed": daily_consumption["fat"], "goal": goals["fat"]},
         "water": {"consumed": 40, "goal": 64}  # in oz
     }
-
-    
-    print(macros)
 
     content = fh.Article(
         fh.Div(

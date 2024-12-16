@@ -1,6 +1,5 @@
 import fasthtml.common as fh
 import fit.web.food as food
-import fit.web.personal as personal
 import fit.web.progress as progress
 import fit.web.trackers as trackers
 
@@ -18,12 +17,11 @@ app.get("/food")(food.get)
 app.post("/analyze_text")(food.analyze_text)
 app.post("/analyze_image")(food.analyze_image)
 
-# Personal routes
-app.get("/personal")(personal.get)
-app.post("/update_personal")(personal.update_personal)
-
 # Progress routes
 app.get("/progress")(progress.get)
+app.post("/update_weight")(progress.update_weight)
+app.post("/update_height")(progress.update_height)
+app.post("/update_goal")(progress.update_goal)
 
 # Tracker routes
 app.get("/trackers")(trackers.get)

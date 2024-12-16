@@ -71,7 +71,15 @@ def get_daily_cumulative_nutrition(database: fh.Database, date: datetime):
         FROM meals 
         WHERE date_entered = ?
     """
-    return database.execute(query, (date,)).fetchall()
+    result =database.execute(query, (date,)).fetchone()
+    result_dict = {
+        "calories": result[0],
+        "protein": result[1],
+        "carbs": result[2],
+        "fat": result[3],
+        "fiber": result[4]
+    } # TODO: hardcoded, need to fix
+    return result_dict
 
 def insert_meal(database: fh.Database, meal_description: str, nutrition_info):
     """
