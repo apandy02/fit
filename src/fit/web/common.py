@@ -97,18 +97,18 @@ def create_modal(content, modal_id="modal"):
             id=modal_id
         ),
         # Modal JavaScript
-        fh.Script(f"""
-            function openModal(id) {{
+        fh.Script("""
+            function openModal(id) {
                 document.getElementById(id).classList.remove('hidden');
                 document.getElementById(id + '-backdrop').classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
-            }}
+            }
             
-            function closeModal(id) {{
+            function closeModal(id) {
                 document.getElementById(id).classList.add('hidden');
                 document.getElementById(id + '-backdrop').classList.add('hidden');
                 document.body.style.overflow = 'auto';
-            }}
+            }
         """)
     )
 

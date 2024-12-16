@@ -3,7 +3,7 @@ from datetime import datetime
 
 import fasthtml.common as fh
 
-from fit.nutrition.data import Goals, NutritionalInfo
+from fit.nutrition.data import Goals
 from fit.nutrition.targets import calculate_all_targets
 from fit.web.common import (DB, active_tracker, nutrition_logger, nutritionist,
                             page_outline)
