@@ -2,10 +2,13 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
+
 from fit.nutrition.data import Goals, NutritionalInfo
 from fit.nutrition.targets import calculate_all_targets
-from fit.web.common import DB, active_tracker, nutrition_logger, nutritionist, page_outline
-from fit.web.databases import get_daily_cumulative_nutrition, insert_meal, get_daily_meals
+from fit.web.common import (DB, active_tracker, nutrition_logger, nutritionist,
+                            page_outline)
+from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
+                               insert_meal)
 
 
 def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, burned: float = None):
@@ -360,10 +363,24 @@ async def generate_overview():
     # Generate analysis
     analysis = nutritionist.daily_io_analysis(meals, targets)
     
-    # Return formatted analysis
-    return fh.Div(
-        fh.P(analysis, cls="whitespace-pre-line text-gray-700"),  # preserve line breaks
-        cls="mt-4"
+    # Return formatted analysis in a card-like structure
+    return fh.Card(
+        fh.Div(
+            # Split the analysis into sections based on newlines and create bullet points
+            *[
+                fh.Div(
+                    # If line starts with "Meal", make it a header
+                    (fh.H4(line.strip(), cls="font-medium mb-2") 
+                     if line.strip().startswith("Meal") or line.strip().startswith("The user")
+                     else fh.Li(line.strip(), cls="mb-1")),
+                    cls="mb-2"
+                )
+                for line in analysis.split('\n')
+                if line.strip()  # Skip empty lines
+            ],
+            cls="p-4 space-y-2"
+        ),
+        cls="bg-white shadow-lg rounded-lg mt-4"
     )
 
 def get():
