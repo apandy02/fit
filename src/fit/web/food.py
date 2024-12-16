@@ -21,7 +21,7 @@ def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, bur
         "x": ["Today"],
         "y": [consumed],
         "name": "Consumed",
-        "marker": {"color": "rgb(59, 130, 246)"}  # Blue
+        "marker": {"color": "rgb(37, 99, 235)"}  # blue-600
     })
     
     # Add goal bar
@@ -30,7 +30,7 @@ def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, bur
         "x": ["Today"],
         "y": [goal],
         "name": "Consumption Goal",
-        "marker": {"color": "rgb(147, 197, 253)"}  # Light blue
+        "marker": {"color": "rgb(96, 165, 250)"}  # blue-400
     })
     
     # Add burned bar for calories
@@ -40,7 +40,7 @@ def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, bur
             "x": ["Today"],
             "y": [burned],
             "name": "Burned",
-            "marker": {"color": "rgb(239, 68, 68)"}  # Red
+            "marker": {"color": "rgb(239, 68, 68)"}  # red-500
         })
     
     plot_data = json.dumps(data)
@@ -56,10 +56,18 @@ def create_plot_layout(title: str, y_axis_title: str):
         "legend": {"orientation": "h", "y": -0.2},
         "height": 300,
         "margin": {"t": 50, "b": 100},
-        "paper_bgcolor": "rgba(0,0,0,0)",
+        "paper_bgcolor": "rgba(0,0,0,0)", 
         "plot_bgcolor": "rgba(0,0,0,0)",
-        "font": {"color": "rgb(55, 65, 81)"},
-        "yaxis": {"title": y_axis_title},
+        "font": {"color": "rgb(226, 232, 240)"},
+        "yaxis": {
+            "title": y_axis_title,
+            "gridcolor": "rgb(71, 85, 105)",  
+            "zerolinecolor": "rgb(71, 85, 105)"
+        },
+        "xaxis": {
+            "gridcolor": "rgb(71, 85, 105)",
+            "zerolinecolor": "rgb(71, 85, 105)"
+        },
         "barmode": "group"
     })
 
@@ -90,28 +98,28 @@ def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, go
                 """
             ),
             # Analysis text below plot
-            fh.P(analysis_text, cls="text-sm text-gray-600 mt-4") if analysis_text else None,
+            fh.P(analysis_text, cls="text-sm text-slate-300 mt-4") if analysis_text else None,
             cls="p-4"
         ),
-        cls="bg-white shadow-lg rounded-lg h-full"
+        cls="bg-slate-800 shadow-lg rounded-lg h-full text-slate-200"
     )
 
 def create_text_input_form():
     """Create the text input form for meal description"""
     return fh.Card(
-        fh.Header(fh.H3("Describe Your Meal", cls="text-xl font-bold mb-4")),
+        fh.Header(fh.H3("Describe Your Meal", cls="text-xl font-bold mb-4 text-slate-200")),
         fh.Form(
             hx_post="/analyze_text",
             hx_target="#text-result",
             cls="space-y-4"
         )(
             fh.Div(
-                fh.Label("Meal Description", cls="label"),
+                fh.Label("Meal Description", cls="label text-slate-200"),
                 fh.Textarea(
                     name="meal_description",
                     placeholder="Example: I had a grilled chicken sandwich with lettuce, tomato and mayo",
                     rows=3,
-                    cls="textarea textarea-bordered w-full"
+                    cls="textarea textarea-bordered w-full bg-slate-700 text-slate-200 placeholder-slate-400"
                 ),
                 cls="form-control"
             ),
@@ -121,7 +129,8 @@ def create_text_input_form():
                 cls="btn btn-primary w-full"
             ),
             fh.Div(id="text-result", cls="mt-4")
-        )
+        ),
+        cls="bg-slate-800 shadow-lg rounded-lg p-6"
     )
 
 def create_image_upload_form():
@@ -278,7 +287,6 @@ def create_metrics_grid(data):
     """Create the grid of metric cards"""
     return fh.Div(
         fh.Div(
-            # Row 1
             fh.Div(
                 metric_card(
                     "Calories", "Calories", "calories-plot",
@@ -293,7 +301,6 @@ def create_metrics_grid(data):
                 ),
                 cls="grid grid-cols-2 gap-6 mb-6"
             ),
-            # Row 2
             fh.Div(
                 metric_card(
                     "Carbohydrates", "Carbs (g)", "carbs-plot",
@@ -307,7 +314,6 @@ def create_metrics_grid(data):
                 ),
                 cls="grid grid-cols-2 gap-6 mb-6"
             ),
-            # Row 3 (centered water card)
             fh.Div(
                 fh.Div(
                     metric_card(
@@ -333,46 +339,36 @@ def create_overview_card():
             fh.Div(
                 fh.Button(
                     "Generate Daily Analysis",
-                    cls="btn btn-primary",  # removed w-full to make it smaller
+                    cls="btn btn-primary",
                     hx_post="/generate_overview",
                     hx_target="#analysis-content"
                 ),
-                cls="flex justify-center mb-4"  # center the button
+                cls="flex justify-center mb-4"
             ),
             # Content area for the analysis
             fh.Div(
                 id="analysis-content",
-                cls="prose max-w-none"  # prose class for better text formatting
+                cls="prose max-w-none prose-invert"  # prose-invert for dark theme
             ),
             cls="p-6"
         ),
-        cls="bg-white shadow-lg rounded-lg mb-8"
+        cls="bg-slate-800 shadow-lg rounded-lg mb-8 text-slate-200"
     )
 
 async def generate_overview():
     """Generate the daily overview analysis"""
     today = datetime.date(datetime.today())
-    
-    # Get all meals for today
     meals = get_daily_meals(DB, today)
-    
-    # Get the targets
+
     calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
     targets = calculate_all_targets(calories_burned, Goals.MAINTAIN)  # goal hardcoded for now
-    
-    # Generate analysis
     analysis = nutritionist.daily_io_analysis(meals, targets)
     
-    # Return formatted analysis in a card-like structure
     return fh.Card(
         fh.Div(
-            # Split the analysis into sections based on newlines and create bullet points
             *[
                 fh.Div(
-                    # If line starts with "Meal", make it a header
-                    (fh.H4(line.strip(), cls="font-medium mb-2") 
-                     if line.strip().startswith("Meal") or line.strip().startswith("The user")
-                     else fh.Li(line.strip(), cls="mb-1")),
+                    fh.P(line.strip(), cls="mb-1 text-slate-300"),
                     cls="mb-2"
                 )
                 for line in analysis.split('\n')
@@ -380,7 +376,7 @@ async def generate_overview():
             ],
             cls="p-4 space-y-2"
         ),
-        cls="bg-white shadow-lg rounded-lg mt-4"
+        cls="bg-slate-800 shadow-lg rounded-lg mt-4"
     )
 
 def get():

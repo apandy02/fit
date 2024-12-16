@@ -119,7 +119,7 @@ def page_outline(selidx, title, *c):
     return (
         fh.Title(title),
         fh.Body(
-            fh.Html(data_theme="winter"),
+            fh.Html(data_theme="dark"),
             fh.Div(
                 fh.Div(
                     fh.A(

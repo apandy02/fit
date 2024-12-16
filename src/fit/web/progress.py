@@ -15,14 +15,14 @@ def create_weight_form():
         cls="space-y-4"
     )(
         fh.Div(
-            fh.Label("Weight (lbs)", cls="label"),
+            fh.Label("Weight (lbs)", cls="label text-slate-200"),
             fh.Input(
                 type="number",
                 name="weight",
                 min="0",
                 step="0.1",
                 placeholder="Enter your weight",
-                cls="input input-bordered w-full"
+                cls="input input-bordered w-full bg-slate-700 text-slate-200 placeholder-slate-400"
             ),
             cls="form-control"
         ),
@@ -42,29 +42,29 @@ def create_height_form():
         cls="space-y-4"
     )(
         fh.Div(
-            fh.Label("Height", cls="label"),
+            fh.Label("Height", cls="label text-slate-200"),
             fh.Div(
                 fh.Div(
-                    fh.Label("Feet", cls="label"),
+                    fh.Label("Feet", cls="label text-slate-200"),
                     fh.Input(
                         type="number",
                         name="height_feet",
                         min="0",
                         max="9",
                         placeholder="ft",
-                        cls="input input-bordered w-24"
+                        cls="input input-bordered w-24 bg-slate-700 text-slate-200 placeholder-slate-400"
                     ),
                     cls="form-control"
                 ),
                 fh.Div(
-                    fh.Label("Inches", cls="label"),
+                    fh.Label("Inches", cls="label text-slate-200"),
                     fh.Input(
                         type="number",
                         name="height_inches",
                         min="0",
                         max="11",
                         placeholder="in",
-                        cls="input input-bordered w-24"
+                        cls="input input-bordered w-24 bg-slate-700 text-slate-200 placeholder-slate-400"
                     ),
                     cls="form-control"
                 ),
@@ -87,14 +87,14 @@ def create_goal_form():
         cls="space-y-4"
     )(
         fh.Div(
-            fh.Label("Fitness Goal", cls="label"),
+            fh.Label("Fitness Goal", cls="label text-slate-200"),
             fh.Select(
                 *[
                     fh.Option(goal.value.title(), value=goal.value)
                     for goal in Goals
                 ],
                 name="fitness_goal",
-                cls="select select-bordered w-full"
+                cls="select select-bordered w-full bg-slate-700 text-slate-200"
             ),
             cls="form-control"
         ),
@@ -121,8 +121,8 @@ def create_weight_plot():
         "type": "scatter",
         "mode": "lines+markers",
         "name": "Weight",
-        "line": {"color": "rgb(59, 130, 246)"},
-        "marker": {"color": "rgb(59, 130, 246)"}
+        "line": {"color": "rgb(37, 99, 235)"},
+        "marker": {"color": "rgb(37, 99, 235)"}
     }])
 
     plot_layout = json.dumps({
@@ -130,17 +130,21 @@ def create_weight_plot():
         "xaxis": {
             "title": "Date",
             "tickangle": -45,
-            "automargin": True
+            "automargin": True,
+            "gridcolor": "rgb(71, 85, 105)",
+            "zerolinecolor": "rgb(71, 85, 105)"
         },
         "yaxis": {
             "title": "Weight (lbs)",
-            "automargin": True
+            "automargin": True,
+            "gridcolor": "rgb(71, 85, 105)",
+            "zerolinecolor": "rgb(71, 85, 105)"
         },
         "margin": {"t": 50, "b": 100},
         "height": 500,
         "paper_bgcolor": "rgba(0,0,0,0)",
         "plot_bgcolor": "rgba(0,0,0,0)",
-        "font": {"color": "rgb(55, 65, 81)"}
+        "font": {"color": "rgb(226, 232, 240)"}
     })
     
     return plot_data, plot_layout
@@ -149,28 +153,28 @@ def create_stats_grid(weights):
     """Create the statistics grid"""
     return fh.Grid(
         fh.Card(
-            fh.H5("Current Weight", cls="text-sm text-gray-600"),
+            fh.H5("Current Weight", cls="text-sm text-slate-400"),
             fh.P(
                 f"{weights[-1]:.1f} lbs" if weights else "No data",
-                cls="text-2xl font-bold text-blue-600"
+                cls="text-2xl font-bold text-blue-400"
             ),
-            cls="p-4 text-center"
+            cls="p-4 text-center bg-slate-800"
         ),
         fh.Card(
-            fh.H5("Total Change", cls="text-sm text-gray-600"),
+            fh.H5("Total Change", cls="text-sm text-slate-400"),
             fh.P(
                 f"{(weights[-1] - weights[0]):.1f} lbs" if len(weights) > 1 else "No change",
-                cls="text-2xl font-bold text-blue-600"
+                cls="text-2xl font-bold text-blue-400"
             ),
-            cls="p-4 text-center"
+            cls="p-4 text-center bg-slate-800"
         ),
         fh.Card(
-            fh.H5("Measurements", cls="text-sm text-gray-600"),
+            fh.H5("Measurements", cls="text-sm text-slate-400"),
             fh.P(
                 str(len(weights)),
-                cls="text-2xl font-bold text-blue-600"
+                cls="text-2xl font-bold text-blue-400"
             ),
-            cls="p-4 text-center"
+            cls="p-4 text-center bg-slate-800"
         ),
         cols=3,
         cls="gap-4 mt-6"
@@ -196,10 +200,10 @@ def get():
         fh.Div(
             fh.Card(
                 fh.Header(
-                    fh.H3("Your Progress", cls="text-2xl font-bold text-center mb-2"),
+                    fh.H3("Your Progress", cls="text-2xl font-bold text-center mb-2 text-slate-200"),
                     fh.P(
                         "Track your weight changes over time",
-                        cls="text-gray-600 text-center"
+                        cls="text-slate-400 text-center"
                     ),
                     cls="mb-6"
                 ),
@@ -216,41 +220,41 @@ def get():
                         );
                         """
                     ),
-                    cls="p-4 bg-white rounded-lg shadow-lg"
+                    cls="p-4 bg-slate-800 rounded-lg shadow-lg"
                 ),
                 fh.Div(
                     fh.Div(
-                        fh.H4("Statistics", cls="text-lg font-semibold mb-4"),
+                        fh.H4("Statistics", cls="text-lg font-semibold mb-4 text-slate-200"),
                         create_stats_grid(weights),
                     ),
                     cls="mt-8"
                 ),
-                cls="bg-white shadow-lg rounded-lg p-6"
+                cls="bg-slate-800 shadow-lg rounded-lg p-6"
             ),
             # Add FAB menu
             create_fab_menu(fab_buttons),
             # Add modals
             create_modal(
                 fh.Card(
-                    fh.Header(fh.H3("Update Weight", cls="text-xl font-bold mb-4")),
+                    fh.Header(fh.H3("Update Weight", cls="text-xl font-bold mb-4 text-slate-200")),
                     create_weight_form(),
-                    cls="bg-white shadow-lg rounded-lg"
+                    cls="bg-slate-800 shadow-lg rounded-lg"
                 ),
                 "weight-modal"
             ),
             create_modal(
                 fh.Card(
-                    fh.Header(fh.H3("Update Height", cls="text-xl font-bold mb-4")),
+                    fh.Header(fh.H3("Update Height", cls="text-xl font-bold mb-4 text-slate-200")),
                     create_height_form(),
-                    cls="bg-white shadow-lg rounded-lg"
+                    cls="bg-slate-800 shadow-lg rounded-lg"
                 ),
                 "height-modal"
             ),
             create_modal(
                 fh.Card(
-                    fh.Header(fh.H3("Change Goal", cls="text-xl font-bold mb-4")),
+                    fh.Header(fh.H3("Change Goal", cls="text-xl font-bold mb-4 text-slate-200")),
                     create_goal_form(),
-                    cls="bg-white shadow-lg rounded-lg"
+                    cls="bg-slate-800 shadow-lg rounded-lg"
                 ),
                 "goal-modal"
             ),
