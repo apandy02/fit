@@ -81,25 +81,35 @@ class Nutritionist:
     
     def daily_io_analysis(self, meals: list[NutritionalInfo], target: dict[str, float]) -> str:
         """
-        Given the user's intake and target, provide a summary of the user's intake for the day. If the 
-        user is over their target, highlight for them specific meals they ate that led to this. If the 
-        meal is objectively bad, for example if they have a carbohydrate target of 50g and they ate 60g 
-        alone in this one meal, recommend that they avoid that meal in the future. If any meal is driving 
-        that number up but is not objectively bad, recommend to them adjusted portions. Do this for any 
-        future. If any meal is driving that number up but is not objectively bad, recommend to them 
-        adjusted portions. Do this for any and all macros, calories, and meals.
-
-        If the user is under their target, let them know what they could have added to their diet to 
-        get to their target. Make sure that the suggestions are not too extreme, and that they are 
-        realistic. Use their prior intake to make suggestions. For example, if they seem to be eating 
-        a lot of one cuisine, recommend things that aren't radically different.
+        Analyzes the user's daily intake and target and produces an overview with feedback.
+        
+        Args:
+            meals: The user's meals for the day.
+            target: The user's target for the day.
         """
+        
         if len(meals) == 0:
             return "No meals logged for today, please log your meals and try again."
 
         @ell.simple(model=self.model)
         def _daily_io_analysis(meals: list[NutritionalInfo], target: NutritionalInfo) -> str:
-            """Given the user's meals and targets, provide a summary and recommendations."""
+            """
+            Given the user's intake and target, provide a summary of the user's intake for the day. If the 
+            user is over their target, highlight for them specific meals they ate that led to this. If the 
+            meal is objectively bad, for example if they have a carbohydrate target of 50g and they ate 60g 
+            alone in this one meal, recommend that they avoid that meal in the future. If any meal is driving 
+            that number up but is not objectively bad, recommend to them adjusted portions. Do this for any 
+            future. If any meal is driving that number up but is not objectively bad, recommend to them 
+            adjusted portions. Do this for any and all macros, calories, and meals.
+
+            If the user is under their target, let them know what they could have added to their diet to 
+            get to their target. Make sure that the suggestions are not too extreme, and that they are 
+            realistic. Use their prior intake to make suggestions. For example, if they seem to be eating 
+            a lot of one cuisine, recommend things that aren't radically different.
+
+
+            ***Respond in plain text (paragraph format). do not use bullet points.***
+            """
             meals_str = "Here are the meals you've had today:\n"
             print(target)
             for i, meal in enumerate(meals, 1):
