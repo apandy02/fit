@@ -11,7 +11,6 @@ class Goals(Enum):
     MAINTAIN = "maintain current weight and composition"
 
 
-@dataclass
 class NutritionalInfo(BaseModel):
     """A dataclass that contains the nutritional information for a food."""
     summary: str = Field(description="a summary of the food description (no longer than 10 words)")

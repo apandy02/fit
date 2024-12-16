@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import fasthtml.common as fh
+from fit.nutrition.data import NutritionalInfo
 
 # TODO: consider creating a class for the database
 
@@ -52,10 +53,50 @@ def init_db(database_path: str):
 def get_daily_meals(database: fh.Database, date: datetime):
     """
     Get meals entered for a given date.
-
     """
-    query = "select * from meals where date_entered = ?"
-    return database.execute(query, (date,)).fetchall()
+    query = """
+        select llm_summary, calories, protein, carbs, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
+        calcium, iron, potassium, sodium 
+        from
+        meals where date_entered = ?
+    """
+    result = database.execute(query, (date,)).fetchall()
+    print(result)
+    for row in result:
+        print(row)
+        NutritionalInfo(
+            summary=row[0],
+            calories=row[1],
+            protein=row[2],
+            carbs=row[3],
+            fat=row[4],
+            fiber=row[5],
+            vitamin_a=row[6],
+            vitamin_c=row[7],
+            vitamin_d=row[8],
+            calcium=row[9],
+            iron=row[10],
+            potassium=row[11],
+            sodium=row[12]
+        )
+        print("success ")
+    return [
+        NutritionalInfo(
+            summary=row[0],
+            calories=row[1],
+            protein=row[2],
+            carbs=row[3],
+            fat=row[4],
+            fiber=row[5],
+            vitamin_a=row[6],
+            vitamin_c=row[7],
+            vitamin_d=row[8],
+            calcium=row[9],
+            iron=row[10],
+            potassium=row[11],
+            sodium=row[12]
+        ) for row in result
+    ]
 
 def get_daily_cumulative_nutrition(database: fh.Database, date: datetime):
     """

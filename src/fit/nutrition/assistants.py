@@ -79,7 +79,7 @@ class Nutritionist:
         
         return _make_recommendations(caloric_burn, goal, prior_intake)
     
-    def daily_io_analysis(self, intake: NutritionalInfo, target: NutritionalInfo) -> str:
+    def daily_io_analysis(self, meals: list[NutritionalInfo], target: dict[str, float]) -> str:
         """
         Given the user's intake and target, provide a summary of the user's intake for the day. If the 
         user is over their target, highlight for them specific meals they ate that led to this. If the 
@@ -94,12 +94,26 @@ class Nutritionist:
         realistic. Use their prior intake to make suggestions. For example, if they seem to be eating 
         a lot of one cuisine, recommend things that aren't radically different.
         """
+        if len(meals) == 0:
+            return "No meals logged for today, please log your meals and try again."
+
         @ell.simple(model=self.model)
-        def _daily_io_analysis(intake: NutritionalInfo, target: NutritionalInfo) -> str:
-            """given the user's intake and target, provide a summary of the user's intake for the day."""
-            return intake, target
+        def _daily_io_analysis(meals: list[NutritionalInfo], target: NutritionalInfo) -> str:
+            """Given the user's meals and targets, provide a summary and recommendations."""
+            meals_str = "Here are the meals you've had today:\n"
+            print(target)
+            for i, meal in enumerate(meals, 1):
+                meals_str += f"Meal {i}: {meal.summary} - {meal.calories} calories, "
+                meals_str += f"{meal.protein}g protein, {meal.carbs}g carbs, {meal.fat}g fat\n"
+            
+            targets_str = f"""
+                The user's daily targets are: Calories: {target["calories"]}, Protein: {target["protein"]}g,
+                Carbohydrates: {target["carbs"]}g, Fat: {target["fat"]}g
+            """
+            
+            return f"{meals_str}\n{targets_str}"
         
-        return _daily_io_analysis(intake, target)
+        return _daily_io_analysis(meals, target)
     
     def macro_analysis(self, macro: str, intake: float, target: float) -> str:
         """Analyze if user is over/under their target for a specific macro.
@@ -112,11 +126,11 @@ class Nutritionist:
         Returns:
             A string indicating if user is over/under target and by how much
         """
-        prefix = "Based on the food you've logged so far and your energy expenditure reported by your fitness tracker, "
+        prefix = "Based on the information logged so far, "
         difference = intake - target
         if difference > 0:
-            return f"{prefix}you are {abs(difference):.1f}g over your {macro} target"
+            return f"{prefix}you are currently {abs(difference):.1f}g over your {macro} target"
         elif difference < 0:
-            return f"{prefix}you are {abs(difference):.1f}g under your {macro} target"
+            return f"{prefix}you are currently {abs(difference):.1f}g under your {macro} target"
         else:
-            return f"{prefix}you have hit your {macro} target exactly"
+            return f"{prefix}you are currently in line with your {macro} target"

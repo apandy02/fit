@@ -2,10 +2,10 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
-from fit.nutrition.data import Goals
+from fit.nutrition.data import Goals, NutritionalInfo
 from fit.nutrition.targets import calculate_all_targets
-from fit.web.common import DB, active_tracker, nutrition_logger, page_outline
-from fit.web.databases import get_daily_cumulative_nutrition, insert_meal
+from fit.web.common import DB, active_tracker, nutrition_logger, nutritionist, page_outline
+from fit.web.databases import get_daily_cumulative_nutrition, insert_meal, get_daily_meals
 
 
 def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, burned: float = None):
@@ -60,12 +60,21 @@ def create_plot_layout(title: str, y_axis_title: str):
         "barmode": "group"
     })
 
-def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, goal: float, burned: float = None):
+def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, goal: float, burned: float = None, show_analysis: bool = True):
     """Create a card containing a metric plot"""
     plot_data, plot_layout = create_plot(title, y_axis_title, consumed, goal, burned)
     
+    # Get analysis text if show_analysis is True
+    analysis_text = None
+    if show_analysis:
+        macro_name = title.lower()
+        if macro_name == "carbohydrates":
+            macro_name = "carbohydrate"
+        analysis_text = nutritionist.macro_analysis(macro_name, consumed, goal)
+    
     return fh.Card(
         fh.Div(
+            # Plot
             fh.Div(id=plot_id, cls="w-full h-full"),
             fh.Script(
                 f"""
@@ -77,6 +86,8 @@ def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, go
                 );
                 """
             ),
+            # Analysis text below plot
+            fh.P(analysis_text, cls="text-sm text-gray-600 mt-4") if analysis_text else None,
             cls="p-4"
         ),
         cls="bg-white shadow-lg rounded-lg h-full"
@@ -299,7 +310,8 @@ def create_metrics_grid(data):
                     metric_card(
                         "Water", "Water (oz)", "water-plot",
                         data["water"]["consumed"],
-                        data["water"]["goal"]
+                        data["water"]["goal"],
+                        show_analysis=False
                     ),
                     cls="w-1/2"
                 ),
@@ -308,6 +320,50 @@ def create_metrics_grid(data):
             cls="w-full"
         ),
         cls="w-full"
+    )
+
+def create_overview_card():
+    """Create the overview card with analysis button"""
+    return fh.Card(
+        fh.Div(
+            # Centered button container
+            fh.Div(
+                fh.Button(
+                    "Generate Daily Analysis",
+                    cls="btn btn-primary",  # removed w-full to make it smaller
+                    hx_post="/generate_overview",
+                    hx_target="#analysis-content"
+                ),
+                cls="flex justify-center mb-4"  # center the button
+            ),
+            # Content area for the analysis
+            fh.Div(
+                id="analysis-content",
+                cls="prose max-w-none"  # prose class for better text formatting
+            ),
+            cls="p-6"
+        ),
+        cls="bg-white shadow-lg rounded-lg mb-8"
+    )
+
+async def generate_overview():
+    """Generate the daily overview analysis"""
+    today = datetime.date(datetime.today())
+    
+    # Get all meals for today
+    meals = get_daily_meals(DB, today)
+    
+    # Get the targets
+    calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
+    targets = calculate_all_targets(calories_burned, Goals.MAINTAIN)  # goal hardcoded for now
+    
+    # Generate analysis
+    analysis = nutritionist.daily_io_analysis(meals, targets)
+    
+    # Return formatted analysis
+    return fh.Div(
+        fh.P(analysis, cls="whitespace-pre-line text-gray-700"),  # preserve line breaks
+        cls="mt-4"
     )
 
 def get():
@@ -330,6 +386,8 @@ def get():
     content = fh.Article(
         fh.Div(
             create_page_header(),
+            # Add overview card at the top
+            create_overview_card(),
             create_metrics_grid(data),
             food_tracking_modal(),
             create_fab_menu(),
