@@ -2,7 +2,7 @@ from datetime import datetime
 
 import fasthtml.common as fh
 
-from fit.nutrition.data import NutritionalInfo
+from fit.nutrition.data import MealBreakdown
 
 # TODO: consider creating a class for the database
 
@@ -63,7 +63,7 @@ def get_daily_meals(database: fh.Database, date: datetime):
     """
     result = database.execute(query, (date,)).fetchall()
     for row in result:
-        NutritionalInfo(
+        MealBreakdown(
             summary=row[0],
             calories=row[1],
             protein=row[2],
@@ -79,7 +79,7 @@ def get_daily_meals(database: fh.Database, date: datetime):
             sodium=row[12]
         )
     return [
-        NutritionalInfo(
+        MealBreakdown(
             summary=row[0],
             calories=row[1],
             protein=row[2],

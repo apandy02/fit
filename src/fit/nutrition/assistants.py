@@ -1,6 +1,6 @@
 import ell
 
-from fit.nutrition.data import Goals, NutritionalInfo
+from fit.nutrition.data import Goals, MealBreakdown
 
 
 class NutritionLogger:
@@ -12,13 +12,13 @@ class NutritionLogger:
         """
         self.model = model
 
-    def natural_language_macros(self, food: str) -> NutritionalInfo:
+    def natural_language_macros(self, food: str) -> MealBreakdown:
         """Returns the macro nutrients in grams and kilocalories for food described in plain text.
         Args:
             food: The food to get the macro nutrients for.
         """
-        @ell.complex(model=self.model, response_format=NutritionalInfo)
-        def _natural_language_macros(food: str) -> NutritionalInfo:
+        @ell.complex(model=self.model, response_format=MealBreakdown)
+        def _natural_language_macros(food: str) -> MealBreakdown:
             """given what the user ate, return the macro nutrients in grams.
             If the user query is not food, return 0 for all macros.
             """
@@ -27,14 +27,29 @@ class NutritionLogger:
         message = _natural_language_macros(food)
         return message.content[0].parsed
     
+    def improve_breakdown(self, breakdown: MealBreakdown, user_feedback: str) -> MealBreakdown:
+        """Improves the breakdown based on user feedback."""
+        @ell.simple(model=self.model)
+        def _improve_breakdown(breakdown: MealBreakdown, user_feedback: str) -> MealBreakdown:
+            """
+            Given the user's feedback on your prediction of the breakdown of their meal,
+            improve the breakdown.
+            """
+            prompt = f"""
+            The user's feedback on your prediction of the breakdown of their meal is: {user_feedback}
+            The breakdown of the meal is: {breakdown}
+            """
+            return prompt
+        
+        return _improve_breakdown(breakdown, user_feedback)
     
-    def image_macros(self, image: str) -> NutritionalInfo:
+    def image_macros(self, image: str) -> MealBreakdown:
         """Returns the macro nutrients in grams and kilocalories for food described in an image.
         Args:
             image: The image to get the macro nutrients for.
         """
-        @ell.complex(model=self.model, response_format=NutritionalInfo)
-        def _image_macros(image: str) -> NutritionalInfo:
+        @ell.complex(model=self.model, response_format=MealBreakdown)
+        def _image_macros(image: str) -> MealBreakdown:
             """given an image of what the user ate, return the macro nutrients in grams.
             If the image is not food, return 0 for all macros.
             """
@@ -54,7 +69,7 @@ class Nutritionist:
         self.model = model
     
     def make_recommendations(
-            self, caloric_burn: float, goal: Goals, prior_intake: NutritionalInfo
+            self, caloric_burn: float, goal: Goals, prior_intake: MealBreakdown
         ) -> str:
         """Makes recommendations for foods based on the user's caloric burn and macro goals.
         Args:
@@ -64,7 +79,7 @@ class Nutritionist:
         """
         @ell.simple(model=self.model)
         def _make_recommendations(
-                caloric_burn: float, goal: Goals, prior_intake: NutritionalInfo
+                caloric_burn: float, goal: Goals, prior_intake: MealBreakdown
             ) -> str:
             """given the user's caloric burn and weight goals, provide the user with 3 meal options.
             Ensure that your response is concise and easy to understand.
@@ -79,7 +94,7 @@ class Nutritionist:
         
         return _make_recommendations(caloric_burn, goal, prior_intake)
     
-    def daily_io_analysis(self, meals: list[NutritionalInfo], target: dict[str, float]) -> str:
+    def daily_io_analysis(self, meals: list[MealBreakdown], target: dict[str, float]) -> str:
         """
         Analyzes the user's daily intake and target and produces an overview with feedback.
 
@@ -92,7 +107,7 @@ class Nutritionist:
             return "No meals logged for today, please log your meals and try again."
 
         @ell.simple(model=self.model)
-        def _daily_io_analysis(meals: list[NutritionalInfo], target: NutritionalInfo) -> str:
+        def _daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float]) -> str:
             """
             Given the user's intake and target, provide a summary of the user's intake for the day. 
             
@@ -145,3 +160,4 @@ class Nutritionist:
             return f"{prefix}you are currently {abs(difference):.1f}g under your {macro} target"
         else:
             return f"{prefix}you are currently in line with your {macro} target"
+            

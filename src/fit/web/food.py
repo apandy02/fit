@@ -3,7 +3,7 @@ from datetime import datetime
 
 import fasthtml.common as fh
 
-from fit.nutrition.data import Goals, NutritionalInfo
+from fit.nutrition.data import Goals, MealBreakdown
 from fit.nutrition.targets import calculate_all_targets
 from fit.web.common import (DB, active_tracker, nutrition_logger, nutritionist,
                             page_outline)
@@ -483,6 +483,21 @@ def create_form_section(title, inputs, cls="mb-6"):
         cls=cls
     )
 
+def create_nutrition_card(nutrition_info):
+    """Create a card containing ingredients text and editable nutrition form"""
+    return fh.Card(
+        fh.Div(
+            fh.H4("Ingredients", cls="font-medium mb-2 text-slate-200"),
+            fh.P(
+                nutrition_info.ingredients,
+                cls="mb-6 text-slate-200"
+            ),
+            create_editable_nutrition_form(nutrition_info),
+            cls="space-y-4"
+        ),
+        cls="bg-slate-800 shadow-lg rounded-lg p-6"
+    )
+
 def create_editable_nutrition_form(nutrition_info):
     """Create a form with editable nutrition inputs pre-populated with values"""
     form_elements = []
@@ -514,48 +529,71 @@ def create_editable_nutrition_form(nutrition_info):
         fh.Div(id="save-result", cls="mt-4")
     )
 
-    return fh.Card(
-        fh.Form(
-            hx_post="/save_meal",
-            hx_target="#save-result",
-            cls="space-y-6"
-        )(
-            *form_elements
-        ),
-        cls="bg-slate-800 shadow-lg rounded-lg p-6"
+    return fh.Form(
+        hx_post="/save_meal",
+        hx_target="#save-result",
+        cls="space-y-6"
+    )(
+        *form_elements
     )
 
 async def analyze_text(meal_description: str):
     """Handle meal description analysis"""
     nutrition_info = nutrition_logger.natural_language_macros(meal_description)
-    return create_editable_nutrition_form(nutrition_info)
+    return create_nutrition_card(nutrition_info)
 
 async def analyze_image(food_image: fh.UploadFile):
     """Handle image upload and analysis"""
     nutrition_info = nutrition_logger.image_macros(food_image)
-    return create_editable_nutrition_form(nutrition_info)
+    return create_nutrition_card(nutrition_info)
 
-async def save_meal(meal_description: str, request: fh.Request):
+async def save_meal(request: fh.Request):
     """Save the meal with user-adjusted nutrition values"""
-    
-    form = await request.form()
-    print(form)
-    nutrition_info = NutritionalInfo(
-        calories=form["calories"],
-        protein=form["protein"],
-        carbs=form["carbs"],
-        fat=form["fat"],
-        vitamin_a=form["vitamin_a"],
-        vitamin_c=form["vitamin_c"],
-        vitamin_d=form["vitamin_d"],
-        calcium=form["calcium"],
-        iron=form["iron"],
-        potassium=form["potassium"],
-        sodium=form["sodium"]
-    )    
-    insert_meal(DB, meal_description, nutrition_info)
-    
-    return fh.P(
-        "Meal saved successfully!",
-        cls="text-green-500 font-semibold text-center"
-    )
+    try:
+        form = await request.form()
+        nutrition_info = MealBreakdown(
+            calories=form["calories"],
+            protein=form["protein"],
+            carbs=form["carbs"],
+            fat=form["fat"],
+            vitamin_a=form["vitamin_a"],
+            vitamin_c=form["vitamin_c"],
+            vitamin_d=form["vitamin_d"],
+            calcium=form["calcium"],
+            iron=form["iron"],
+            potassium=form["potassium"],
+            sodium=form["sodium"]
+        )    
+        insert_meal(DB, form["summary"], nutrition_info)
+        
+        return fh.Div(
+            fh.P(
+                "Meal saved successfully!",
+                cls="text-green-500 font-semibold text-center mb-4"
+            ),
+            # Add script to reset the modal
+            fh.Script("""
+                // Show success message briefly
+                setTimeout(() => {
+                    // Reset text form
+                    const textForm = document.querySelector('#text-result');
+                    if (textForm) textForm.innerHTML = '';
+                    const textArea = document.querySelector('textarea[name="meal_description"]');
+                    if (textArea) textArea.value = '';
+                    
+                    // Reset image form
+                    const imageForm = document.querySelector('#image-result');
+                    if (imageForm) imageForm.innerHTML = '';
+                    const fileInput = document.querySelector('input[type="file"]');
+                    if (fileInput) fileInput.value = '';
+                    
+                    // Close the modal
+                    closeModal();
+                }, 1000);
+            """)
+        )
+    except Exception as e:
+        return fh.P(
+            f"Error saving meal: {str(e)}",
+            cls="text-red-500 font-semibold text-center"
+        )
