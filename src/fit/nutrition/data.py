@@ -10,14 +10,14 @@ class Goals(Enum):
     MAINTAIN = "maintain current weight and composition"
 
 
-class NutritionalInfo(BaseModel):
+class MealBreakdown(BaseModel):
     """A dataclass that contains the nutritional information for a food."""
-    summary: str = Field(description="a summary of the food description (no longer than 10 words)")
+    summary: str = Field(description="a summary of the food description (no longer than 8 words)")
+    ingredients: str = Field(description="predicted ingredients in the food and their amounts")
     calories: float = Field(description="the amount of calories in the food")
     protein: float = Field(description="the amount of protein in grams")    
     carbs: float = Field(description="the amount of carbs in grams")
     fat: float = Field(description="the amount of fat in grams")
-    
     fiber: float = Field(description="the amount of fiber in grams")
     vitamin_a: float = Field(description="the amount of vitamin A in IU")
     vitamin_c: float = Field(description="the amount of vitamin C in mg")
