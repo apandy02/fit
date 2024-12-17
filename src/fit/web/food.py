@@ -3,7 +3,7 @@ from datetime import datetime
 
 import fasthtml.common as fh
 
-from fit.nutrition.data import Goals
+from fit.nutrition.data import Goals, NutritionalInfo
 from fit.nutrition.targets import calculate_all_targets
 from fit.web.common import (DB, active_tracker, nutrition_logger, nutritionist,
                             page_outline)
@@ -15,32 +15,35 @@ def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, bur
     """Create a plot with the provided data"""
     data = []
 
-    # Add consumed bar
     data.append({
         "type": "bar",
         "x": ["Today"],
         "y": [consumed],
         "name": "Consumed",
-        "marker": {"color": "rgb(37, 99, 235)"}  # blue-600
+        "marker": {"color": "rgb(37, 99, 235)"},  # blue-600
+        "hoverinfo": "y",
+        "showlegend": True,
     })
     
-    # Add goal bar
     data.append({
         "type": "bar",
         "x": ["Today"],
         "y": [goal],
         "name": "Consumption Goal",
-        "marker": {"color": "rgb(96, 165, 250)"}  # blue-400
+        "marker": {"color": "rgb(96, 165, 250)"},  # blue-400
+        "hoverinfo": "y",
+        "showlegend": True,
     })
     
-    # Add burned bar for calories
     if burned is not None:
         data.append({
             "type": "bar",
             "x": ["Today"],
             "y": [burned],
             "name": "Burned",
-            "marker": {"color": "rgb(239, 68, 68)"}  # red-500
+            "marker": {"color": "rgb(239, 68, 68)"},  # red-500
+            "hoverinfo": "y", 
+            "showlegend": True,
         })
     
     plot_data = json.dumps(data)
@@ -75,17 +78,16 @@ def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, go
     """Create a card containing a metric plot"""
     plot_data, plot_layout = create_plot(title, y_axis_title, consumed, goal, burned)
     
-    # Get analysis text if show_analysis is True
     analysis_text = None
     if show_analysis:
         macro_name = title.lower()
         if macro_name == "carbohydrates":
             macro_name = "carbohydrate"
+        print(macro_name, consumed, goal)
         analysis_text = nutritionist.macro_analysis(macro_name, consumed, goal)
     
     return fh.Card(
         fh.Div(
-            # Plot
             fh.Div(id=plot_id, cls="w-full h-full"),
             fh.Script(
                 f"""
@@ -97,7 +99,6 @@ def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, go
                 );
                 """
             ),
-            # Analysis text below plot
             fh.P(analysis_text, cls="text-sm text-slate-300 mt-4") if analysis_text else None,
             cls="p-4"
         ),
@@ -165,13 +166,11 @@ def create_image_upload_form():
 def create_modal_content():
     """Create the content for the food tracking modal"""
     return fh.Div(
-        # Close button
         fh.Button(
             "×",
             cls="absolute right-4 top-4 text-3xl font-light hover:text-gray-800 z-10",
             onclick="closeModal()"
         ),
-        # Scrollable content
         fh.Div(
             create_text_input_form(),
             create_image_upload_form(),
@@ -183,19 +182,16 @@ def create_modal_content():
 def food_tracking_modal():
     """Create the food tracking modal"""
     return fh.Div(
-        # Modal backdrop
         fh.Div(
             cls="fixed inset-0 bg-black bg-opacity-50 transition-opacity hidden",
             id="modal-backdrop",
             onclick="closeModal()"
         ),
-        # Modal content
         fh.Div(
             create_modal_content(),
             cls="fixed inset-0 flex items-center justify-center p-4 hidden",
             id="food-modal"
         ),
-        # Modal JavaScript
         fh.Script("""
             function openFoodModal() {
                 document.getElementById('food-modal').classList.remove('hidden');
@@ -214,11 +210,9 @@ def food_tracking_modal():
 def create_fab_menu():
     """Create the floating action button menu"""
     return fh.Div(
-        # Sub-buttons (initially hidden)
         fh.Div(
-            # Food Entry Button
             fh.Div(
-                fh.Span("Food", cls="text-slate-700 text-sm font-medium"),
+                fh.Span("Food", cls="text-slate-300 text-sm font-medium"),
                 fh.Button(
                     fh.Span("🍽️", cls="text-lg"),
                     cls="btn btn-primary btn-circle shadow-lg ml-3",
@@ -227,9 +221,8 @@ def create_fab_menu():
                 cls="flex items-center justify-end mb-2 opacity-0 transition-all duration-200 translate-y-[30px]",
                 id="food-button"
             ),
-            # Water Entry Button
             fh.Div(
-                fh.Span("Water", cls="text-slate-700 text-sm font-medium"),
+                fh.Span("Water", cls="text-slate-300 text-sm font-medium"),
                 fh.Button(
                     fh.Span("💧", cls="text-lg"),
                     cls="btn btn-primary btn-circle shadow-lg ml-3"
@@ -239,7 +232,6 @@ def create_fab_menu():
             ),
             cls="absolute bottom-16 right-0 transition-all duration-200"
         ),
-        # Main FAB
         fh.Button(
             fh.Span("+", cls="text-2xl transition-transform duration-200"),
             cls="btn btn-primary btn-circle shadow-lg",
@@ -283,50 +275,92 @@ def create_page_header():
         cls="mb-8"
     )
 
+def create_metric_overview_section(title, metrics_data, metrics_config):
+    """Create a metrics overview section with configurable metrics
+    
+    Args:
+        title (str): Title of the section
+        metrics_data (dict): Data for each metric
+        metrics_config (list[dict]): List of metric configs with keys:
+            - name: Display name of the metric
+            - column_name: Database column name
+            - unit: Unit of measurement
+            - plot_id: ID for the plot element
+    """
+    return fh.Section(
+        fh.H3(f"{title} Overview", cls="text-2xl font-bold text-center mb-8 text-slate-200"),
+        fh.Div(
+            # Create rows of metric cards
+            *[
+                fh.Div(
+                    *[
+                        metric_card(
+                            metric["name"],
+                            f"{metric['name']} ({metric['unit']})" if metric["unit"] else metric["name"],
+                            metric["plot_id"],
+                            metrics_data[metric["column_name"]]["consumed"],
+                            metrics_data[metric["column_name"]]["goal"],
+                            metrics_data[metric["column_name"]].get("burned") # Only passed for calories
+                        )
+                        for metric in row
+                    ],
+                    cls="grid grid-cols-2 gap-6 mb-6"
+                )
+                for row in [metrics_config[i:i+2] for i in range(0, len(metrics_config), 2)]
+            ],
+            cls="w-full"
+        ),
+        cls="w-full"
+    )
+
+def create_macro_section(data):
+    """Create the macronutrient metrics section"""
+    macro_metrics = [
+        {"name": "Calories", "column_name": "calories", "unit": "", "plot_id": "calories-plot"},
+        {"name": "Protein", "column_name": "protein", "unit": "g", "plot_id": "protein-plot"},
+        {"name": "Carbohydrates", "column_name": "carbs", "unit": "g", "plot_id": "carbs-plot"},
+        {"name": "Fat", "column_name": "fat", "unit": "g", "plot_id": "fat-plot"}
+    ]
+    return create_metric_overview_section("Macronutrient", data, macro_metrics)
+
+def create_micro_section(data):
+    """Create the micronutrient metrics section"""
+    micro_metrics = [
+        {"name": "Vitamin A", "column_name": "vitamin_a", "unit": "IU", "plot_id": "vitamin-a-plot"},
+        {"name": "Vitamin C", "column_name": "vitamin_c", "unit": "mg", "plot_id": "vitamin-c-plot"},
+        {"name": "Iron", "column_name": "iron", "unit": "mg", "plot_id": "iron-plot"},
+        {"name": "Calcium", "column_name": "calcium", "unit": "mg", "plot_id": "calcium-plot"}
+    ]
+    return create_metric_overview_section("Micronutrient", data, micro_metrics)
+
+def create_water_section(data):
+    """Create the water metrics section"""
+    return fh.Section(
+        fh.H3("Hydration Overview", cls="text-2xl font-bold text-center mb-6 text-slate-200"),
+        fh.Div(
+            fh.Div(
+                metric_card(
+                    "Water", "Water (oz)", "water-plot",
+                    data["water"]["consumed"],
+                    data["water"]["goal"],
+                    show_analysis=False
+                ),
+                cls="w-1/2 mx-auto"  # Centered with max width of 50%
+            ),
+            cls="w-full"
+        ),
+        cls="w-full"
+    )
+
 def create_metrics_grid(data):
     """Create the grid of metric cards"""
     return fh.Div(
         fh.Div(
-            fh.Div(
-                metric_card(
-                    "Calories", "Calories", "calories-plot",
-                    data["calories"]["consumed"],
-                    data["calories"]["goal"],
-                    data["calories"]["burned"]
-                ),
-                metric_card(
-                    "Protein", "Protein (g)", "protein-plot",
-                    data["protein"]["consumed"],
-                    data["protein"]["goal"]
-                ),
-                cls="grid grid-cols-2 gap-6 mb-6"
-            ),
-            fh.Div(
-                metric_card(
-                    "Carbohydrates", "Carbs (g)", "carbs-plot",
-                    data["carbs"]["consumed"],
-                    data["carbs"]["goal"]
-                ),
-                metric_card(
-                    "Fat", "Fat (g)", "fat-plot",
-                    data["fat"]["consumed"],
-                    data["fat"]["goal"]
-                ),
-                cls="grid grid-cols-2 gap-6 mb-6"
-            ),
-            fh.Div(
-                fh.Div(
-                    metric_card(
-                        "Water", "Water (oz)", "water-plot",
-                        data["water"]["consumed"],
-                        data["water"]["goal"],
-                        show_analysis=False
-                    ),
-                    cls="w-1/2"
-                ),
-                cls="flex justify-center"
-            ),
-            cls="w-full"
+            create_overview_card(),
+            create_macro_section(data),
+            create_micro_section(data),
+            create_water_section(data),
+            cls="w-full space-y-12"
         ),
         cls="w-full"
     )
@@ -335,7 +369,6 @@ def create_overview_card():
     """Create the overview card with analysis button"""
     return fh.Card(
         fh.Div(
-            # Centered button container
             fh.Div(
                 fh.Button(
                     "Generate Daily Analysis",
@@ -345,10 +378,9 @@ def create_overview_card():
                 ),
                 cls="flex justify-center mb-4"
             ),
-            # Content area for the analysis
             fh.Div(
                 id="analysis-content",
-                cls="prose max-w-none prose-invert"  # prose-invert for dark theme
+                cls="prose max-w-none prose-invert"
             ),
             cls="p-6"
         ),
@@ -381,26 +413,25 @@ async def generate_overview():
 
 def get():
     """Return the nutritional overview page content"""
-    # Example data - replace with actual data from your database
-    
     calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
     goals = calculate_all_targets(calories_burned, Goals.MAINTAIN) # goal hardcoded for now
-
     daily_consumption = get_daily_cumulative_nutrition(DB, datetime.date(datetime.today()))
-    
+
     data = {
         "calories": {"consumed": daily_consumption["calories"], "goal": goals["calories"], "burned": calories_burned},
         "protein": {"consumed": daily_consumption["protein"], "goal": goals["protein"]},
         "carbs": {"consumed": daily_consumption["carbs"], "goal": goals["carbs"]},
         "fat": {"consumed": daily_consumption["fat"], "goal": goals["fat"]},
+        "vitamin_a": {"consumed": daily_consumption.get("vitamin_a", 0), "goal": 5000},  # Daily Value: 5000 IU
+        "vitamin_c": {"consumed": daily_consumption.get("vitamin_c", 0), "goal": 60},    # Daily Value: 60 mg
+        "iron": {"consumed": daily_consumption.get("iron", 0), "goal": 18},              # Daily Value: 18 mg
+        "calcium": {"consumed": daily_consumption.get("calcium", 0), "goal": 1000},      # Daily Value: 1000 mg
         "water": {"consumed": 40, "goal": 64}  # in oz
     }
 
     content = fh.Article(
         fh.Div(
             create_page_header(),
-            # Add overview card at the top
-            create_overview_card(),
             create_metrics_grid(data),
             food_tracking_modal(),
             create_fab_menu(),
@@ -427,55 +458,104 @@ def create_nutrition_section(title: str, items: list, cls: str = "mb-4"):
         cls=cls
     )
 
-def NutritionCard(nutrition_info):
-    """Helper function to create a consistent nutrition display card"""
-    macros = [
-        ("Calories", f"{nutrition_info.calories} kcal"),
-        ("Protein", f"{nutrition_info.protein}g"),
-        ("Carbs", f"{nutrition_info.carbs}g"),
-        ("Fat", f"{nutrition_info.fat}g"),
-        ("Fiber", f"{nutrition_info.fiber}g"),
-    ]
-    
-    vitamins = [
-        ("Vitamin A", f"{nutrition_info.vitamin_a} IU"),
-        ("Vitamin C", f"{nutrition_info.vitamin_c} mg"),
-        ("Vitamin D", f"{nutrition_info.vitamin_d} IU"),
-    ]
-    
-    minerals = [
-        ("Calcium", f"{nutrition_info.calcium} mg"),
-        ("Iron", f"{nutrition_info.iron} mg"),
-        ("Potassium", f"{nutrition_info.potassium} mg"),
-        ("Sodium", f"{nutrition_info.sodium} mg"),
-    ]
-    
-    return fh.Card(
-        fh.Header(
-            fh.H3(nutrition_info.summary, cls="text-lg font-semibold text-center mb-4")
+def create_form_input(label_text, input_name, input_value, input_type="number", step="0.1"):
+    """Helper function to create a form input with label"""
+    return fh.Div(
+        fh.Label(label_text, cls="label text-slate-200"),
+        fh.Input(
+            type=input_type,
+            name=input_name,
+            value=input_value,
+            step=step if input_type == "number" else None,
+            cls="input input-bordered w-full bg-slate-700 text-slate-200"
         ),
-        create_nutrition_section("Macronutrients", macros),
-        create_nutrition_section("Vitamins", vitamins),
-        create_nutrition_section("Minerals", minerals, cls=""),
-        cls="bg-white shadow-lg rounded-lg p-6"
+        cls="form-control"
     )
 
+def create_form_section(title, inputs, cls="mb-6"):
+    """Helper function to create a form section with a title and inputs"""
+    return fh.Section(
+        fh.H4(title, cls="font-medium mb-4 text-slate-200"),
+        fh.Div(
+            *inputs,
+            cls="grid grid-cols-2 gap-4"
+        ),
+        cls=cls
+    )
 
-async def analyze_image(food_image: fh.UploadFile):
-    """Handle image upload and analysis"""
-    nutrition_info = nutrition_logger.image_macros(food_image)
-    
-    insert_meal(DB, "Image Upload", nutrition_info)
-    
-    return NutritionCard(nutrition_info)
+def create_editable_nutrition_form(nutrition_info):
+    """Create a form with editable nutrition inputs pre-populated with values"""
+    form_elements = []
 
+    prepopulated_inputs = [
+        create_form_input("Meal Title", "summary", nutrition_info.summary, input_type="text"),
+        create_form_input("Calories (kcal)", "calories", nutrition_info.calories),
+        create_form_input("Protein (g)", "protein", nutrition_info.protein),
+        create_form_input("Carbs (g)", "carbs", nutrition_info.carbs),
+        create_form_input("Fat (g)", "fat", nutrition_info.fat),
+        create_form_input("Vitamin A (IU)", "vitamin_a", nutrition_info.vitamin_a),
+        create_form_input("Vitamin C (mg)", "vitamin_c", nutrition_info.vitamin_c), 
+        create_form_input("Vitamin D (IU)", "vitamin_d", nutrition_info.vitamin_d),
+        create_form_input("Calcium (mg)", "calcium", nutrition_info.calcium),
+        create_form_input("Iron (mg)", "iron", nutrition_info.iron),
+        create_form_input("Potassium (mg)", "potassium", nutrition_info.potassium),
+        create_form_input("Sodium (mg)", "sodium", nutrition_info.sodium),
+    ]
+    form_elements.append(create_form_section("Nutrition Information", prepopulated_inputs))
+
+    form_elements.append(
+        fh.Button(
+            "Save Meal",
+            type="submit",
+            cls="btn btn-primary w-full"
+        )
+    )
+    form_elements.append(
+        fh.Div(id="save-result", cls="mt-4")
+    )
+
+    return fh.Card(
+        fh.Form(
+            hx_post="/save_meal",
+            hx_target="#save-result",
+            cls="space-y-6"
+        )(
+            *form_elements
+        ),
+        cls="bg-slate-800 shadow-lg rounded-lg p-6"
+    )
 
 async def analyze_text(meal_description: str):
     """Handle meal description analysis"""
     nutrition_info = nutrition_logger.natural_language_macros(meal_description)
+    return create_editable_nutrition_form(nutrition_info)
+
+async def analyze_image(food_image: fh.UploadFile):
+    """Handle image upload and analysis"""
+    nutrition_info = nutrition_logger.image_macros(food_image)
+    return create_editable_nutrition_form(nutrition_info)
+
+async def save_meal(meal_description: str, request: fh.Request):
+    """Save the meal with user-adjusted nutrition values"""
     
+    form = await request.form()
+    print(form)
+    nutrition_info = NutritionalInfo(
+        calories=form["calories"],
+        protein=form["protein"],
+        carbs=form["carbs"],
+        fat=form["fat"],
+        vitamin_a=form["vitamin_a"],
+        vitamin_c=form["vitamin_c"],
+        vitamin_d=form["vitamin_d"],
+        calcium=form["calcium"],
+        iron=form["iron"],
+        potassium=form["potassium"],
+        sodium=form["sodium"]
+    )    
     insert_meal(DB, meal_description, nutrition_info)
-
-    return NutritionCard(nutrition_info)
-
-
+    
+    return fh.P(
+        "Meal saved successfully!",
+        cls="text-green-500 font-semibold text-center"
+    )

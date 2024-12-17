@@ -62,9 +62,7 @@ def get_daily_meals(database: fh.Database, date: datetime):
         meals where date_entered = ?
     """
     result = database.execute(query, (date,)).fetchall()
-    print(result)
     for row in result:
-        print(row)
         NutritionalInfo(
             summary=row[0],
             calories=row[1],
@@ -80,7 +78,6 @@ def get_daily_meals(database: fh.Database, date: datetime):
             potassium=row[11],
             sodium=row[12]
         )
-        print("success ")
     return [
         NutritionalInfo(
             summary=row[0],
@@ -109,18 +106,32 @@ def get_daily_cumulative_nutrition(database: fh.Database, date: datetime):
             SUM(protein) as protein,
             SUM(carbs) as carbs, 
             SUM(fat) as fat,
-            SUM(fiber) as fiber
+            SUM(fiber) as fiber,
+            SUM(vitamin_a) as vitamin_a,
+            SUM(vitamin_c) as vitamin_c,
+            SUM(vitamin_d) as vitamin_d,
+            SUM(calcium) as calcium,
+            SUM(iron) as iron,
+            SUM(potassium) as potassium,
+            SUM(sodium) as sodium
         FROM meals 
         WHERE date_entered = ?
     """
-    result =database.execute(query, (date,)).fetchone()
+    result = database.execute(query, (date,)).fetchone()
     result_dict = {
-        "calories": result[0],
-        "protein": result[1],
-        "carbs": result[2],
-        "fat": result[3],
-        "fiber": result[4]
-    } # TODO: hardcoded, need to fix
+        "calories": result[0] if result[0] is not None else 0,
+        "protein": result[1] if result[1] is not None else 0,
+        "carbs": result[2] if result[2] is not None else 0,
+        "fat": result[3] if result[3] is not None else 0,
+        "fiber": result[4] if result[4] is not None else 0,
+        "vitamin_a": result[5] if result[5] is not None else 0,
+        "vitamin_c": result[6] if result[6] is not None else 0,
+        "vitamin_d": result[7] if result[7] is not None else 0,
+        "calcium": result[8] if result[8] is not None else 0,
+        "iron": result[9] if result[9] is not None else 0,
+        "potassium": result[10] if result[10] is not None else 0,
+        "sodium": result[11] if result[11] is not None else 0
+    } # TODO: hardcoded, need to fix (create a separate dataclass containing nutrition info)
     return result_dict
 
 def insert_meal(database: fh.Database, meal_description: str, nutrition_info):

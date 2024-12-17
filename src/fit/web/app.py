@@ -18,6 +18,7 @@ app.get("/food")(food.get)
 app.post("/analyze_text")(food.analyze_text)
 app.post("/analyze_image")(food.analyze_image)
 app.post("/generate_overview")(food.generate_overview)
+app.post("/save_meal")(food.save_meal)
 
 # Progress routes
 app.get("/progress")(progress.get)
@@ -29,6 +30,5 @@ app.post("/update_goal")(progress.update_goal)
 app.get("/trackers")(trackers.get)
 app.post("/connect_tracker")(trackers.connect_tracker)
 app.post("/set_active_tracker")(trackers.set_active_tracker)
-
 
 fh.serve() 
