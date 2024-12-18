@@ -11,40 +11,60 @@ from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
                                insert_meal)
 
 
-def base_bar(x, y, name, color):
-    return {
-        "type": "bar",
-        "x": [x],
-        "y": [y],
-        "name": name,
-        "marker": {"color": color},
-        "hoverinfo": "y",
-        "showlegend": True
-    }
-
 def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, burned: float = None):
-    """Create a bar chart (data + layout) in fewer lines."""
+    """Create a plot with the provided data"""
+    data = []
+
+    data.append({
+        "type": "bar",
+        "x": ["Today"],
+        "y": [consumed],
+        "name": "Consumed",
+        "marker": {"color": "rgb(37, 99, 235)"},  # blue-600
+        "hoverinfo": "y",
+        "showlegend": True,
+    })
     
-
-    data = [
-        base_bar("Today", consumed, "Consumed", "rgb(37, 99, 235)"),
-        base_bar("Today", goal, "Consumption Goal", "rgb(96, 165, 250)")
-    ]
+    data.append({
+        "type": "bar",
+        "x": ["Today"],
+        "y": [goal],
+        "name": "Consumption Goal",
+        "marker": {"color": "rgb(96, 165, 250)"},  # blue-400
+        "hoverinfo": "y",
+        "showlegend": True,
+    })
+    
     if burned is not None:
-        data.append(base_bar("Today", burned, "Burned", "rgb(239, 68, 68)"))
+        data.append({
+            "type": "bar",
+            "x": ["Today"],
+            "y": [burned],
+            "name": "Burned",
+            "marker": {"color": "rgb(239, 68, 68)"},  # red-500
+            "hoverinfo": "y", 
+            "showlegend": True,
+        })
+    
+    plot_data = json.dumps(data)
+    plot_layout = create_plot_layout(title, y_axis_title)
+    
+    return plot_data, plot_layout
 
-    layout = {
+def create_plot_layout(title: str, y_axis_title: str):
+    """Create the layout configuration for a plot"""
+    return json.dumps({
         "title": title,
         "showlegend": True,
         "legend": {"orientation": "h", "y": -0.2},
         "height": 300,
         "margin": {"t": 50, "b": 100},
-        "paper_bgcolor": "rgba(0,0,0,0)",
+        "paper_bgcolor": "rgba(0,0,0,0)", 
         "plot_bgcolor": "rgba(0,0,0,0)",
         "font": {"color": "rgb(226, 232, 240)"},
         "yaxis": {
             "title": y_axis_title,
-            "gridcolor": "rgb(71, 85, 105)",
+            "gridcolor": "rgb(71, 85, 105)",  
             "zerolinecolor": "rgb(71, 85, 105)"
         },
         "xaxis": {
@@ -52,71 +72,146 @@ def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, bur
             "zerolinecolor": "rgb(71, 85, 105)"
         },
         "barmode": "group"
-    }
-    return json.dumps(data), json.dumps(layout)
+    })
 
-def create_input_form(form_type="text"):
-    """Create a single function to handle both text and image forms."""
-    if form_type == "text":
-        return fh.Card(
-            fh.Div(
-                fh.Header(fh.H3("Describe Your Meal", cls="text-xl font-bold text-slate-200"), cls="mb-6"),
-                fh.Form(hx_post="/analyze_text", hx_target="#text-result", cls="space-y-4")(
-                    fh.Div(
-                        fh.Label("Meal Description", cls="label text-slate-200"),
-                        fh.Textarea(
-                            name="meal_description",
-                            placeholder="Example: I had a grilled chicken sandwich with lettuce, tomato and mayo",
-                            rows=3,
-                            cls="textarea textarea-bordered w-full bg-slate-700 text-slate-200 placeholder-slate-400"
-                        ),
-                        cls="form-control"
-                    ),
-                    fh.Button("Analyze Description", type="submit", cls="btn bg-primary"),
-                    fh.Div(id="text-result", cls="mt-4")
-                ),
-                cls="p-6"
+def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, goal: float, burned: float = None, show_analysis: bool = True):
+    """Create a card containing a metric plot"""
+    plot_data, plot_layout = create_plot(title, y_axis_title, consumed, goal, burned)
+    
+    analysis_text = None
+    if show_analysis:
+        macro_name = title.lower()
+        if macro_name == "carbohydrates":
+            macro_name = "carbohydrate"
+        analysis_text = nutritionist.macro_analysis(macro_name, consumed, goal)
+    
+    return fh.Card(
+        fh.Div(
+            fh.Div(id=plot_id, cls="w-full h-full"),
+            fh.Script(
+                f"""
+                Plotly.newPlot(
+                    '{plot_id}',
+                    {plot_data},
+                    {plot_layout},
+                    {{responsive: true}}
+                );
+                """
             ),
-            cls="bg-base-100 shadow-lg rounded-lg"
-        )
-    else:
-        return fh.Card(
-            fh.Div(
-                fh.Header(fh.H3("Upload Food Image", cls="text-xl font-bold text-slate-200"), cls="mb-6"),
-                fh.Form(hx_post="/analyze_image", hx_target="#image-result", hx_encoding="multipart/form-data", cls="space-y-4")(
-                    fh.Div(
-                        fh.Label("Food Image", cls="label"),
-                        fh.Input(type="file", name="food_image", accept="image/*", cls="file-input file-input-bordered w-full text-sm"),
-                        cls="form-control"
-                    ),
-                    fh.Button("Upload & Analyze", type="submit", cls="btn btn-primary"),
-                    fh.Div(id="image-result", cls="mt-4")
-                ),
-                cls="p-6"
+            fh.P(analysis_text, cls="text-sm text-slate-300 mt-4") if analysis_text else None,
+            cls="p-4"
+        ),
+        cls="bg-slate-800 shadow-lg rounded-lg h-full text-slate-200"
+    )
+
+def create_text_input_form():
+    """Create the text input form for meal description"""
+    return fh.Card(
+        fh.Div(
+            fh.Header(
+                fh.H3("Describe Your Meal", cls="text-xl font-bold text-slate-200"),
+                cls="mb-6"
             ),
-            cls="bg-base-100 shadow-lg rounded-lg"
-        )
+            fh.Form(
+                hx_post="/analyze_text",
+                hx_target="#text-result",
+                cls="space-y-4"
+            )(
+                fh.Div(
+                    fh.Label("Meal Description", cls="label text-slate-200"),
+                    fh.Textarea(
+                        name="meal_description",
+                        placeholder="Example: I had a grilled chicken sandwich with lettuce, tomato and mayo",
+                        rows=3,
+                        cls="textarea textarea-bordered w-full bg-slate-700 text-slate-200 placeholder-slate-400"
+                    ),
+                    cls="form-control"
+                ),
+                fh.Button(
+                    "Analyze Description",
+                    type="submit",
+                    cls="btn bg-primary"
+                ),
+                fh.Div(id="text-result", cls="mt-4")
+            ),
+            cls="p-6"
+        ),
+        cls="bg-base-100 shadow-lg rounded-lg"
+    )
+
+def create_image_upload_form():
+    """Create the image upload form"""
+    return fh.Card(
+        fh.Div(
+            fh.Header(
+                fh.H3("Upload Food Image", cls="text-xl font-bold text-slate-200"),
+                cls="mb-6"
+            ),
+            fh.Form(
+                hx_post="/analyze_image",
+                hx_target="#image-result",
+                hx_encoding="multipart/form-data",
+                cls="space-y-4"
+            )(
+                fh.Div(
+                    fh.Label("Food Image", cls="label"),
+                    fh.Input(
+                        type="file",
+                        name="food_image",
+                        accept="image/*",
+                        cls="file-input file-input-bordered w-full text-sm"
+                    ),
+                    cls="form-control"
+                ),
+                fh.Button(
+                    "Upload & Analyze",
+                    type="submit",
+                    cls="btn btn-primary"
+                ),
+                fh.Div(id="image-result", cls="mt-4")
+            ),
+            cls="p-6"
+        ),
+        cls="bg-base-100 shadow-lg rounded-lg"
+    )
 
 def create_modal_content():
+    """Create the content for the food tracking modal"""
     return fh.Div(
         # Close button
-        fh.Button("×", cls="absolute right-4 top-4 text-xl font-light text-blue-400 hover:text-blue-300 focus:outline-none focus:ring-0 border-none outline-none z-10", onclick="closeModal()", style="outline: none; box-shadow: none;"),
-        # Back button
-        fh.Button("←", cls="absolute left-4 top-4 text-xl font-light text-blue-400 hover:text-blue-300 focus:outline-none focus:ring-0 border-none outline-none hidden z-10", onclick="showInputSelection()", style="outline: none; box-shadow: none;", id="back-button"),
-        # Initial selection
+        fh.Button(
+            "×",
+            cls="absolute right-4 top-4 text-xl font-light text-blue-400 hover:text-blue-300 focus:outline-none focus:ring-0 focus:ring-offset-0 border-none outline-none z-10",
+            onclick="closeModal()",
+            style="outline: none; box-shadow: none;"
+        ),
+        # Back button (shown only when a form is visible)
+        fh.Button(
+            "←",
+            cls="absolute left-4 top-4 text-xl font-light text-blue-400 hover:text-blue-300 focus:outline-none focus:ring-0 focus:ring-offset-0 border-none outline-none hidden z-10",
+            onclick="showInputSelection()",
+            style="outline: none; box-shadow: none;",
+            id="back-button"
+        ),
+        # Initial selection view
         fh.Div(
             fh.Div(
                 fh.H3("How would you like to log your meal?", cls="text-xl font-bold text-center mb-8 text-slate-200"),
                 fh.Div(
+                    # Image upload option
                     fh.Button(
                         fh.Div(
-                            fh.Img(src="/static/images/camera.png", cls="h-12 w-auto object-contain mb-3"),
+                            fh.Img(
+                                src="/static/images/camera.png",
+                                cls="h-12 w-auto object-contain mb-3"
+                            ),
                             fh.P("Upload an image", cls="text-slate-200 mb-2"),
                             cls="flex flex-col items-center justify-center h-full"
                         ),
                         cls="p-6 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors w-full focus:outline-none mb-4 h-32",
                         onclick="showInputForm('image')"
                     ),
+                    # Text description option
                     fh.Button(
                         fh.P("Describe it", cls="text-slate-200 text-lg"),
                         cls="p-6 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors w-full flex items-center justify-center focus:outline-none h-32",
@@ -127,74 +222,95 @@ def create_modal_content():
                 id="input-selection",
                 cls="p-6"
             ),
-            fh.Div(create_input_form("image"), cls="hidden", id="image-input"),
-            fh.Div(create_input_form("text"), cls="hidden", id="text-input"),
+            # Hidden forms that will be shown when selected
+            fh.Div(
+                create_image_upload_form(),
+                cls="hidden",
+                id="image-input"
+            ),
+            fh.Div(
+                create_text_input_form(),
+                cls="hidden",
+                id="text-input"
+            ),
             cls="space-y-6 overflow-y-auto max-h-[80vh]"
         ),
         cls="bg-base-100 rounded-lg shadow-xl relative w-full max-w-lg"
     )
 
-def create_modal_script():
-    """Create the modal control script."""
-    return fh.Script("""
-        function openFoodModal() {
-            document.getElementById('food-modal').classList.remove('hidden');
-            document.getElementById('modal-backdrop').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-            document.getElementById('back-button').classList.add('hidden');
-            showInputSelection();
-        }
-
-        function closeModal() {
-            document.getElementById('food-modal').classList.add('hidden');
-            document.getElementById('modal-backdrop').classList.add('hidden');
-            document.body.style.overflow = 'auto';
-
-            // Reset forms
-            document.getElementById('text-result').innerHTML = '';
-            document.querySelector('textarea[name="meal_description"]').value = '';
-            document.getElementById('image-result').innerHTML = '';
-            document.querySelector('input[type="file"]').value = '';
-
-            // Hide back button
-            document.getElementById('back-button').classList.add('hidden');
-        }
-
-        function showInputForm(type) {
-            // Hide selection view
-            document.getElementById('input-selection').classList.add('hidden');
-
-            // Show selected input form
-            if (type === 'image') {
-                document.getElementById('image-input').classList.remove('hidden');
-                document.getElementById('text-input').classList.add('hidden');
-            } else {
-                document.getElementById('text-input').classList.remove('hidden');
-                document.getElementById('image-input').classList.add('hidden');
+def food_tracking_modal():
+    """Create the food tracking modal"""
+    return fh.Div(
+        fh.Div(
+            cls="fixed inset-0 bg-slate-800 bg-opacity-20 transition-opacity hidden",
+            id="modal-backdrop",
+            onclick="closeModal()"
+        ),
+        fh.Div(
+            create_modal_content(),
+            cls="fixed inset-0 flex items-center justify-center p-4 hidden",
+            id="food-modal"
+        ),
+        fh.Script("""
+            function openFoodModal() {
+                document.getElementById('food-modal').classList.remove('hidden');
+                document.getElementById('modal-backdrop').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+                document.getElementById('back-button').classList.add('hidden');
+                showInputSelection();
             }
-
-            // Show back button
-            document.getElementById('back-button').classList.remove('hidden');
-        }
-
-        function showInputSelection() {
-            // Show selection view
-            document.getElementById('input-selection').classList.remove('hidden');
             
-            // Hide input forms
-            document.getElementById('image-input').classList.add('hidden');
-            document.getElementById('text-input').classList.add('hidden');
-
-            // Hide back button
-            document.getElementById('back-button').classList.add('hidden');
-
-            // Reset forms
-            document.getElementById('text-result').innerHTML = '';
-            document.querySelector('textarea[name="meal_description"]').value = '';
-            document.getElementById('image-result').innerHTML = '';
-            document.querySelector('input[type="file"]').value = '';
-        }
-    """)
+            function closeModal() {
+                document.getElementById('food-modal').classList.add('hidden');
+                document.getElementById('modal-backdrop').classList.add('hidden');
+                document.body.style.overflow = 'auto';
+                
+                // Reset forms
+                document.getElementById('text-result').innerHTML = '';
+                document.querySelector('textarea[name="meal_description"]').value = '';
+                document.getElementById('image-result').innerHTML = '';
+                document.querySelector('input[type="file"]').value = '';
+                
+                // Hide back button
+                document.getElementById('back-button').classList.add('hidden');
+            }
+            
+            function showInputForm(type) {
+                // Hide selection view
+                document.getElementById('input-selection').classList.add('hidden');
+                
+                // Show selected input form
+                if (type === 'image') {
+                    document.getElementById('image-input').classList.remove('hidden');
+                    document.getElementById('text-input').classList.add('hidden');
+                } else {
+                    document.getElementById('text-input').classList.remove('hidden');
+                    document.getElementById('image-input').classList.add('hidden');
+                }
+                
+                // Show back button
+                document.getElementById('back-button').classList.remove('hidden');
+            }
+            
+            function showInputSelection() {
+                // Show selection view
+                document.getElementById('input-selection').classList.remove('hidden');
+                
+                // Hide input forms
+                document.getElementById('image-input').classList.add('hidden');
+                document.getElementById('text-input').classList.add('hidden');
+                
+                // Hide back button
+                document.getElementById('back-button').classList.add('hidden');
+                
+                // Reset forms
+                document.getElementById('text-result').innerHTML = '';
+                document.querySelector('textarea[name="meal_description"]').value = '';
+                document.getElementById('image-result').innerHTML = '';
+                document.querySelector('input[type="file"]').value = '';
+            }
+        """)
+    )
 
 def create_fab_menu():
     """Create the floating action button menu"""
