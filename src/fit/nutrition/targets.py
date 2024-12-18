@@ -23,7 +23,6 @@ def calculate_caloric_target(calories_burned: float, goal: Goals) -> float:
 def calculate_protein_target(caloric_target: float) -> float:
     """
     Calculate daily protein target (30% of calories).
-    4 calories per gram of protein.
     
     Args:
         caloric_target: Daily caloric target
@@ -37,7 +36,6 @@ def calculate_protein_target(caloric_target: float) -> float:
 def calculate_fat_target(caloric_target: float) -> float:
     """
     Calculate daily fat target (30% of calories).
-    9 calories per gram of fat.
     
     Args:
         caloric_target: Daily caloric target
@@ -51,7 +49,6 @@ def calculate_fat_target(caloric_target: float) -> float:
 def calculate_carb_target(caloric_target: float) -> float:
     """
     Calculate daily carbohydrate target (40% of calories).
-    4 calories per gram of carbs.
     
     Args:
         caloric_target: Daily caloric target
