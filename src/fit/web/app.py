@@ -31,4 +31,11 @@ app.get("/trackers")(trackers.get)
 app.post("/connect_tracker")(trackers.connect_tracker)
 app.post("/set_active_tracker")(trackers.set_active_tracker)
 
+fh.reg_re_param("imgext", "png")
+
+
+@app.get(r"/static/{path:path}")
+def get(path: str):
+    return fh.FileResponse(f"{path}")
+
 fh.serve() 
