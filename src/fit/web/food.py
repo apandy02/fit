@@ -9,70 +9,8 @@ from fit.web.common import (DB, active_tracker, nutrition_logger, nutritionist,
                             page_outline)
 from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
                                insert_meal)
+from fit.web.food_plots import create_plot
 
-
-def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, burned: float = None):
-    """Create a plot with the provided data"""
-    data = []
-
-    data.append({
-        "type": "bar",
-        "x": ["Today"],
-        "y": [consumed],
-        "name": "Consumed",
-        "marker": {"color": "rgb(37, 99, 235)"},  # blue-600
-        "hoverinfo": "y",
-        "showlegend": True,
-    })
-    
-    data.append({
-        "type": "bar",
-        "x": ["Today"],
-        "y": [goal],
-        "name": "Consumption Goal",
-        "marker": {"color": "rgb(96, 165, 250)"},  # blue-400
-        "hoverinfo": "y",
-        "showlegend": True,
-    })
-    
-    if burned is not None:
-        data.append({
-            "type": "bar",
-            "x": ["Today"],
-            "y": [burned],
-            "name": "Burned",
-            "marker": {"color": "rgb(239, 68, 68)"},  # red-500
-            "hoverinfo": "y", 
-            "showlegend": True,
-        })
-    
-    plot_data = json.dumps(data)
-    plot_layout = create_plot_layout(title, y_axis_title)
-    
-    return plot_data, plot_layout
-
-def create_plot_layout(title: str, y_axis_title: str):
-    """Create the layout configuration for a plot"""
-    return json.dumps({
-        "title": title,
-        "showlegend": True,
-        "legend": {"orientation": "h", "y": -0.2},
-        "height": 300,
-        "margin": {"t": 50, "b": 100},
-        "paper_bgcolor": "rgba(0,0,0,0)", 
-        "plot_bgcolor": "rgba(0,0,0,0)",
-        "font": {"color": "rgb(226, 232, 240)"},
-        "yaxis": {
-            "title": y_axis_title,
-            "gridcolor": "rgb(71, 85, 105)",  
-            "zerolinecolor": "rgb(71, 85, 105)"
-        },
-        "xaxis": {
-            "gridcolor": "rgb(71, 85, 105)",
-            "zerolinecolor": "rgb(71, 85, 105)"
-        },
-        "barmode": "group"
-    })
 
 def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, goal: float, burned: float = None, show_analysis: bool = True):
     """Create a card containing a metric plot"""
@@ -314,27 +252,23 @@ def food_tracking_modal():
 
 def create_fab_menu():
     """Create the floating action button menu"""
+    menu_items = [
+        ("Food", "🍽️", "openFoodModal()"),
+        ("Water", "💧", None)  # No handler yet
+    ]
+    
     return fh.Div(
         fh.Div(
-            fh.Div(
-                fh.Span("Food", cls="text-slate-300 text-sm font-medium"),
+            *[fh.Div(
+                fh.Span(name, cls="text-slate-300 text-sm font-medium"),
                 fh.Button(
-                    fh.Span("🍽️", cls="text-lg"),
+                    fh.Span(emoji, cls="text-lg"),
                     cls="btn btn-primary btn-circle shadow-lg ml-3",
-                    onclick="openFoodModal()"
+                    onclick=handler if handler else None
                 ),
                 cls="flex items-center justify-end mb-2 opacity-0 transition-all duration-200 translate-y-[30px]",
-                id="food-button"
-            ),
-            fh.Div(
-                fh.Span("Water", cls="text-slate-300 text-sm font-medium"),
-                fh.Button(
-                    fh.Span("💧", cls="text-lg"),
-                    cls="btn btn-primary btn-circle shadow-lg ml-3"
-                ),
-                cls="flex items-center justify-end mb-2 opacity-0 transition-all duration-200 translate-y-[30px]",
-                id="water-button"
-            ),
+                id=f"{name.lower()}-button"
+            ) for name, emoji, handler in menu_items],
             cls="absolute bottom-16 right-0 transition-all duration-200"
         ),
         fh.Button(
@@ -381,38 +315,23 @@ def create_page_header():
     )
 
 def create_metric_overview_section(title, metrics_data, metrics_config):
-    """Create a metrics overview section with configurable metrics
+    """Create a metrics overview section with configurable metrics"""
+    metric_rows = [metrics_config[i:i+2] for i in range(0, len(metrics_config), 2)]
     
-    Args:
-        title (str): Title of the section
-        metrics_data (dict): Data for each metric
-        metrics_config (list[dict]): List of metric configs with keys:
-            - name: Display name of the metric
-            - column_name: Database column name
-            - unit: Unit of measurement
-            - plot_id: ID for the plot element
-    """
     return fh.Section(
         fh.H3(f"{title} Overview", cls="text-2xl font-bold text-center mb-8 text-slate-200"),
         fh.Div(
-            # Create rows of metric cards
-            *[
-                fh.Div(
-                    *[
-                        metric_card(
-                            metric["name"],
-                            f"{metric['name']} ({metric['unit']})" if metric["unit"] else metric["name"],
-                            metric["plot_id"],
-                            metrics_data[metric["column_name"]]["consumed"],
-                            metrics_data[metric["column_name"]]["goal"],
-                            metrics_data[metric["column_name"]].get("burned") # Only passed for calories
-                        )
-                        for metric in row
-                    ],
-                    cls="grid grid-cols-2 gap-6 mb-6"
-                )
-                for row in [metrics_config[i:i+2] for i in range(0, len(metrics_config), 2)]
-            ],
+            *[fh.Div(
+                *[metric_card(
+                    metric["name"],
+                    f"{metric['name']} ({metric['unit']})" if metric["unit"] else metric["name"],
+                    metric["plot_id"],
+                    metrics_data[metric["column_name"]]["consumed"],
+                    metrics_data[metric["column_name"]]["goal"],
+                    metrics_data[metric["column_name"]].get("burned")
+                ) for metric in row],
+                cls="grid grid-cols-2 gap-6 mb-6"
+            ) for row in metric_rows],
             cls="w-full"
         ),
         cls="w-full"
