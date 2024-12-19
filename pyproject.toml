@@ -6,9 +6,11 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "authlib>=1.3.2",
+    "fh-bootstrap>=0.0.3",
     "ipython>=8.29.0",
     "isort>=5.13.2",
     "jupyter>=1.1.1",
+    "markdown>=3.7",
     "plotly>=5.24.1",
     "python-fasthtml>=0.10.1",
     "requests>=2.32.3",

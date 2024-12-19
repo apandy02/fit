@@ -1,11 +1,16 @@
 import fasthtml.common as fh
+import fh_bootstrap as fhb
+from markdown import markdown
 
 from fit.nutrition.assistants import Nutritionist, NutritionLogger
 from fit.nutrition.targets import MICRO_GOALS
 from fit.trackers.manager import get_active_tracker
 from fit.web.databases import init_db
 
+
 DB_PATH = "data/nutrition.db"
+md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
+
 
 DB = init_db(DB_PATH)
 nutrition_logger = NutritionLogger()
@@ -149,3 +154,9 @@ def page_outline(selidx, title, *c):
             ),
         ),
     )
+
+def Markdown(s, exts=md_exts, **kw):
+    """
+    Enable markdown component rendering with left inner padding.
+    """
+    return fhb.Div(fhb.NotStr(markdown(s, extensions=exts)), cls="pl-2", **kw)

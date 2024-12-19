@@ -3,10 +3,9 @@ from datetime import datetime
 import fasthtml.common as fh
 
 from fit.nutrition.data import Goals, MealBreakdown
-from markdown import markdown
 from fit.nutrition.targets import calculate_macro_targets
 from fit.web.common import (DB, active_tracker, nutrition_logger, nutritionist,
-                            page_outline, micronutrient_goals)
+                            page_outline, micronutrient_goals, Markdown)
 from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
                                insert_meal)
 from fit.web.food_plots import create_plot
@@ -39,7 +38,7 @@ def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, go
             fh.P(analysis_text, cls="text-sm text-slate-300 mt-4") if analysis_text else None,
             cls="p-4"
         ),
-        cls="bg-slate-800 shadow-lg rounded-lg h-full text-slate-200"
+        cls="bg-slate-800 rounded-lg h-full text-slate-200"
     )
 
 def create_text_input_form():
@@ -173,7 +172,7 @@ def create_modal_content():
             ),
             cls="space-y-6 overflow-y-auto max-h-[80vh]"
         ),
-        cls="bg-base-100 rounded-lg shadow-xl relative w-full max-w-lg"
+        cls="bg-base-100 rounded-lg relative w-full max-w-lg"
     )
 
 def food_tracking_modal():
@@ -263,7 +262,7 @@ def create_fab_menu():
                 fh.Span(name, cls="text-slate-300 text-sm font-medium"),
                 fh.Button(
                     fh.Span(emoji, cls="text-lg"),
-                    cls="btn btn-primary btn-circle shadow-lg ml-3",
+                    cls="btn btn-primary btn-circle ml-3",
                     onclick=handler if handler else None
                 ),
                 cls="flex items-center justify-end mb-2 opacity-0 transition-all duration-200 translate-y-[30px]",
@@ -273,7 +272,7 @@ def create_fab_menu():
         ),
         fh.Button(
             fh.Span("+", cls="text-2xl transition-transform duration-200"),
-            cls="btn btn-primary btn-circle shadow-lg",
+            cls="btn btn-primary btn-circle",
             onclick="""
                 this.classList.toggle('btn-active');
                 this.firstElementChild.style.transform = this.classList.contains('btn-active') ? 'rotate(45deg)' : '';
@@ -408,7 +407,7 @@ def create_overview_card():
             ),
             cls="p-6"
         ),
-        cls="bg-slate-800 shadow-lg rounded-lg mb-8 text-slate-200"
+        cls="bg-slate-800 rounded-lg mb-8 text-slate-200"
     )
 
 async def generate_overview():
@@ -420,12 +419,13 @@ async def generate_overview():
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
     analysis = nutritionist.daily_io_analysis(meals, targets)
-    
+    print(analysis)
+            
     return fh.Card(
         fh.Div(
             *[
                 fh.Div(
-                    fh.P(markdown(line.strip()), cls="mb-1 text-slate-300"),
+                    fh.P(Markdown(line.strip()), cls="mb-1 text-slate-300"),
                     cls="mb-2"
                 )
                 for line in analysis.split('\n')
@@ -433,7 +433,7 @@ async def generate_overview():
             ],
             cls="p-4 space-y-2"
         ),
-        cls="bg-slate-800 shadow-lg rounded-lg mt-4"
+        cls="bg-slate-800 rounded-lg mt-4"
     )
 
 def get():
@@ -568,7 +568,7 @@ def create_nutrition_card(nutrition_info):
             ),
             cls="space-y-4"
         ),
-        cls="bg-slate-800 shadow-lg rounded-lg p-6"
+        cls="bg-slate-800 rounded-lg p-6"
     )
 
 async def analyze_text(meal_description: str):
