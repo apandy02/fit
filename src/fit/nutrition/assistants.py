@@ -29,7 +29,7 @@ class NutritionLogger:
     
     def improve_breakdown(self, breakdown: MealBreakdown, user_feedback: str) -> MealBreakdown:
         """Improves the breakdown based on user feedback."""
-        @ell.simple(model=self.model)
+        @ell.complex(model=self.model, response_format=MealBreakdown)
         def _improve_breakdown(breakdown: MealBreakdown, user_feedback: str) -> MealBreakdown:
             """
             Given the user's feedback on your prediction of the breakdown of their meal,
@@ -41,7 +41,8 @@ class NutritionLogger:
             """
             return prompt
         
-        return _improve_breakdown(breakdown, user_feedback)
+        message = _improve_breakdown(breakdown, user_feedback)
+        return message.content[0].parsed
     
     def image_macros(self, image: str) -> MealBreakdown:
         """Returns the macro nutrients in grams and kilocalories for food described in an image.

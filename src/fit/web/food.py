@@ -41,40 +41,88 @@ def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, go
         cls="bg-slate-800 rounded-lg h-full text-slate-200"
     )
 
-def create_text_input_form():
+def create_text_input_form(is_feedback: bool = False):
     """Create the text input form for meal description"""
-    return fh.Card(
-        fh.Div(
-            fh.Header(
-                fh.H3("Describe Your Meal", cls="text-xl font-bold text-slate-200"),
-                cls="mb-6"
-            ),
-            fh.Form(
-                hx_post="/analyze_text",
-                hx_target="#text-result",
-                cls="space-y-4"
-            )(
-                fh.Div(
-                    fh.Label("Meal Description", cls="label text-slate-200"),
-                    fh.Textarea(
-                        name="meal_description",
-                        placeholder="Example: I had a grilled chicken sandwich with lettuce, tomato and mayo",
-                        rows=3,
-                        cls="textarea textarea-bordered w-full bg-slate-700 text-slate-200 placeholder-slate-400"
+    if not is_feedback:
+        return fh.Card(
+            fh.Div(
+                fh.Header(
+                    fh.H3("Describe Your Meal", cls="text-xl font-bold text-slate-200"),
+                    cls="mb-6"
+                ),
+                fh.Form(
+                    hx_post="/analyze_text",
+                    hx_target="#text-input",
+                    hx_swap="outerHTML",
+                    cls="space-y-4"
+                )(
+                    fh.Div(
+                        fh.Label("Meal Description", cls="label text-slate-200"),
+                        fh.Textarea(
+                            name="meal_description",
+                            placeholder="Example: I had a grilled chicken sandwich with lettuce, tomato and mayo",
+                            rows=3,
+                            cls="textarea textarea-bordered w-full bg-slate-700 text-slate-200 placeholder-slate-400"
+                        ),
+                        cls="form-control"
                     ),
-                    cls="form-control"
+                    fh.Button(
+                        "Analyze Description",
+                        type="submit",
+                        cls="btn bg-primary"
+                    )
                 ),
-                fh.Button(
-                    "Analyze Description",
-                    type="submit",
-                    cls="btn bg-primary"
-                ),
-                fh.Div(id="text-result", cls="mt-4")
+                cls="p-6"
             ),
-            cls="p-6"
-        ),
-        cls="bg-base-100 shadow-lg rounded-lg"
-    )
+            cls="bg-base-100 rounded-lg"
+        )
+    else:
+        return fh.Card(
+            fh.Div(
+                fh.Header(
+                    fh.Div(
+                        fh.H3("Refine Analysis", cls="text-xl font-bold text-slate-200"),
+                        fh.Button(
+                            "↺",
+                            hx_post="/reset_text_form",
+                            hx_target="#text-input",
+                            cls="btn btn-ghost text-xl text-slate-200"
+                        ),
+                        cls="flex justify-between items-center"
+                    ),
+                    cls="mb-6"
+                ),
+                fh.Form(
+                    hx_post="/regenerate_analysis",
+                    hx_target="#text-result",
+                    cls="space-y-4"
+                )(
+                    fh.Div(
+                        fh.Label("Suggest Edits", cls="label text-slate-200"),
+                        fh.Textarea(
+                            name="feedback",
+                            placeholder="Suggest edits to improve the analysis",
+                            rows=2,
+                            cls="textarea textarea-bordered w-full bg-slate-700 text-slate-200 placeholder-slate-400"
+                        ),
+                        cls="form-control"
+                    ),
+                    fh.Input(
+                        type="hidden",
+                        name="original_description",
+                        id="original_description"
+                    ),
+                    fh.Button(
+                        "Regenerate",
+                        type="submit",
+                        cls="btn bg-primary"
+                    ),
+                    fh.Div(id="text-result", cls="mt-4")
+                ),
+                cls="p-6"
+            ),
+            cls="bg-base-100 rounded-lg"
+        )
 
 def create_image_upload_form():
     """Create the image upload form"""
@@ -574,7 +622,63 @@ def create_nutrition_card(nutrition_info):
 async def analyze_text(meal_description: str):
     """Handle meal description analysis"""
     nutrition_info = nutrition_logger.natural_language_macros(meal_description)
-    return create_nutrition_card(nutrition_info)
+    return fh.Card(
+        fh.Div(
+            # Feedback form section
+            fh.Div(
+                fh.Header(
+                    fh.Div(
+                        fh.H3("Refine Analysis", cls="text-xl font-bold text-slate-200"),
+                        fh.Button(
+                            "↺",
+                            hx_post="/reset_text_form",
+                            hx_target="#text-input",
+                            hx_swap="outerHTML",
+                            cls="btn btn-ghost text-xl text-slate-200"
+                        ),
+                        cls="flex justify-between items-center"
+                    ),
+                    cls="mb-6"
+                ),
+                fh.Form(
+                    hx_post="/regenerate_analysis",
+                    hx_target="#nutrition-card",
+                    cls="space-y-4"
+                )(
+                    fh.Div(
+                        fh.Label("Suggest Edits", cls="label text-slate-200"),
+                        fh.Textarea(
+                            name="feedback",
+                            placeholder="Suggest edits to improve the analysis",
+                            rows=2,
+                            cls="textarea textarea-bordered w-full bg-slate-700 text-slate-200 placeholder-slate-400"
+                        ),
+                        cls="form-control"
+                    ),
+                    fh.Input(
+                        type="hidden",
+                        name="original_description",
+                        id="original_description",
+                        value=meal_description
+                    ),
+                    fh.Button(
+                        "Regenerate",
+                        type="submit",
+                        cls="btn bg-primary"
+                    )
+                ),
+                cls="mb-6"
+            ),
+            # Nutrition card section
+            fh.Div(
+                create_nutrition_card(nutrition_info),
+                id="nutrition-card"
+            ),
+            cls="p-6"
+        ),
+        cls="bg-base-100 rounded-lg",
+        id="text-input"  # Important: keep the same ID for proper replacement
+    )
 
 async def analyze_image(food_image: fh.UploadFile):
     """Handle image upload and analysis"""
@@ -638,3 +742,15 @@ async def save_meal(request: fh.Request):
             f"Error saving meal: {str(e)}",
             cls="text-red-500 font-semibold text-center"
         )
+
+async def reset_text_form():
+    """Reset the text form to its original state"""
+    return create_text_input_form(is_feedback=False)
+
+async def regenerate_analysis(feedback: str, original_description: str):
+    """Regenerate analysis based on feedback"""
+    # First get the original nutrition info
+    original_info = nutrition_logger.natural_language_macros(original_description)
+    # Then improve it based on feedback
+    improved_info = nutrition_logger.improve_breakdown(original_info, feedback)
+    return create_nutrition_card(improved_info)

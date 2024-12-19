@@ -19,6 +19,8 @@ app.post("/analyze_text")(food.analyze_text)
 app.post("/analyze_image")(food.analyze_image)
 app.post("/generate_overview")(food.generate_overview)
 app.post("/save_meal")(food.save_meal)
+app.post("/reset_text_form")(food.reset_text_form)
+app.post("/regenerate_analysis")(food.regenerate_analysis)
 
 # Progress routes
 app.get("/progress")(progress.get)
