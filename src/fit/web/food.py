@@ -428,7 +428,7 @@ async def generate_overview():
                     cls="mb-2"
                 )
                 for line in analysis.split('\n')
-                if line.strip()  # Skip empty lines
+                if line.strip() 
             ],
             cls="p-4 space-y-2"
         ),
@@ -442,15 +442,15 @@ def get():
     daily_consumption = get_daily_cumulative_nutrition(DB, datetime.date(datetime.today()))
 
     data = {
-        "calories": {"consumed": daily_consumption["calories"], "goal": goals["calories"], "burned": calories_burned},
-        "protein": {"consumed": daily_consumption["protein"], "goal": goals["protein"]},
-        "carbs": {"consumed": daily_consumption["carbs"], "goal": goals["carbs"]},
-        "fat": {"consumed": daily_consumption["fat"], "goal": goals["fat"]},
-        "vitamin_a": {"consumed": daily_consumption.get("vitamin_a", 0), "goal": 5000},  # Daily Value: 5000 IU
-        "vitamin_c": {"consumed": daily_consumption.get("vitamin_c", 0), "goal": 60},    # Daily Value: 60 mg
-        "iron": {"consumed": daily_consumption.get("iron", 0), "goal": 18},              # Daily Value: 18 mg
-        "calcium": {"consumed": daily_consumption.get("calcium", 0), "goal": 1000},      # Daily Value: 1000 mg
-        "water": {"consumed": 40, "goal": 64}  # in oz
+        "calories": {"consumed": daily_consumption.calories, "goal": goals["calories"], "burned": calories_burned},
+        "protein": {"consumed": daily_consumption.protein, "goal": goals["protein"]},
+        "carbs": {"consumed": daily_consumption.carbs, "goal": goals["carbs"]},
+        "fat": {"consumed": daily_consumption.fat, "goal": goals["fat"]},
+        "vitamin_a": {"consumed": daily_consumption.vitamin_a, "goal": 5000},
+        "vitamin_c": {"consumed": daily_consumption.vitamin_c, "goal": 60},
+        "iron": {"consumed": daily_consumption.iron, "goal": 18},
+        "calcium": {"consumed": daily_consumption.calcium, "goal": 1000},
+        "water": {"consumed": 40, "goal": 64}
     }
 
     content = fh.Article(
@@ -584,6 +584,7 @@ async def save_meal(request: fh.Request):
     """Save the meal with user-adjusted nutrition values"""
     try:
         form = await request.form()
+        print(form)
         nutrition_info = MealBreakdown(
             summary=form["summary"],
             ingredients=form["ingredients"],

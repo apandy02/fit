@@ -1,8 +1,8 @@
 import json
 
-def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, burned: float = None):
-    """Create a plot with the provided data"""
-    base_bar = lambda x, y, name, color: {
+
+def base_bar(x, y, name, color):
+    return {
         "type": "bar",
         "x": [x],
         "y": [y],
@@ -11,6 +11,9 @@ def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, bur
         "hoverinfo": "y",
         "showlegend": True
     }
+def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, burned: float = None):
+    """Create a plot with the provided data"""
+    
     
     data = [
         base_bar("Today", consumed, "Consumed", "rgb(37, 99, 235)"),

@@ -2,7 +2,7 @@ from datetime import datetime
 
 import fasthtml.common as fh
 
-from fit.nutrition.data import MealBreakdown
+from fit.nutrition.data import MealBreakdown, NutritionalInformation
 
 # TODO: consider creating a class for the database
 
@@ -18,6 +18,7 @@ def init_db(database_path: str):
             dict(
                 uuid=str,
                 date_entered=str,
+                ingredients=str,
                 meal_time=str,
                 user_description=str,
                 llm_summary=str,
@@ -56,43 +57,29 @@ def get_daily_meals(database: fh.Database, date: datetime):
     Get meals entered for a given date.
     """
     query = """
-        select llm_summary, calories, protein, carbs, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
+        select llm_summary, ingredients, calories, protein, carbs, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
         calcium, iron, potassium, sodium 
         from
         meals where date_entered = ?
     """
     result = database.execute(query, (date,)).fetchall()
-    for row in result:
-        MealBreakdown(
-            summary=row[0],
-            calories=row[1],
-            protein=row[2],
-            carbs=row[3],
-            fat=row[4],
-            fiber=row[5],
-            vitamin_a=row[6],
-            vitamin_c=row[7],
-            vitamin_d=row[8],
-            calcium=row[9],
-            iron=row[10],
-            potassium=row[11],
-            sodium=row[12]
-        )
+    print(result)
     return [
         MealBreakdown(
             summary=row[0],
-            calories=row[1],
-            protein=row[2],
-            carbs=row[3],
-            fat=row[4],
-            fiber=row[5],
-            vitamin_a=row[6],
-            vitamin_c=row[7],
-            vitamin_d=row[8],
-            calcium=row[9],
-            iron=row[10],
-            potassium=row[11],
-            sodium=row[12]
+            ingredients=row[1],
+            calories=row[2],
+            protein=row[3],
+            carbs=row[4],
+            fat=row[5],
+            fiber=row[6],
+            vitamin_a=row[7],
+            vitamin_c=row[8],
+            vitamin_d=row[9],
+            calcium=row[10],
+            iron=row[11],
+            potassium=row[12],
+            sodium=row[13]
         ) for row in result
     ]
 
@@ -118,23 +105,28 @@ def get_daily_cumulative_nutrition(database: fh.Database, date: datetime):
         WHERE date_entered = ?
     """
     result = database.execute(query, (date,)).fetchone()
-    result_dict = {
-        "calories": result[0] if result[0] is not None else 0,
-        "protein": result[1] if result[1] is not None else 0,
-        "carbs": result[2] if result[2] is not None else 0,
-        "fat": result[3] if result[3] is not None else 0,
-        "fiber": result[4] if result[4] is not None else 0,
-        "vitamin_a": result[5] if result[5] is not None else 0,
-        "vitamin_c": result[6] if result[6] is not None else 0,
-        "vitamin_d": result[7] if result[7] is not None else 0,
-        "calcium": result[8] if result[8] is not None else 0,
-        "iron": result[9] if result[9] is not None else 0,
-        "potassium": result[10] if result[10] is not None else 0,
-        "sodium": result[11] if result[11] is not None else 0
-    } # TODO: hardcoded, need to fix (create a separate dataclass containing nutrition info)
-    return result_dict
+    # calories should never be None
+    if result is None or result[0] is None:
+        return NutritionalInformation()
+    
+    result_info = NutritionalInformation(
+        calories=result[0],
+        protein=result[1],
+        carbs=result[2],
+        fat=result[3],
+        fiber=result[4],
+        vitamin_a=result[5],
+        vitamin_c=result[6],
+        vitamin_d=result[7],
+        calcium=result[8],
+        iron=result[9],
+        potassium=result[10],
+        sodium=result[11]
+    )
 
-def insert_meal(database: fh.Database, meal_description: str, nutrition_info):
+    return result_info
+
+def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdown):
     """
     Insert a meal into the database.
     """
@@ -143,17 +135,18 @@ def insert_meal(database: fh.Database, meal_description: str, nutrition_info):
         date_entered=datetime.date(datetime.today()),
         meal_time=datetime.now().isoformat(),
         user_description=meal_description,
-        llm_summary=nutrition_info.summary,
-        calories=nutrition_info.calories,
-        protein=nutrition_info.protein,
-        carbs=nutrition_info.carbs,
-        fat=nutrition_info.fat,
-        vitamin_a=nutrition_info.vitamin_a,
-        vitamin_c=nutrition_info.vitamin_c,
-        vitamin_d=nutrition_info.vitamin_d,
-        calcium=nutrition_info.calcium,
-        iron=nutrition_info.iron,
-        potassium=nutrition_info.potassium,
-        sodium=nutrition_info.sodium,
-        fiber=nutrition_info.fiber
+        llm_summary=meal.summary,
+        ingredients=meal.ingredients,
+        calories=meal.calories,
+        protein=meal.protein,
+        carbs=meal.carbs,
+        fat=meal.fat,
+        vitamin_a=meal.vitamin_a,
+        vitamin_c=meal.vitamin_c,
+        vitamin_d=meal.vitamin_d,
+        calcium=meal.calcium,
+        iron=meal.iron,
+        potassium=meal.potassium,
+        sodium=meal.sodium,
+        fiber=meal.fiber
     )
