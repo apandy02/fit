@@ -1,12 +1,12 @@
-import json
 from datetime import datetime
 
 import fasthtml.common as fh
 
 from fit.nutrition.data import Goals, MealBreakdown
-from fit.nutrition.targets import calculate_all_targets
+from markdown import markdown
+from fit.nutrition.targets import calculate_macro_targets
 from fit.web.common import (DB, active_tracker, nutrition_logger, nutritionist,
-                            page_outline)
+                            page_outline, micronutrient_goals)
 from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
                                insert_meal)
 from fit.web.food_plots import create_plot
@@ -417,14 +417,15 @@ async def generate_overview():
     meals = get_daily_meals(DB, today)
 
     calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
-    targets = calculate_all_targets(calories_burned, Goals.MAINTAIN)  # goal hardcoded for now
+    targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
+    targets.update(micronutrient_goals)
     analysis = nutritionist.daily_io_analysis(meals, targets)
     
     return fh.Card(
         fh.Div(
             *[
                 fh.Div(
-                    fh.P(line.strip(), cls="mb-1 text-slate-300"),
+                    fh.P(markdown(line.strip()), cls="mb-1 text-slate-300"),
                     cls="mb-2"
                 )
                 for line in analysis.split('\n')
@@ -438,7 +439,7 @@ async def generate_overview():
 def get():
     """Return the nutritional overview page content"""
     calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
-    goals = calculate_all_targets(calories_burned, Goals.MAINTAIN) # goal hardcoded for now
+    goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN) # goal hardcoded for now
     daily_consumption = get_daily_cumulative_nutrition(DB, datetime.date(datetime.today()))
 
     data = {
@@ -446,10 +447,10 @@ def get():
         "protein": {"consumed": daily_consumption.protein, "goal": goals["protein"]},
         "carbs": {"consumed": daily_consumption.carbs, "goal": goals["carbs"]},
         "fat": {"consumed": daily_consumption.fat, "goal": goals["fat"]},
-        "vitamin_a": {"consumed": daily_consumption.vitamin_a, "goal": 5000},
-        "vitamin_c": {"consumed": daily_consumption.vitamin_c, "goal": 60},
-        "iron": {"consumed": daily_consumption.iron, "goal": 18},
-        "calcium": {"consumed": daily_consumption.calcium, "goal": 1000},
+        "vitamin_a": {"consumed": daily_consumption.vitamin_a, "goal": micronutrient_goals["vitamin_a"]},
+        "vitamin_c": {"consumed": daily_consumption.vitamin_c, "goal": micronutrient_goals["vitamin_c"]},
+        "iron": {"consumed": daily_consumption.iron, "goal": micronutrient_goals["iron"]},
+        "calcium": {"consumed": daily_consumption.calcium, "goal": micronutrient_goals["calcium"]},
         "water": {"consumed": 40, "goal": 64}
     }
 

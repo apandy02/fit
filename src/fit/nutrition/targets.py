@@ -59,7 +59,7 @@ def calculate_carb_target(caloric_target: float) -> float:
     carb_calories = caloric_target * 0.4
     return carb_calories / 4
 
-def calculate_all_targets(calories_burned: float, goal: Goals) -> dict:
+def calculate_macro_targets(calories_burned: float, goal: Goals) -> dict:
     """
     Calculate all nutritional targets based on calories burned and goal.
     
@@ -82,3 +82,25 @@ def calculate_all_targets(calories_burned: float, goal: Goals) -> dict:
         "fat": round(calculate_fat_target(caloric_target)),
         "carbs": round(calculate_carb_target(caloric_target))
     }
+
+
+MICRO_GOALS = {
+    "male": {
+        "vitamin_a": 900,
+        "vitamin_c": 90, 
+        "vitamin_d": 15,
+        "calcium": 1000,
+        "iron": 18,
+        "potassium": 3400,
+        "sodium": 1500
+    },
+    "female": {
+        "vitamin_a": 700,
+        "vitamin_c": 75,
+        "vitamin_d": 15, 
+        "calcium": 1000,
+        "iron": 18,
+        "potassium": 2600,
+        "sodium": 1500
+    }
+}

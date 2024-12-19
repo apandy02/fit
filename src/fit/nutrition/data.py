@@ -51,27 +51,3 @@ class NutritionalInformation(BaseModel):
     potassium: float = Field(description="the amount of potassium in mg", default=0)
     sodium: float = Field(description="the amount of sodium in mg", default=0)
     
-    
-class MicronutrientGoals:
-    """
-    A class that contains the micronutrient goals for a user.
-    """
-    MALE_GOALS = {
-        "vitamin_a": 900,
-        "vitamin_c": 90, 
-        "vitamin_d": 15,
-        "calcium": 1000,
-        "iron": 18,
-        "potassium": 3400,
-        "sodium": 1500
-    }
-
-    FEMALE_GOALS = {
-        "vitamin_a": 700,
-        "vitamin_c": 75,
-        "vitamin_d": 15, 
-        "calcium": 1000,
-        "iron": 18,
-        "potassium": 2600,
-        "sodium": 1500
-    }

@@ -123,18 +123,24 @@ class Nutritionist:
             realistic. Use their prior intake to make suggestions. For example, if they seem to be eating 
             a lot of one cuisine, recommend things that aren't radically different.
             
-
-            ***Respond in plain text (paragraph format). do not use bullet points.***
+            ***Respond in plain text (paragraph format). do not use bullet points. you may bold certain words to highlight them.
+            in markdown***
             """
             meals_str = "Here are the meals you've had today:\n"
             print(target)
             for i, meal in enumerate(meals, 1):
                 meals_str += f"Meal {i}: {meal.summary} - {meal.calories} calories, "
                 meals_str += f"{meal.protein}g protein, {meal.carbs}g carbs, {meal.fat}g fat\n"
+                meals_str += f"Micros: {meal.vitamin_a}IU vit A, {meal.vitamin_c}mg vit C, "
+                meals_str += f"{meal.iron}mg iron, {meal.calcium}mg calcium, "
+                meals_str += f"{meal.sodium}mg sodium, {meal.potassium}mg potassium\n"
             
             targets_str = f"""
                 The user's daily targets are: Calories: {target["calories"]}, Protein: {target["protein"]}g,
                 Carbohydrates: {target["carbs"]}g, Fat: {target["fat"]}g
+                Micronutrient targets: Vitamin A: {target["vitamin_a"]}IU, Vitamin C: {target["vitamin_c"]}mg,
+                Iron: {target["iron"]}mg, Calcium: {target["calcium"]}mg,
+                Sodium: {target["sodium"]}mg, Potassium: {target["potassium"]}mg
             """
             
             return f"{meals_str}\n{targets_str}"
