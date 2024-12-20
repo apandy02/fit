@@ -127,9 +127,12 @@ class Nutritionist:
             ***Respond in plain text (paragraph format). do not use bullet points. you may bold certain phrases to highlight using **
             . bold things that you think most require the users attention. for example "you are currently 10g under 
             your protein target"***
+
+            break this analysis down into "general" (this doesn't need a header), "macronutients", and "micronutrients" and "suggestions" sections.
+
+            the latter three sections should have headers that are bolded text on new lines.
             """
             meals_str = "Here are the meals you've had today:\n"
-            print(target)
             for i, meal in enumerate(meals, 1):
                 meals_str += f"Meal {i}: {meal.summary} - {meal.calories} calories, "
                 meals_str += f"{meal.protein}g protein, {meal.carbs}g carbs, {meal.fat}g fat\n"

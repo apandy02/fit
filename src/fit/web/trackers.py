@@ -129,7 +129,6 @@ def change_tracker_section():
     secrets = load_secrets()
     active_type = get_active_tracker_type()
     
-    # Only show if there are multiple trackers or if there are trackers but none active
     if len(secrets) == 0 or (len(secrets) == 1 and active_type is not None):
         return ""
     

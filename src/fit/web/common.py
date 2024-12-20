@@ -7,7 +7,6 @@ from fit.nutrition.targets import MICRO_GOALS
 from fit.trackers.manager import get_active_tracker
 from fit.web.databases import init_db
 
-
 DB_PATH = "data/nutrition.db"
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
 

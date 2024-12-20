@@ -4,8 +4,8 @@ import fasthtml.common as fh
 
 from fit.nutrition.data import Goals, MealBreakdown
 from fit.nutrition.targets import calculate_macro_targets
-from fit.web.common import (DB, active_tracker, nutrition_logger, nutritionist,
-                            page_outline, micronutrient_goals, Markdown)
+from fit.web.common import (DB, Markdown, active_tracker, micronutrient_goals,
+                            nutrition_logger, nutritionist, page_outline)
 from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
                                insert_meal)
 from fit.web.food_plots import create_plot
