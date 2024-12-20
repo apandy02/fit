@@ -366,7 +366,7 @@ def create_metric_overview_section(title, metrics_data, metrics_config):
     metric_rows = [metrics_config[i:i+2] for i in range(0, len(metrics_config), 2)]
     
     return fh.Section(
-        fh.H3(f"{title} Overview", cls="text-2xl font-bold text-center mb-8 text-slate-200"),
+        fh.H3(f"{title}", cls="text-2xl font-bold text-center mb-8 text-slate-200"),
         fh.Div(
             *[fh.Div(
                 *[metric_card(
@@ -392,7 +392,7 @@ def create_macro_section(data):
         {"name": "Carbohydrates", "column_name": "carbs", "unit": "g", "plot_id": "carbs-plot"},
         {"name": "Fat", "column_name": "fat", "unit": "g", "plot_id": "fat-plot"}
     ]
-    return create_metric_overview_section("Macronutrient", data, macro_metrics)
+    return create_metric_overview_section("Macronutrients", data, macro_metrics)
 
 def create_micro_section(data):
     """Create the micronutrient metrics section"""
@@ -402,12 +402,12 @@ def create_micro_section(data):
         {"name": "Iron", "column_name": "iron", "unit": "mg", "plot_id": "iron-plot"},
         {"name": "Calcium", "column_name": "calcium", "unit": "mg", "plot_id": "calcium-plot"}
     ]
-    return create_metric_overview_section("Micronutrient", data, micro_metrics)
+    return create_metric_overview_section("Micronutrients", data, micro_metrics)
 
 def create_water_section(data):
     """Create the water metrics section"""
     return fh.Section(
-        fh.H3("Hydration Overview", cls="text-2xl font-bold text-center mb-6 text-slate-200"),
+        fh.H3("Hydration", cls="text-2xl font-bold text-center mb-6 text-slate-200"),
         fh.Div(
             fh.Div(
                 metric_card(
@@ -467,7 +467,6 @@ async def generate_overview():
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
     analysis = nutritionist.daily_io_analysis(meals, targets)
-    print(analysis)
             
     return fh.Card(
         fh.Div(
@@ -689,7 +688,6 @@ async def save_meal(request: fh.Request):
     """Save the meal with user-adjusted nutrition values"""
     try:
         form = await request.form()
-        print(form)
         nutrition_info = MealBreakdown(
             summary=form["summary"],
             ingredients=form["ingredients"],

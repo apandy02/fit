@@ -63,7 +63,6 @@ def get_daily_meals(database: fh.Database, date: datetime):
         meals where date_entered = ?
     """
     result = database.execute(query, (date,)).fetchall()
-    print(result)
     return [
         MealBreakdown(
             summary=row[0],
