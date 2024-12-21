@@ -1,13 +1,13 @@
 from datetime import datetime
-import json
-import fasthtml.common as fh
 
+import fasthtml.common as fh
 from fit.nutrition.data import Goals, MealBreakdown
 from fit.nutrition.targets import calculate_macro_targets
 from fit.web.common import (DB, Markdown, active_tracker, micronutrient_goals,
                             nutrition_logger, nutritionist, page_outline)
 from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
-                               insert_meal, get_visible_metrics, set_visible_metrics)
+                               get_visible_metrics, insert_meal,
+                               set_visible_metrics)
 from fit.web.food_plots import create_plot
 
 
@@ -885,11 +885,6 @@ def create_metrics_container(data):
 
 async def toggle_dropdown(dropdown_id: str):
     """Toggle the visibility of a dropdown"""
-    # Get the section title from the dropdown ID
-    section_title = dropdown_id.replace("dropdown-", "").replace("-", " ").title()
-    
-    # Get the current metrics data and visible metrics
-    data = get_nutrition_data()
     visible_metrics = get_visible_metrics(DB, "default")
     
     # Get the appropriate metrics list based on the section
