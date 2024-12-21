@@ -1,6 +1,6 @@
 import fasthtml.common as fh
 
-import fit.web.food as food
+import fit.web.nutrition.requests as nutrition
 import fit.web.progress as progress
 import fit.web.trackers as trackers
 
@@ -14,15 +14,16 @@ modal_css = fh.Link(rel="stylesheet", href="/static/public/modal.css")
 app = fh.FastHTML(hdrs=(tlink, plotly, dlink, fh.picolink, modal_css))
 
 # Food routes
-app.get("/food")(food.get)
-app.post("/analyze_text")(food.analyze_text)
-app.post("/analyze_image")(food.analyze_image)
-app.post("/generate_overview")(food.generate_overview)
-app.post("/save_meal")(food.save_meal)
-app.post("/reset_text_form")(food.reset_text_form)
-app.post("/regenerate_analysis")(food.regenerate_analysis)
-app.post("/hide_metric/{plot_id}")(food.hide_metric)
-app.post("/show_metric/{plot_id}")(food.show_metric)
+app.get("/nutrition")(nutrition.get)
+app.post("/analyze_text")(nutrition.analyze_text)
+app.post("/analyze_image")(nutrition.analyze_image)
+app.post("/generate_overview")(nutrition.generate_overview)
+app.post("/save_meal")(nutrition.save_meal)
+app.post("/reset_text_form")(nutrition.reset_text_form)
+app.post("/regenerate_analysis")(nutrition.regenerate_analysis)
+app.post("/hide_metric/{plot_id}")(nutrition.hide_metric)
+app.post("/show_metric/{plot_id}")(nutrition.show_metric)
+app.get("/toggle_dropdown/{dropdown_id}")(nutrition.toggle_dropdown)
 
 # Progress routes
 app.get("/progress")(progress.get)

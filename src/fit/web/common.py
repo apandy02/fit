@@ -35,7 +35,6 @@ nutritionist = Nutritionist()
 micronutrient_goals = MICRO_GOALS["male"]
 
 
-
 def create_fab_menu(buttons):
     """
     Create a floating action button menu with custom buttons.

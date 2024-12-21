@@ -1,13 +1,6 @@
-from datetime import datetime
-
 import fasthtml.common as fh
-from fit.nutrition.data import Goals, MealBreakdown
-from fit.nutrition.targets import calculate_macro_targets
-from fit.web.common import (DB, active_tracker, micronutrient_goals,
-                            nutrition_logger, nutritionist, page_outline, create_fab_menu)
-from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
-                               get_visible_metrics, insert_meal,
-                               set_visible_metrics)
+
+from fit.web.common import nutritionist
 from fit.web.food_plots import create_plot
 
 
@@ -22,7 +15,6 @@ def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, go
             macro_name = "carbohydrate"
         analysis_text = nutritionist.macro_analysis(macro_name, consumed, goal)
     
-    # Add hide button if metric is hideable and not mandatory
     hide_button = None
     if allow_hide and title.lower() not in ["calories", "water", "creatine"]:
         hide_button = fh.Button(
@@ -66,19 +58,7 @@ def create_meal_prompt_form(
     header_buttons: list = None,
     rows: int = 3
 ):
-    """Create a form for meal description or refinement input.
-    
-    Args:
-        title: Form title
-        textarea_label: Label for the textarea
-        textarea_placeholder: Placeholder text for the textarea
-        submit_text: Text for the submit button
-        hx_post_url: HTMX post URL
-        hx_target: HTMX target selector
-        extra_fields: Additional form fields to include
-        header_buttons: Additional buttons to show in header
-        rows: Number of rows for the textarea
-    """
+    """Create a form for meal description or refinement input."""
     # Create header content
     header_content = fh.H3(title, cls="text-xl font-bold text-primary-content")
     if header_buttons:
@@ -353,30 +333,28 @@ def create_metric_overview_section(title, metrics_data, filtered_metrics, all_me
     """Create a metrics overview section with configurable metrics"""    
     # Create dropdown of hidden metrics if all_metrics is provided
     add_button = None
-    if all_metrics:
-        # Get metrics that are hidden (in all_metrics but not in filtered_metrics)
-        hidden_metrics = [
-            metric for metric in all_metrics 
-            if metric["column_name"] not in [m["column_name"] for m in filtered_metrics]
-        ]
-        
-        if hidden_metrics:
-            dropdown_id = f"dropdown-{title.lower().replace(' ', '-')}"
-            add_button = fh.Div(
-                fh.Button(
-                    "+",
-                    cls="text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
-                    hx_get=f"/toggle_dropdown/{dropdown_id}",
-                    hx_target=f"#{dropdown_id}",
-                    hx_swap="innerHTML",
-                    onclick=f"document.getElementById('{dropdown_id}').classList.toggle('hidden')"
-                ),
-                fh.Div(
-                    cls="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-base-200 outline  ring-1 ring-black ring-opacity-5 z-10",
-                    id=dropdown_id
-                ),
-                cls="relative inline-block text-left ml-2"
-            )
+    hidden_metrics = [
+        metric for metric in all_metrics 
+        if metric["column_name"] not in [m["column_name"] for m in filtered_metrics]
+    ]
+    
+    if hidden_metrics:
+        dropdown_id = f"dropdown-{title.lower().replace(' ', '-')}"
+        add_button = fh.Div(
+            fh.Button(
+                "+",
+                cls="text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                hx_get=f"/toggle_dropdown/{dropdown_id}",
+                hx_target=f"#{dropdown_id}",
+                hx_swap="innerHTML",
+                onclick=f"document.getElementById('{dropdown_id}').classList.toggle('hidden')"
+            ),
+            fh.Div(
+                cls="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-base-200 outline  ring-1 ring-black ring-opacity-5 z-10",
+                id=dropdown_id
+            ),
+            cls="relative inline-block text-left ml-2"
+        )
     
     return fh.Section(
         fh.Div(
@@ -447,25 +425,15 @@ def create_conditional_section(data, visible_metrics):
     ]
     return create_metric_overview_section("Conditionally Essential Nutrients", data, filtered_metrics, conditional_metrics)
 
-def create_water_section(data):
-    """Create the water metrics section"""
-    water_metrics = [
-        {"name": "Water", "column_name": "water", "unit": "oz", "plot_id": "water-plot"}
-    ]
-    return create_metric_overview_section("Hydration", data, water_metrics)
-
-def create_metrics_grid(data):
+def create_metrics_grid(data, visible_metrics, water_metrics):
     """Create the grid of metric cards"""
-    visible_metrics = get_visible_metrics(DB, "default") # TODO: get user_id from session, hardcoded for now
-
     sections = [
         create_overview_card(),
         create_macro_section(data, visible_metrics),
         create_micro_section(data, visible_metrics),
         create_conditional_section(data, visible_metrics),
-        create_water_section(data)
+        create_metric_overview_section("Hydration", data, water_metrics)
     ]
-    # Filter out None sections (those with all metrics hidden)
     sections = [section for section in sections if section is not None]
     
     return fh.Div(
@@ -498,66 +466,6 @@ def create_overview_card():
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mb-8 text-primary-content"
     )
 
-async def generate_overview():
-    """Generate the daily overview analysis"""
-    today = datetime.date(datetime.today())
-    meals = get_daily_meals(DB, today)
-
-    calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
-    targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
-    targets.update(micronutrient_goals)
-    analysis = nutritionist.daily_io_analysis(meals, targets)
-    
-    return fh.Card(
-        fh.Div(
-            *[
-                fh.Div(
-                    fh.P(line.strip(), cls="text-primary-content mb-1"),
-                    cls="mb-2"
-                )
-                for line in analysis.split('\n')
-                if line.strip() 
-            ],
-            cls="p-4 space-y-2 mt-2"
-        ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-4"
-    )
-
-def get():
-    """Return the nutritional overview page content"""
-    calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
-    goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN) # goal hardcoded for now
-    daily_consumption = get_daily_cumulative_nutrition(DB, datetime.date(datetime.today()))
-
-    data = {
-        "calories": {"consumed": daily_consumption.calories, "goal": goals["calories"], "burned": calories_burned},
-        "protein": {"consumed": daily_consumption.protein, "goal": goals["protein"]},
-        "carbs": {"consumed": daily_consumption.carbs, "goal": goals["carbs"]},
-        "fat": {"consumed": daily_consumption.fat, "goal": goals["fat"]},
-        "vitamin_a": {"consumed": daily_consumption.vitamin_a, "goal": micronutrient_goals["vitamin_a"]},
-        "vitamin_c": {"consumed": daily_consumption.vitamin_c, "goal": micronutrient_goals["vitamin_c"]},
-        "iron": {"consumed": daily_consumption.iron, "goal": micronutrient_goals["iron"]},
-        "calcium": {"consumed": daily_consumption.calcium, "goal": micronutrient_goals["calcium"]},
-        "water": {"consumed": 40, "goal": 64},
-        "creatine": {"consumed": 2.0, "goal": 5.0}  # Added creatine with default values
-    }
-
-    menu_items = [
-        ("Food", "🍽️", "openFoodModal()"),
-        ("Water", "💧", None)  # No handler yet
-    ]
-
-    content = fh.Article(
-        fh.Div(
-            create_page_header(),
-            create_metrics_grid(data),
-            food_tracking_modal(),
-            create_fab_menu(menu_items),
-            cls="max-w-6xl mx-auto p-6"
-        ),
-        cls="bg-base-100",
-    )
-    return page_outline(1, "Nutritional Overview", content)
 
 def create_nutrition_section(title: str, items: list, cls: str = "mb-4"):
     """Create a section in the nutrition card"""
@@ -579,11 +487,8 @@ def create_nutrition_section(title: str, items: list, cls: str = "mb-4"):
 
 def create_form_input(label_text, input_name, input_value, input_type="number", step="0.1"):
     """Helper function to create a form input with label"""
-    # Ensure numeric values are formatted with one decimal place
     if input_type == "number":
-        # Convert to float and handle None/empty values
         value = 0.0 if input_value is None or input_value == "" else float(input_value)
-        # Format with one decimal place
         formatted_value = "{:.1f}".format(value)
     else:
         formatted_value = input_value
@@ -665,149 +570,16 @@ def create_nutrition_card(nutrition_info):
         cls="bg-base-200 outline  rounded-lg p-6"
     )
 
-async def analyze_text(meal_description: str):
-    """Handle meal description analysis"""
-    nutrition_info = nutrition_logger.natural_language_macros(meal_description)
-    return fh.Card(
-        fh.Div(
-            # Feedback form section
-            fh.Div(
-                create_text_input_form(is_feedback=True)
-            ),
-            # Nutrition card section
-            fh.Div(
-                create_nutrition_card(nutrition_info),
-                id="nutrition-card"
-            ),
-            cls="p-6"
-        ),
-        cls="bg-base-200 rounded-lg",
-        id="text-input"  # Important: keep the same ID for proper replacement
-    )
 
-async def analyze_image(food_image: fh.UploadFile):
-    """Handle image upload and analysis"""
-    nutrition_info = nutrition_logger.image_macros(food_image)
-    return create_nutrition_card(nutrition_info)
-
-async def save_meal(request: fh.Request):
-    """Save the meal with user-adjusted nutrition values"""
-    try:
-        form = await request.form()
-        nutrition_info = MealBreakdown(
-            summary=form["summary"],
-            ingredients=form["ingredients"],
-            calories=form["calories"],
-            protein=form["protein"],
-            carbs=form["carbs"],
-            fat=form["fat"],
-            fiber=form["fiber"],
-            vitamin_a=form["vitamin_a"],
-            vitamin_c=form["vitamin_c"],
-            vitamin_d=form["vitamin_d"],
-            calcium=form["calcium"],
-            iron=form["iron"],
-            potassium=form["potassium"],
-            sodium=form["sodium"]
-        )    
-        insert_meal(DB, form["summary"], nutrition_info)
-        
-        return fh.Div(
-            fh.P(
-                "Meal saved successfully!",
-                cls="text-green-500 font-semibold text-center mb-4"
-            ),
-            # Add script to reset the modal and reload page
-            fh.Script("""
-                // Show success message briefly
-                setTimeout(() => {
-                    // Reset text form
-                    const textForm = document.querySelector('#text-result');
-                    if (textForm) textForm.innerHTML = '';
-                    const textArea = document.querySelector('textarea[name="meal_description"]');
-                    if (textArea) textArea.value = '';
-                    
-                    // Reset image form
-                    const imageForm = document.querySelector('#image-result');
-                    if (imageForm) imageForm.innerHTML = '';
-                    const fileInput = document.querySelector('input[type="file"]');
-                    if (fileInput) fileInput.value = '';
-                    
-                    // Close the modal
-                    closeModal();
-                    
-                    // Reload the page to show updated data
-                    window.location.reload();
-                }, 1000);
-            """)
-        )
-    except Exception as e:
-        return fh.P(
-            f"Error saving meal: {str(e)}",
-            cls="text-red-500 font-semibold text-center"
-        )
-
-async def reset_text_form():
-    """Reset the text form to its original state"""
-    return create_text_input_form(is_feedback=False)
-
-async def regenerate_analysis(feedback: str, original_description: str):
-    """Regenerate analysis based on feedback"""
-    # First get the original nutrition info
-    original_info = nutrition_logger.natural_language_macros(original_description)
-    # Then improve it based on feedback
-    improved_info = nutrition_logger.improve_breakdown(original_info, feedback)
-    return create_nutrition_card(improved_info)
-
-async def hide_metric(plot_id: str):
-    """Hide a metric by removing it from visible_metrics"""
-    visible_metrics = get_visible_metrics(DB, "default")
-
-    if plot_id in visible_metrics:
-        visible_metrics.remove(plot_id)
-        set_visible_metrics(DB, visible_metrics, "default")
-    return ""  # Return empty string to remove the card
-
-async def show_metric(plot_id: str):
-    """Show a previously hidden metric"""
-    visible_metrics = get_visible_metrics(DB, "default")
-    
-    column_name = plot_id.replace("-plot", "").replace("_", "")
-    if column_name not in visible_metrics:
-        visible_metrics.append(column_name)
-        set_visible_metrics(DB, visible_metrics, "default")
-    
-    return create_metrics_container(get_nutrition_data())
-
-def get_nutrition_data():
-    """Get the current nutrition data for display"""
-    calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
-    goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
-    daily_consumption = get_daily_cumulative_nutrition(DB, datetime.date(datetime.today()))
-
-    return {
-        "calories": {"consumed": daily_consumption.calories, "goal": goals["calories"], "burned": calories_burned},
-        "protein": {"consumed": daily_consumption.protein, "goal": goals["protein"]},
-        "carbs": {"consumed": daily_consumption.carbs, "goal": goals["carbs"]},
-        "fat": {"consumed": daily_consumption.fat, "goal": goals["fat"]},
-        "vitamin_a": {"consumed": daily_consumption.vitamin_a, "goal": micronutrient_goals["vitamin_a"]},
-        "vitamin_c": {"consumed": daily_consumption.vitamin_c, "goal": micronutrient_goals["vitamin_c"]},
-        "iron": {"consumed": daily_consumption.iron, "goal": micronutrient_goals["iron"]},
-        "calcium": {"consumed": daily_consumption.calcium, "goal": micronutrient_goals["calcium"]},
-        "water": {"consumed": 40, "goal": 64},
-        "creatine": {"consumed": 2.0, "goal": 5.0}
-    }
-
-def create_metrics_container(data):
+def create_metrics_container(data, visible_metrics):
     """Create the metrics grid with its container"""
-    visible_metrics = get_visible_metrics(DB, "default")
-    
+    water_metrics = [{"name": "Water", "column_name": "water", "unit": "oz", "plot_id": "water-plot"}]
     sections = [
         create_overview_card(),
         create_macro_section(data, visible_metrics),
         create_micro_section(data, visible_metrics),
         create_conditional_section(data, visible_metrics),
-        create_water_section(data)
+        create_metric_overview_section("Hydration", data, water_metrics)
     ]
     sections = [section for section in sections if section is not None]
     
@@ -819,3 +591,4 @@ def create_metrics_container(data):
         cls="w-full",
         id="metrics-container"
     )
+
