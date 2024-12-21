@@ -573,7 +573,8 @@ def get():
             food_tracking_modal(),
             create_fab_menu(),
             cls="max-w-6xl mx-auto p-6"
-        )
+        ),
+        cls="bg-base-100",
     )
     return page_outline(1, "Nutritional Overview", content)
 

@@ -142,7 +142,7 @@ def page_outline(selidx, title, *c):
     return (
         fh.Title(title),
         fh.Body(
-            fh.Html(data_theme="dark"),
+            fh.Html(data_theme="black"),
             fh.Div(
                 fh.Div(
                     fh.A(
@@ -169,6 +169,7 @@ def page_outline(selidx, title, *c):
                 cls="overflow-y-auto",
             ),
         ),
+        
     )
 
 def Markdown(s, exts=md_exts, **kw):
