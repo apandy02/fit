@@ -41,7 +41,7 @@ def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, go
                 """
             ),
             fh.P(analysis_text, cls="text-sm text-primary-content mt-4") if analysis_text else None,
-            cls="p-4 relative"  # Added relative positioning for absolute hide button
+            cls="p-4 relative"
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg h-full text-primary-content",
         id=f"{plot_id}-container"
@@ -59,7 +59,6 @@ def create_meal_prompt_form(
     rows: int = 3
 ):
     """Create a form for meal description or refinement input."""
-    # Create header content
     header_content = fh.H3(title, cls="text-xl font-bold text-primary-content")
     if header_buttons:
         header_content = fh.Div(
@@ -102,7 +101,7 @@ def create_meal_prompt_form(
         cls="bg-base-200 rounded-lg"
     )
 
-def create_text_input_form(is_feedback: bool = False):
+def create_text_input_form(is_feedback: bool = False, original_description: str = None):
     """Create the text input form for meal description"""
     if not is_feedback:
         return create_meal_prompt_form(
@@ -120,13 +119,14 @@ def create_text_input_form(is_feedback: bool = False):
             textarea_placeholder="Suggest edits to improve the analysis",
             submit_text="Regenerate",
             hx_post_url="/regenerate_analysis",
-            hx_target="#text-result",
+            hx_target="#text-input",
             rows=2,
             extra_fields=[
                 fh.Input(
                     type="hidden",
                     name="original_description",
-                    id="original_description"
+                    id="original_description",
+                    value=original_description
                 )
             ],
             header_buttons=[
@@ -333,10 +333,12 @@ def create_metric_overview_section(title, metrics_data, filtered_metrics, all_me
     """Create a metrics overview section with configurable metrics"""    
     # Create dropdown of hidden metrics if all_metrics is provided
     add_button = None
-    hidden_metrics = [
-        metric for metric in all_metrics 
-        if metric["column_name"] not in [m["column_name"] for m in filtered_metrics]
-    ]
+    hidden_metrics = []
+    if all_metrics is not None:
+        hidden_metrics = [
+            metric for metric in all_metrics 
+            if metric["column_name"] not in [m["column_name"] for m in filtered_metrics]
+        ]
     
     if hidden_metrics:
         dropdown_id = f"dropdown-{title.lower().replace(' ', '-')}"

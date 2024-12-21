@@ -3,7 +3,8 @@ from datetime import datetime
 import fasthtml.common as fh
 
 from fit.nutrition.data import Goals, MealBreakdown
-from fit.web.common import (DB, active_tracker, calculate_macro_targets,
+from fit.nutrition.targets import calculate_macro_targets
+from fit.web.common import (DB, active_tracker,
                             create_fab_menu, micronutrient_goals,
                             nutrition_logger, nutritionist, page_outline)
 from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
@@ -117,7 +118,7 @@ async def analyze_text(meal_description: str):
     return fh.Card(
         fh.Div(
             fh.Div(
-                create_text_input_form(is_feedback=True)
+                create_text_input_form(is_feedback=True, original_description=meal_description)
             ),
             fh.Div(
                 create_nutrition_card(nutrition_info),
@@ -199,7 +200,20 @@ async def regenerate_analysis(feedback: str, original_description: str):
     """Regenerate analysis based on feedback"""
     original_info = nutrition_logger.natural_language_macros(original_description)
     improved_info = nutrition_logger.improve_breakdown(original_info, feedback)
-    return create_nutrition_card(improved_info)
+    return fh.Card(
+        fh.Div(
+            fh.Div(
+                create_text_input_form(is_feedback=True)
+            ),
+            fh.Div(
+                create_nutrition_card(improved_info),
+                id="nutrition-card"
+            ),
+            cls="p-6"
+        ),
+        cls="bg-base-200 rounded-lg",
+        id="text-input"  # Important: keep the same ID for proper replacement
+    )
 
 async def hide_metric(plot_id: str):
     """Hide a metric by removing it from visible_metrics"""
