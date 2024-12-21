@@ -13,31 +13,31 @@ def active_tracker_info():
         return fh.Card(
             fh.P(
                 "No active tracker configured",
-                cls="text-slate-400 text-center"
+                cls="text-primary-content text-center"
             ),
-            cls="bg-slate-800 shadow-lg rounded-lg p-6"
+            cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6"
         )
     
     active_info = secrets[active_type]
     return fh.Card(
         fh.Header(
-            fh.H3("Active Tracker", cls="text-xl font-bold text-center mb-2 text-slate-200"),
+            fh.H3("Active Tracker", cls="text-xl font-bold text-center mb-2 text-primary-content"),
             cls="mb-4"
         ),
         fh.Div(
             fh.P(
                 fh.Span("Type: ", cls="font-semibold"),
                 active_type.replace('_', ' ').title(),
-                cls="mb-2 text-slate-300"
+                cls="mb-2 text-primary-content"
             ),
             fh.P(
                 fh.Span("Username: ", cls="font-semibold"),
                 active_info['username'],
-                cls="mb-4 text-slate-300"
+                cls="mb-4 text-primary-content"
             ),
-            cls="text-slate-300"
+            cls="text-primary-content"
         ),
-        cls="bg-slate-800 shadow-lg rounded-lg p-6"
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6"
     )
 
 def credentials_section():
@@ -47,10 +47,10 @@ def credentials_section():
     
     return fh.Card(
         fh.Header(
-            fh.H3("Add New Tracker", cls="text-xl font-bold text-center mb-2 text-slate-200"),
+            fh.H3("Add New Tracker", cls="text-xl font-bold text-center mb-2 text-primary-content"),
             fh.P(
                 "Connect a fitness tracker account",
-                cls="text-slate-400 text-center"
+                cls="text-primary-content text-center opacity-70"
             ),
             cls="mb-6"
         ),
@@ -60,7 +60,7 @@ def credentials_section():
             cls="space-y-4"
         )(
             fh.Div(
-                fh.Label("Select Tracker", cls="label text-slate-200"),
+                fh.Label("Select Tracker", cls="label text-primary-content"),
                 fh.Select(
                     fh.Option("Select a tracker", value="", selected=True, disabled=True),
                     fh.Option("Fitbit", value="fitbit"),
@@ -68,29 +68,29 @@ def credentials_section():
                     fh.Option("Apple Watch", value="apple_watch"),
                     fh.Option("Garmin", value="garmin"),
                     name="tracker_type",
-                    cls="select select-bordered w-full bg-slate-700 text-slate-200",
+                    cls="select select-bordered w-full bg-base-200 outline outline-1 outline-primary-content text-primary-content",
                     required=True
                 ),
                 cls="form-control"
             ),
             fh.Div(
-                fh.Label("Username/Email", cls="label text-slate-200"),
+                fh.Label("Username/Email", cls="label text-primary-content"),
                 fh.Input(
                     type="text",
                     name="username",
                     placeholder="Enter your tracker account username or email",
-                    cls="input input-bordered w-full bg-slate-700 text-slate-200 placeholder-slate-400",
+                    cls="input input-bordered w-full bg-base-200 outline outline-1 outline-primary-content text-primary-content placeholder-primary-content placeholder-opacity-50",
                     required=True
                 ),
                 cls="form-control"
             ),
             fh.Div(
-                fh.Label("Password", cls="label text-slate-200"),
+                fh.Label("Password", cls="label text-primary-content"),
                 fh.Input(
                     type="password",
                     name="password",
                     placeholder="Enter your tracker account password",
-                    cls="input input-bordered w-full bg-slate-700 text-slate-200 placeholder-slate-400",
+                    cls="input input-bordered w-full bg-base-200 outline outline-1 outline-primary-content text-primary-content placeholder-primary-content placeholder-opacity-50",
                     required=True
                 ),
                 cls="form-control"
@@ -104,7 +104,7 @@ def credentials_section():
                         cls="checkbox checkbox-primary mr-2"
                     ),
                     "Set as active tracker",
-                    cls="label cursor-pointer justify-start gap-2 text-slate-200"
+                    cls="label cursor-pointer justify-start gap-2 text-primary-content"
                 ),
                 cls="form-control"
             ) if has_active else "",
@@ -116,11 +116,11 @@ def credentials_section():
             fh.Button(
                 "Save Credentials",
                 type="submit",
-                cls="btn btn-primary w-full mt-2"
+                cls="btn btn-primary outline outline-1 outline-primary-content w-full mt-2"
             ),
             fh.Div(id="connection-result")
         ),
-        cls="bg-slate-800 shadow-lg rounded-lg p-6"
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6"
     )
 
 def change_tracker_section():
@@ -133,10 +133,10 @@ def change_tracker_section():
     
     return fh.Card(
         fh.Header(
-            fh.H3("Change Active Tracker", cls="text-xl font-bold text-center mb-2 text-slate-200"),
+            fh.H3("Change Active Tracker", cls="text-xl font-bold text-center mb-2 text-primary-content"),
             fh.P(
                 "Switch to a different tracker",
-                cls="text-slate-400 text-center"
+                cls="text-primary-content text-center opacity-70"
             ),
             cls="mb-6"
         ),
@@ -146,7 +146,7 @@ def change_tracker_section():
             cls="space-y-4"
         )(
             fh.Div(
-                fh.Label("Select Tracker", cls="label text-slate-200"),
+                fh.Label("Select Tracker", cls="label text-primary-content"),
                 fh.Select(
                     [
                         fh.Option(
@@ -157,7 +157,7 @@ def change_tracker_section():
                         for tracker_type, info in secrets.items()
                     ],
                     name="active_tracker",
-                    cls="select select-bordered w-full bg-slate-700 text-slate-200",
+                    cls="select select-bordered w-full bg-base-200 outline outline-1 outline-primary-content text-primary-content",
                     required=True
                 ),
                 cls="form-control"
@@ -165,11 +165,11 @@ def change_tracker_section():
             fh.Button(
                 "Set Active",
                 type="submit",
-                cls="btn btn-primary w-full mt-2"
+                cls="btn btn-primary outline outline-1 outline-primary-content w-full mt-2"
             ),
             fh.Div(id="active-tracker-result")
         ),
-        cls="bg-slate-800 shadow-lg rounded-lg p-6"
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6"
     )
 
 def get():
@@ -180,7 +180,8 @@ def get():
             credentials_section(),
             change_tracker_section(),
             cls="max-w-lg mx-auto p-6 space-y-6"
-        )
+        ),
+        cls="bg-base-100"
     )
     return page_outline(4, "Tracker Management", content)
 
@@ -198,18 +199,18 @@ async def connect_tracker(tracker_type: str, username: str, password: str, set_a
         return fh.Div(
             fh.P(
                 f"Successfully saved credentials for {tracker_type.replace('_', ' ').title()}{active_msg}!",
-                cls="text-green-600 font-semibold text-center mt-4"
+                cls="text-success font-semibold text-center mt-4"
             )
         )
     except Exception as e:
         return fh.Div(
             fh.P(
                 "Failed to save tracker credentials.",
-                cls="text-red-600 font-semibold text-center mt-4"
+                cls="text-error font-semibold text-center mt-4"
             ),
             fh.P(
                 str(e),
-                cls="text-gray-600 text-center text-sm mt-1"
+                cls="text-primary-content opacity-70 text-center text-sm mt-1"
             )
         )
 
@@ -220,17 +221,17 @@ async def set_active_tracker(active_tracker: str):
         return fh.Div(
             fh.P(
                 f"Successfully set {active_tracker.replace('_', ' ').title()} as active tracker!",
-                cls="text-green-600 font-semibold text-center mt-4"
+                cls="text-success font-semibold text-center mt-4"
             )
         )
     except Exception as e:
         return fh.Div(
             fh.P(
                 "Failed to set active tracker.",
-                cls="text-red-600 font-semibold text-center mt-4"
+                cls="text-error font-semibold text-center mt-4"
             ),
             fh.P(
                 str(e),
-                cls="text-gray-600 text-center text-sm mt-1"
+                cls="text-primary-content opacity-70 text-center text-sm mt-1"
             )
         ) 

@@ -152,28 +152,28 @@ def create_stats_grid(weights):
     """Create the statistics grid"""
     return fh.Grid(
         fh.Card(
-            fh.H5("Current Weight", cls="text-sm text-slate-400"),
+            fh.H5("Current Weight", cls="text-sm text-primary-content"),
             fh.P(
                 f"{weights[-1]:.1f} lbs" if weights else "No data",
-                cls="text-2xl font-bold text-blue-400"
+                cls="text-2xl font-bold text-secondary-content"
             ),
-            cls="p-4 text-center bg-slate-800"
+            cls="p-4 text-center bg-base-300"
         ),
         fh.Card(
-            fh.H5("Total Change", cls="text-sm text-slate-400"),
+            fh.H5("Total Change", cls="text-sm text-primary-content"),
             fh.P(
                 f"{(weights[-1] - weights[0]):.1f} lbs" if len(weights) > 1 else "No change",
-                cls="text-2xl font-bold text-blue-400"
+                cls="text-2xl font-bold text-secondary-content"
             ),
-            cls="p-4 text-center bg-slate-800"
+            cls="p-4 text-center bg-base-300"
         ),
         fh.Card(
-            fh.H5("Measurements", cls="text-sm text-slate-400"),
+            fh.H5("Measurements", cls="text-sm text-primary-content"),
             fh.P(
                 str(len(weights)),
-                cls="text-2xl font-bold text-blue-400"
+                cls="text-2xl font-bold text-secondary-content"
             ),
-            cls="p-4 text-center bg-slate-800"
+            cls="p-4 text-center bg-base-300"
         ),
         cols=3,
         cls="gap-4 mt-6"

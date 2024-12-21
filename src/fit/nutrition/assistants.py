@@ -109,29 +109,25 @@ class Nutritionist:
 
         @ell.simple(model=self.model)
         def _daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float]) -> str:
-            """
-            Given the user's intake and target, provide a summary of the user's intake for the day. 
+            """Analyze the user's daily nutritional intake versus their targets and provide a detailed 
+            assessment in plain text format. Start with an overview comparing total intake to goals. 
+            Then evaluate each meal's contribution to any excess - flag meals that significantly exceed 
+            targets (e.g., >100% of a macro target in one meal) as problematic and suggest alternatives. 
+            For meals contributing to excess but not extreme, recommend portion adjustments. 
+            For under-target scenarios, suggest realistic additions based on their evident food preferences 
+            and eating patterns.
             
-            If the user is over their target, highlight for them specific meals they ate that led to this. If the 
-            meal is objectively bad, for example if they have a carbohydrate target of 50g and they ate 60g 
-            alone in this one meal, recommend that they avoid that meal in the future. If any meal is driving 
-            that number up but is not objectively bad, recommend to them adjusted portions. Do this for any 
-            future. If any meal is driving that number up but is not objectively bad, recommend to them 
-            adjusted portions. Do this for any and all macros, calories, and meals.
+            Break the analysis into four sections:
 
-            If the user is under their target, let them know what they could have added to their diet to 
-            get to their target. Make sure that the suggestions are not too extreme, and that they are 
-            realistic. Use their prior intake to make suggestions. For example, if they seem to be eating 
-            a lot of one cuisine, recommend things that aren't radically different.
+            An untitled general overview
+            <b>Macronutrients</b>
+            <b>Micronutrients</b>
+            <b>Suggestions</b>
+
+            Format as plain text paragraphs without bullets, markdown, or special formatting 
+            (except section headers in <b> tags). Each section should flow naturally in paragraph form."""
+            meals_str = "Here are the meals the user has logged today:\n"
             
-            respond in plain text (paragraph format). do not use bullet points.
-            your text will not be rendered, but displayed as is. do not use special characters to try and bold things.
-            no markdown, no html, just plain english.
-            
-            break this analysis down into "general" (this doesn't need a header), "macronutients", and "micronutrients" and "suggestions" sections. 
-            the latter three sections should have headers that are bolded text (using <b> tags) on new lines.
-            """
-            meals_str = "Here are the meals you've had today:\n"
             for i, meal in enumerate(meals, 1):
                 meals_str += f"Meal {i}: {meal.summary} - {meal.calories} calories, "
                 meals_str += f"{meal.protein}g protein, {meal.carbs}g carbs, {meal.fat}g fat\n"
