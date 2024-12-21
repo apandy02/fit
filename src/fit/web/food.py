@@ -3,13 +3,12 @@ from datetime import datetime
 import fasthtml.common as fh
 from fit.nutrition.data import Goals, MealBreakdown
 from fit.nutrition.targets import calculate_macro_targets
-from fit.web.common import (DB, Markdown, active_tracker, micronutrient_goals,
-                            nutrition_logger, nutritionist, page_outline)
+from fit.web.common import (DB, active_tracker, micronutrient_goals,
+                            nutrition_logger, nutritionist, page_outline, create_fab_menu)
 from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
                                get_visible_metrics, insert_meal,
                                set_visible_metrics)
 from fit.web.food_plots import create_plot
-from markdown import markdown
 
 
 def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, goal: float, burned: float = None, show_analysis: bool = True, allow_hide: bool = True):
@@ -333,53 +332,6 @@ def food_tracking_modal():
         """)
     )
 
-def create_fab_menu():
-    """Create the floating action button menu"""
-    menu_items = [
-        ("Food", "🍽️", "openFoodModal()"),
-        ("Water", "💧", None)  # No handler yet
-    ]
-    
-    return fh.Div(
-        fh.Div(
-            *[fh.Div(
-                fh.Span(name, cls="text-primary-content text-sm font-medium"),
-                fh.Button(
-                    fh.Span(emoji, cls="text-lg"),
-                    cls="btn btn-primary btn-circle ml-3",
-                    onclick=handler if handler else None
-                ),
-                cls="flex items-center justify-end mb-2 opacity-0 transition-all duration-200 translate-y-[30px]",
-                id=f"{name.lower()}-button"
-            ) for name, emoji, handler in menu_items],
-            cls="absolute bottom-16 right-0 transition-all duration-200"
-        ),
-        fh.Button(
-            fh.Span("+", cls="text-2xl transition-transform duration-200"),
-            cls="btn btn-primary btn-circle",
-            onclick="""
-                this.classList.toggle('btn-active');
-                this.firstElementChild.style.transform = this.classList.contains('btn-active') ? 'rotate(45deg)' : '';
-                
-                const foodBtn = document.getElementById('food-button');
-                const waterBtn = document.getElementById('water-button');
-                
-                if (this.classList.contains('btn-active')) {
-                    foodBtn.style.opacity = '1';
-                    waterBtn.style.opacity = '1';
-                    foodBtn.style.transform = 'translate(0, -30px)';
-                    waterBtn.style.transform = 'translate(0, -15px)';
-                } else {
-                    foodBtn.style.opacity = '0';
-                    waterBtn.style.opacity = '0';
-                    foodBtn.style.transform = 'translate(0, 15px)';
-                    waterBtn.style.transform = 'translate(0, 15px)';
-                }
-            """
-        ),
-        cls="fixed bottom-8 right-8"
-    )
-
 def create_page_header():
     """Create the page header with title and time filter"""
     return fh.Div(
@@ -398,9 +350,7 @@ def create_page_header():
     )
 
 def create_metric_overview_section(title, metrics_data, filtered_metrics, all_metrics=None):
-    """Create a metrics overview section with configurable metrics"""
-    metric_rows = [filtered_metrics[i:i+2] for i in range(0, len(filtered_metrics), 2)]
-    
+    """Create a metrics overview section with configurable metrics"""    
     # Create dropdown of hidden metrics if all_metrics is provided
     add_button = None
     if all_metrics:
@@ -435,18 +385,22 @@ def create_metric_overview_section(title, metrics_data, filtered_metrics, all_me
             cls="flex items-center justify-center"
         ),
         fh.Div(
-            *[fh.Div(
-                *[metric_card(
-                    metric["name"],
-                    f"{metric['name']} ({metric['unit']})" if metric["unit"] else metric["name"],
-                    metric["plot_id"],
-                    metrics_data[metric["column_name"]]["consumed"],
-                    metrics_data[metric["column_name"]]["goal"],
-                    metrics_data[metric["column_name"]].get("burned"),
-                    allow_hide=metric["name"].lower() not in ["calories", "water", "creatine"]
-                ) for metric in row],
-                cls=f"{'w-1/2 mx-auto' if len(row) == 1 else 'grid grid-cols-2 gap-6'} mb-6"
-            ) for row in metric_rows],
+            fh.Div(
+                *[fh.Div(
+                    metric_card(
+                        metric["name"],
+                        f"{metric['name']} ({metric['unit']})" if metric["unit"] else metric["name"],
+                        metric["plot_id"],
+                        metrics_data[metric["column_name"]]["consumed"],
+                        metrics_data[metric["column_name"]]["goal"],
+                        metrics_data[metric["column_name"]].get("burned"),
+                        allow_hide=metric["name"].lower() not in ["calories", "water", "creatine"]
+                    ),
+                    cls="w-1/2 p-2" if i < len(filtered_metrics) - 1 or len(filtered_metrics) % 2 == 0 
+                        else "w-1/2 p-2 mx-auto"
+                ) for i, metric in enumerate(filtered_metrics)],
+                cls="flex flex-wrap"
+            ),
             cls="w-full"
         ),
         cls="w-full"
@@ -588,12 +542,17 @@ def get():
         "creatine": {"consumed": 2.0, "goal": 5.0}  # Added creatine with default values
     }
 
+    menu_items = [
+        ("Food", "🍽️", "openFoodModal()"),
+        ("Water", "💧", None)  # No handler yet
+    ]
+
     content = fh.Article(
         fh.Div(
             create_page_header(),
             create_metrics_grid(data),
             food_tracking_modal(),
-            create_fab_menu(),
+            create_fab_menu(menu_items),
             cls="max-w-6xl mx-auto p-6"
         ),
         cls="bg-base-100",
@@ -813,14 +772,11 @@ async def show_metric(plot_id: str):
     """Show a previously hidden metric"""
     visible_metrics = get_visible_metrics(DB, "default")
     
-    # Add the metric back to visible metrics
-    # Extract the column name from plot_id by removing any suffixes
     column_name = plot_id.replace("-plot", "").replace("_", "")
     if column_name not in visible_metrics:
         visible_metrics.append(column_name)
         set_visible_metrics(DB, visible_metrics, "default")
     
-    # Return the refreshed metrics grid
     return create_metrics_container(get_nutrition_data())
 
 def get_nutrition_data():
@@ -853,7 +809,6 @@ def create_metrics_container(data):
         create_conditional_section(data, visible_metrics),
         create_water_section(data)
     ]
-    # Filter out None sections (those with all metrics hidden)
     sections = [section for section in sections if section is not None]
     
     return fh.Div(
