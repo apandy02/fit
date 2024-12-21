@@ -124,13 +124,12 @@ class Nutritionist:
             realistic. Use their prior intake to make suggestions. For example, if they seem to be eating 
             a lot of one cuisine, recommend things that aren't radically different.
             
-            ***Respond in plain text (paragraph format). do not use bullet points. you may bold certain phrases to highlight using **
-            . bold things that you think most require the users attention. for example "you are currently 10g under 
-            your protein target"***
-
-            break this analysis down into "general" (this doesn't need a header), "macronutients", and "micronutrients" and "suggestions" sections.
-
-            the latter three sections should have headers that are bolded text on new lines.
+            respond in plain text (paragraph format). do not use bullet points.
+            your text will not be rendered, but displayed as is. do not use special characters to try and bold things.
+            no markdown, no html, just plain english.
+            
+            break this analysis down into "general" (this doesn't need a header), "macronutients", and "micronutrients" and "suggestions" sections. 
+            the latter three sections should have headers that are bolded text (using <b> tags) on new lines.
             """
             meals_str = "Here are the meals you've had today:\n"
             for i, meal in enumerate(meals, 1):

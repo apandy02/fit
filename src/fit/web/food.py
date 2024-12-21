@@ -9,6 +9,7 @@ from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
                                get_visible_metrics, insert_meal,
                                set_visible_metrics)
 from fit.web.food_plots import create_plot
+from markdown import markdown
 
 
 def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, goal: float, burned: float = None, show_analysis: bool = True, allow_hide: bool = True):
@@ -27,7 +28,7 @@ def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, go
     if allow_hide and title.lower() not in ["calories", "water", "creatine"]:
         hide_button = fh.Button(
             "×",
-            cls="absolute right-2 top-2 text-xl font-light text-slate-400 hover:text-slate-200 focus:outline-none focus:ring-0 border-none outline-none",
+            cls="absolute right-2 top-2 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
             style="outline: none; box-shadow: none;",
             hx_post=f"/hide_metric/{plot_id}",
             hx_target=f"#{plot_id}-container",
@@ -48,10 +49,10 @@ def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, go
                 );
                 """
             ),
-            fh.P(analysis_text, cls="text-sm text-slate-300 mt-4") if analysis_text else None,
+            fh.P(analysis_text, cls="text-sm text-primary-content mt-4") if analysis_text else None,
             cls="p-4 relative"  # Added relative positioning for absolute hide button
         ),
-        cls="bg-slate-800 rounded-lg h-full text-slate-200",
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg h-full text-primary-content",
         id=f"{plot_id}-container"
     )
 
@@ -61,7 +62,7 @@ def create_text_input_form(is_feedback: bool = False):
         return fh.Card(
             fh.Div(
                 fh.Header(
-                    fh.H3("Describe Your Meal", cls="text-xl font-bold text-slate-200"),
+                    fh.H3("Describe Your Meal", cls="text-xl font-bold text-primary-content"),
                     cls="mb-6"
                 ),
                 fh.Form(
@@ -71,12 +72,12 @@ def create_text_input_form(is_feedback: bool = False):
                     cls="space-y-4"
                 )(
                     fh.Div(
-                        fh.Label("Meal Description", cls="label text-slate-200"),
+                        fh.Label("Meal Description", cls="label text-primary-content"),
                         fh.Textarea(
                             name="meal_description",
                             placeholder="Example: I had a grilled chicken sandwich with lettuce, tomato and mayo",
                             rows=3,
-                            cls="textarea textarea-bordered w-full bg-slate-700 text-slate-200 placeholder-slate-400"
+                            cls="textarea textarea-bordered w-full bg-base-200 outline  text-primary-content placeholder-slate-400"
                         ),
                         cls="form-control"
                     ),
@@ -88,19 +89,19 @@ def create_text_input_form(is_feedback: bool = False):
                 ),
                 cls="p-6"
             ),
-            cls="bg-base-100 rounded-lg"
+            cls="bg-base-200 rounded-lg"
         )
     else:
         return fh.Card(
             fh.Div(
                 fh.Header(
                     fh.Div(
-                        fh.H3("Refine Analysis", cls="text-xl font-bold text-slate-200"),
+                        fh.H3("Refine Analysis", cls="text-xl font-bold text-primary-content"),
                         fh.Button(
                             "↺",
                             hx_post="/reset_text_form",
                             hx_target="#text-input",
-                            cls="btn btn-ghost text-xl text-slate-200"
+                            cls="btn btn-ghost text-xl text-primary-content"
                         ),
                         cls="flex justify-between items-center"
                     ),
@@ -112,12 +113,12 @@ def create_text_input_form(is_feedback: bool = False):
                     cls="space-y-4"
                 )(
                     fh.Div(
-                        fh.Label("Suggest Edits", cls="label text-slate-200"),
+                        fh.Label("Suggest Edits", cls="label text-primary-content"),
                         fh.Textarea(
                             name="feedback",
                             placeholder="Suggest edits to improve the analysis",
                             rows=2,
-                            cls="textarea textarea-bordered w-full bg-slate-700 text-slate-200 placeholder-slate-400"
+                            cls="textarea textarea-bordered w-full bg-base-200 outline  text-primary-content placeholder-slate-400"
                         ),
                         cls="form-control"
                     ),
@@ -135,7 +136,7 @@ def create_text_input_form(is_feedback: bool = False):
                 ),
                 cls="p-6"
             ),
-            cls="bg-base-100 rounded-lg"
+            cls="bg-base-200 rounded-lg"
         )
 
 def create_image_upload_form():
@@ -143,7 +144,7 @@ def create_image_upload_form():
     return fh.Card(
         fh.Div(
             fh.Header(
-                fh.H3("Upload Food Image", cls="text-xl font-bold text-slate-200"),
+                fh.H3("Upload Food Image", cls="text-xl font-bold text-primary-content"),
                 cls="mb-6"
             ),
             fh.Form(
@@ -171,7 +172,7 @@ def create_image_upload_form():
             ),
             cls="p-6"
         ),
-        cls="bg-base-100 shadow-lg rounded-lg"
+        cls="bg-base-200 shadow-lg rounded-lg"
     )
 
 def create_modal_content():
@@ -180,14 +181,14 @@ def create_modal_content():
         # Close button
         fh.Button(
             "×",
-            cls="absolute right-4 top-4 text-xl font-light text-blue-400 hover:text-blue-300 focus:outline-none focus:ring-0 focus:ring-offset-0 border-none outline-none z-10",
+            cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 focus:ring-offset-0 border-none outline-none z-10",
             onclick="closeModal()",
             style="outline: none; box-shadow: none;"
         ),
         # Back button (shown only when a form is visible)
         fh.Button(
             "←",
-            cls="absolute left-4 top-4 text-xl font-light text-blue-400 hover:text-blue-300 focus:outline-none focus:ring-0 focus:ring-offset-0 border-none outline-none hidden z-10",
+            cls="absolute left-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 focus:ring-offset-0 border-none outline-none hidden z-10",
             onclick="showInputSelection()",
             style="outline: none; box-shadow: none;",
             id="back-button"
@@ -195,7 +196,7 @@ def create_modal_content():
         # Initial selection view
         fh.Div(
             fh.Div(
-                fh.H3("How would you like to log your meal?", cls="text-xl font-bold text-center mb-8 text-slate-200"),
+                fh.H3("How would you like to log your meal?", cls="text-xl font-bold text-center mb-8 text-primary-content"),
                 fh.Div(
                     # Image upload option
                     fh.Button(
@@ -204,16 +205,16 @@ def create_modal_content():
                                 src="/static/images/camera.png",
                                 cls="h-12 w-auto object-contain mb-3"
                             ),
-                            fh.P("Upload an image", cls="text-slate-200 mb-2"),
+                            fh.P("Upload an image", cls="text-primary-content mb-2"),
                             cls="flex flex-col items-center justify-center h-full"
                         ),
-                        cls="p-6 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors w-full focus:outline-none mb-4 h-32",
+                        cls="p-6 bg-base-200 bg-opacity-70 outline outline-1 outline-primary-content rounded-lg hover:bg-base-200 hover:bg-opacity-90 transition-colors w-full focus:outline-none mb-4 h-32",
                         onclick="showInputForm('image')"
                     ),
                     # Text description option
                     fh.Button(
-                        fh.P("Describe it", cls="text-slate-200 text-lg"),
-                        cls="p-6 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors w-full flex items-center justify-center focus:outline-none h-32",
+                        fh.P("Describe it", cls="text-primary-content text-lg"),
+                        cls="p-6 bg-base-200 bg-opacity-70 outline outline-1 outline-primary-content rounded-lg hover:bg-base-200 hover:bg-opacity-90 transition-colors w-full flex items-center justify-center focus:outline-none h-32",
                         onclick="showInputForm('text')"
                     ),
                     cls="flex flex-col space-y-4"
@@ -232,16 +233,16 @@ def create_modal_content():
                 cls="hidden",
                 id="text-input"
             ),
-            cls="space-y-6 overflow-y-auto max-h-[80vh]"
+            cls="space-y-6 overflow-y-auto max-h-[80vh] bg-base-200 bg-opacity-70 rounded-lg relative w-full max-w-lg"
         ),
-        cls="bg-base-100 rounded-lg relative w-full max-w-lg"
+        cls="bg-transparent rounded-lg relative w-full max-w-lg"
     )
 
 def food_tracking_modal():
     """Create the food tracking modal"""
     return fh.Div(
         fh.Div(
-            cls="fixed inset-0 bg-slate-800 bg-opacity-20 transition-opacity hidden",
+            cls="fixed inset-0 bg-slate-100 bg-opacity-25 transition-opacity hidden",
             id="modal-backdrop",
             onclick="closeModal()"
         ),
@@ -321,7 +322,7 @@ def create_fab_menu():
     return fh.Div(
         fh.Div(
             *[fh.Div(
-                fh.Span(name, cls="text-slate-300 text-sm font-medium"),
+                fh.Span(name, cls="text-primary-content text-sm font-medium"),
                 fh.Button(
                     fh.Span(emoji, cls="text-lg"),
                     cls="btn btn-primary btn-circle ml-3",
@@ -361,7 +362,7 @@ def create_fab_menu():
 def create_page_header():
     """Create the page header with title and time filter"""
     return fh.Div(
-        fh.H2("Nutritional Overview", cls="text-3xl font-bold text-center mb-6"),
+        fh.P("Nutritional Overview", cls="text-3xl font-bold text-center mb-6 text-primary-content"),
         fh.Div(
             fh.Select(
                 fh.Option("Today", value="today", selected=True),
@@ -393,14 +394,14 @@ def create_metric_overview_section(title, metrics_data, filtered_metrics, all_me
             add_button = fh.Div(
                 fh.Button(
                     "+",
-                    cls="text-xl font-light text-slate-400 hover:text-slate-200 focus:outline-none focus:ring-0 border-none outline-none",
+                    cls="text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
                     hx_get=f"/toggle_dropdown/{dropdown_id}",
                     hx_target=f"#{dropdown_id}",
                     hx_swap="innerHTML",
                     onclick=f"document.getElementById('{dropdown_id}').classList.toggle('hidden')"
                 ),
                 fh.Div(
-                    cls="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-slate-800 ring-1 ring-black ring-opacity-5 z-10",
+                    cls="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-base-200 outline  ring-1 ring-black ring-opacity-5 z-10",
                     id=dropdown_id
                 ),
                 cls="relative inline-block text-left ml-2"
@@ -408,7 +409,7 @@ def create_metric_overview_section(title, metrics_data, filtered_metrics, all_me
     
     return fh.Section(
         fh.Div(
-            fh.H3(f"{title}", cls="text-2xl font-bold text-center mb-8 text-slate-200"),
+            fh.H3(f"{title}", cls="text-2xl font-bold text-center mb-8 text-primary-content"),
             add_button if add_button else None,
             cls="flex items-center justify-center"
         ),
@@ -507,7 +508,7 @@ def create_overview_card():
             fh.Div(
                 fh.Button(
                     "Generate Daily Analysis",
-                    cls="btn btn-primary",
+                    cls="btn btn-primary outline outline-1 outline-primary-content",
                     hx_post="/generate_overview",
                     hx_target="#analysis-content"
                 ),
@@ -519,7 +520,7 @@ def create_overview_card():
             ),
             cls="p-6"
         ),
-        cls="bg-slate-800 rounded-lg mb-8 text-slate-200"
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mb-8 text-primary-content"
     )
 
 async def generate_overview():
@@ -531,20 +532,20 @@ async def generate_overview():
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
     analysis = nutritionist.daily_io_analysis(meals, targets)
-            
+    
     return fh.Card(
         fh.Div(
             *[
                 fh.Div(
-                    fh.P(Markdown(line.strip()), cls="mb-1 text-slate-300"),
+                    fh.P(fh.NotStr(line.strip()), cls="text-primary-content mb-1"),
                     cls="mb-2"
                 )
                 for line in analysis.split('\n')
                 if line.strip() 
             ],
-            cls="p-4 space-y-2"
+            cls="p-4 space-y-2 mt-2"
         ),
-        cls="bg-slate-800 rounded-lg mt-4"
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-4"
     )
 
 def get():
@@ -608,13 +609,13 @@ def create_form_input(label_text, input_name, input_value, input_type="number", 
         formatted_value = input_value
 
     return fh.Div(
-        fh.Label(label_text, cls="label text-slate-200"),
+        fh.Label(label_text, cls="label text-primary-content"),
         fh.Input(
             type=input_type,
             name=input_name,
             value=formatted_value,
             step=step if input_type == "number" else None,
-            cls="input input-bordered w-full bg-slate-700 text-slate-200"
+            cls="input input-bordered w-full bg-base-200 outline  text-primary-content"
         ),
         cls="form-control"
     )
@@ -622,7 +623,7 @@ def create_form_input(label_text, input_name, input_value, input_type="number", 
 def create_form_section(title, inputs, cls="mb-6"):
     """Helper function to create a form section with a title and inputs"""
     return fh.Section(
-        fh.H4(title, cls="font-medium mb-4 text-slate-200"),
+        fh.H4(title, cls="font-medium mb-4 text-primary-content"),
         fh.Div(
             *inputs,
             cls="grid grid-cols-2 gap-4"
@@ -634,10 +635,10 @@ def create_nutrition_card(nutrition_info):
     """Create a card containing ingredients text and editable nutrition form"""
     return fh.Card(
         fh.Div(
-            fh.H4("Ingredients", cls="font-medium mb-2 text-slate-200"),
+            fh.H4("Ingredients", cls="font-medium mb-2 text-primary-content"),
             fh.P(
                 nutrition_info.ingredients,
-                cls="mb-6 text-slate-200"
+                cls="mb-6 text-primary-content"
             ),
             # Add hidden fields for llm_summary and ingredients
             fh.Form(
@@ -681,7 +682,7 @@ def create_nutrition_card(nutrition_info):
             ),
             cls="space-y-4"
         ),
-        cls="bg-slate-800 rounded-lg p-6"
+        cls="bg-base-200 outline  rounded-lg p-6"
     )
 
 async def analyze_text(meal_description: str):
@@ -693,13 +694,13 @@ async def analyze_text(meal_description: str):
             fh.Div(
                 fh.Header(
                     fh.Div(
-                        fh.H3("Refine Analysis", cls="text-xl font-bold text-slate-200"),
+                        fh.H3("Refine Analysis", cls="text-xl font-bold text-primary-content"),
                         fh.Button(
                             "↺",
                             hx_post="/reset_text_form",
                             hx_target="#text-input",
                             hx_swap="outerHTML",
-                            cls="btn btn-ghost text-xl text-slate-200"
+                            cls="btn btn-ghost text-xl text-primary-content"
                         ),
                         cls="flex justify-between items-center"
                     ),
@@ -711,12 +712,12 @@ async def analyze_text(meal_description: str):
                     cls="space-y-4"
                 )(
                     fh.Div(
-                        fh.Label("Suggest Edits", cls="label text-slate-200"),
+                        fh.Label("Suggest Edits", cls="label text-primary-content"),
                         fh.Textarea(
                             name="feedback",
                             placeholder="Suggest edits to improve the analysis",
                             rows=2,
-                            cls="textarea textarea-bordered w-full bg-slate-700 text-slate-200 placeholder-slate-400"
+                            cls="textarea textarea-bordered w-full bg-base-200 outline  text-primary-content placeholder-slate-400"
                         ),
                         cls="form-control"
                     ),
@@ -741,7 +742,7 @@ async def analyze_text(meal_description: str):
             ),
             cls="p-6"
         ),
-        cls="bg-base-100 rounded-lg",
+        cls="bg-base-200 rounded-lg",
         id="text-input"  # Important: keep the same ID for proper replacement
     )
 
@@ -921,7 +922,7 @@ async def toggle_dropdown(dropdown_id: str):
         *[
             fh.A(
                 metric["name"],
-                cls="block w-full text-left px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 cursor-pointer",
+                cls="block w-full text-left px-4 py-2 text-sm text-primary-content hover:bg-base-200 outline  cursor-pointer",
                 onclick=f"""
                     fetch('/show_metric/{metric["plot_id"]}', {{method: 'POST'}})
                         .then(response => response.text())
@@ -935,6 +936,6 @@ async def toggle_dropdown(dropdown_id: str):
             )
             for metric in hidden_metrics
         ],
-        cls="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-slate-800 ring-1 ring-black ring-opacity-5 z-10 block",  # Removed hidden class
+        cls="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-base-200 outline  ring-1 ring-black ring-opacity-5 z-10 block",  # Removed hidden class
         id=dropdown_id
     )

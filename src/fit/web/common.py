@@ -63,7 +63,7 @@ def create_fab_menu(buttons):
         # Main FAB
         fh.Button(
             fh.Span("+", cls="text-2xl transition-transform duration-200"),
-            cls="btn btn-primary btn-circle shadow-lg",
+            cls="btn btn-circle btn-outline",
             onclick=create_fab_animation_script([b[0].lower() for b in buttons])
         ),
         cls="fixed bottom-8 right-8"
@@ -162,7 +162,7 @@ def page_outline(selidx, title, *c):
                     ),
                     cls="flex justify-center items-center flex-1",
                 ),
-                cls="navbar bg-slate-950 bg-opacity-100 rounded-m h-[5vh] flex justify-center",
+                cls="navbar bg-base-100 bg-opacity-100 rounded-m h-[5vh] flex justify-center outline outline-1 outline-primary-content",
             ),
             fh.Div(
                 fh.Div(*c, cls="min-h-[calc(100vh-8vh)] pb-[3vh]"),
@@ -176,4 +176,4 @@ def Markdown(s, exts=md_exts, **kw):
     """
     Enable markdown component rendering with left inner padding.
     """
-    return fhb.Div(fhb.NotStr(markdown(s, extensions=exts)), cls="pl-2", **kw)
+    return fh.Div(fhb.NotStr(markdown(s, extensions=exts)), **kw)

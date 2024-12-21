@@ -14,14 +14,14 @@ def create_weight_form():
         cls="space-y-4"
     )(
         fh.Div(
-            fh.Label("Weight (lbs)", cls="label text-slate-200"),
+            fh.Label("Weight (lbs)", cls="label text-primary-content"),
             fh.Input(
                 type="number",
                 name="weight",
                 min="0",
                 step="0.1",
                 placeholder="Enter your weight",
-                cls="input input-bordered w-full bg-slate-700 text-slate-200 placeholder-slate-400"
+                cls="input input-bordered w-full bg-base-200 text-primary-content placeholder-slate-400"
             ),
             cls="form-control"
         ),
@@ -41,29 +41,29 @@ def create_height_form():
         cls="space-y-4"
     )(
         fh.Div(
-            fh.Label("Height", cls="label text-slate-200"),
+            fh.Label("Height", cls="label text-primary-content"),
             fh.Div(
                 fh.Div(
-                    fh.Label("Feet", cls="label text-slate-200"),
+                    fh.Label("Feet", cls="label text-primary-content"),
                     fh.Input(
                         type="number",
                         name="height_feet",
                         min="0",
                         max="9",
                         placeholder="ft",
-                        cls="input input-bordered w-24 bg-slate-700 text-slate-200 placeholder-slate-400"
+                        cls="input input-bordered w-24 bg-base-200 text-primary-content placeholder-slate-400"
                     ),
                     cls="form-control"
                 ),
                 fh.Div(
-                    fh.Label("Inches", cls="label text-slate-200"),
+                    fh.Label("Inches", cls="label text-primary-content"),
                     fh.Input(
                         type="number",
                         name="height_inches",
                         min="0",
                         max="11",
                         placeholder="in",
-                        cls="input input-bordered w-24 bg-slate-700 text-slate-200 placeholder-slate-400"
+                        cls="input input-bordered w-24 bg-base-200 text-primary-content placeholder-slate-400"
                     ),
                     cls="form-control"
                 ),
@@ -86,14 +86,14 @@ def create_goal_form():
         cls="space-y-4"
     )(
         fh.Div(
-            fh.Label("Fitness Goal", cls="label text-slate-200"),
+            fh.Label("Fitness Goal", cls="label text-primary-content"),
             fh.Select(
                 *[
                     fh.Option(goal.value.title(), value=goal.value)
                     for goal in Goals
                 ],
                 name="fitness_goal",
-                cls="select select-bordered w-full bg-slate-700 text-slate-200"
+                cls="select select-bordered w-full bg-base-200 text-primary-content"
             ),
             cls="form-control"
         ),
@@ -199,12 +199,12 @@ def get():
         fh.Div(
             fh.Card(
                 fh.Header(
-                    fh.H3("Your Progress", cls="text-2xl font-bold text-center mb-2 text-slate-200"),
+                    fh.H3("Your Progress", cls="text-2xl font-bold text-center mb-2 text-primary-content"),
                     fh.P(
                         "Track your weight changes over time",
                         cls="text-slate-400 text-center"
                     ),
-                    cls="mb-6"
+                    cls="mb-6 bg-base-200"
                 ),
                 # Plot container and script
                 fh.Div(
@@ -219,46 +219,47 @@ def get():
                         );
                         """
                     ),
-                    cls="p-4 bg-slate-800 rounded-lg shadow-lg"
+                    cls="p-4 bg-base-200 rounded-lg shadow-lg"
                 ),
                 fh.Div(
                     fh.Div(
-                        fh.H4("Statistics", cls="text-lg font-semibold mb-4 text-slate-200"),
+                        fh.H4("Statistics", cls="text-lg font-semibold mb-4 text-primary-content"),
                         create_stats_grid(weights),
                     ),
                     cls="mt-8"
                 ),
-                cls="bg-slate-800 shadow-lg rounded-lg p-6"
+                cls="bg-base-200 shadow-lg rounded-lg p-6"
             ),
             # Add FAB menu
             create_fab_menu(fab_buttons),
             # Add modals
             create_modal(
                 fh.Card(
-                    fh.Header(fh.H3("Update Weight", cls="text-xl font-bold mb-4 text-slate-200")),
+                    fh.Header(fh.H3("Update Weight", cls="text-xl font-bold mb-4 text-primary-content")),
                     create_weight_form(),
-                    cls="bg-slate-800 shadow-lg rounded-lg"
+                    cls="bg-base-200 shadow-lg rounded-lg"
                 ),
                 "weight-modal"
             ),
             create_modal(
                 fh.Card(
-                    fh.Header(fh.H3("Update Height", cls="text-xl font-bold mb-4 text-slate-200")),
+                    fh.Header(fh.H3("Update Height", cls="text-xl font-bold mb-4 text-primary-content")),
                     create_height_form(),
-                    cls="bg-slate-800 shadow-lg rounded-lg"
+                    cls="bg-base-200 shadow-lg rounded-lg"
                 ),
                 "height-modal"
             ),
             create_modal(
                 fh.Card(
-                    fh.Header(fh.H3("Change Goal", cls="text-xl font-bold mb-4 text-slate-200")),
+                    fh.Header(fh.H3("Change Goal", cls="text-xl font-bold mb-4 text-primary-content")),
                     create_goal_form(),
-                    cls="bg-slate-800 shadow-lg rounded-lg"
+                    cls="bg-base-200 shadow-lg rounded-lg"
                 ),
                 "goal-modal"
             ),
-            cls="max-w-4xl mx-auto p-6"
-        )
+            cls="max-w-4xl mx-auto p-6 bg-base-100"
+        ),
+        cls="bg-base-100"
     )
     return page_outline(2, "Progress Tracking", content)
 

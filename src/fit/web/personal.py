@@ -76,8 +76,8 @@ def get():
                 type="submit",
                 cls="btn btn-primary w-full mt-6"
             ),
-            fh.Div(id="update-result")
-        )
+            fh.Div(id="update-result"),
+        ),
     )
     return page_outline(2, "Personal Information", content)
 
