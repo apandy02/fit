@@ -527,13 +527,11 @@ def create_nutrition_card(nutrition_info):
                 nutrition_info.ingredients,
                 cls="mb-6 text-primary-content"
             ),
-            # Add hidden fields for llm_summary and ingredients
             fh.Form(
                 hx_post="/save_meal",
                 hx_target="#save-result",
                 cls="space-y-6"
             )(
-                # Hidden fields
                 fh.Input(
                     type="hidden",
                     name="summary",
@@ -544,7 +542,6 @@ def create_nutrition_card(nutrition_info):
                     name="ingredients",
                     value=nutrition_info.ingredients
                 ),
-                # Nutrition inputs
                 create_form_section("Nutrition Information", [
                     create_form_input("Meal Title", "summary", nutrition_info.summary, input_type="text"),
                     create_form_input("Calories (kcal)", "calories", nutrition_info.calories),

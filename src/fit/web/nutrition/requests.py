@@ -162,7 +162,6 @@ async def save_meal(request: fh.Request):
                 "Meal saved successfully!",
                 cls="text-green-500 font-semibold text-center mb-4"
             ),
-            # Add script to reset the modal and reload page
             fh.Script("""
                 // Show success message briefly
                 setTimeout(() => {
