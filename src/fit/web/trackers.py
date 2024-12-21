@@ -22,7 +22,7 @@ def active_tracker_info():
     return fh.Card(
         fh.Header(
             fh.H3("Active Tracker", cls="text-xl font-bold text-center mb-2 text-primary-content"),
-            cls="mb-4"
+            cls="mb-4 bg-base-200"
         ),
         fh.Div(
             fh.P(
@@ -35,7 +35,7 @@ def active_tracker_info():
                 active_info['username'],
                 cls="mb-4 text-primary-content"
             ),
-            cls="text-primary-content"
+            cls="text-primary-content bg-base-200"
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6"
     )
@@ -52,7 +52,7 @@ def credentials_section():
                 "Connect a fitness tracker account",
                 cls="text-primary-content text-center opacity-70"
             ),
-            cls="mb-6"
+            cls="mb-6 bg-base-200"
         ),
         fh.Form(
             hx_post="/connect_tracker",
@@ -116,7 +116,7 @@ def credentials_section():
             fh.Button(
                 "Save Credentials",
                 type="submit",
-                cls="btn btn-primary outline outline-1 outline-primary-content w-full mt-2"
+                cls="btn btn-primary outline outline-1 outline-slate-200 text-slate-200" # TODO: figure out why it isn't picking up the theme
             ),
             fh.Div(id="connection-result")
         ),
@@ -165,7 +165,7 @@ def change_tracker_section():
             fh.Button(
                 "Set Active",
                 type="submit",
-                cls="btn btn-primary outline outline-1 outline-primary-content w-full mt-2"
+                cls="btn btn-primary outline outline-1 outline-primary-content"
             ),
             fh.Div(id="active-tracker-result")
         ),
@@ -185,7 +185,13 @@ def get():
     )
     return page_outline(4, "Tracker Management", content)
 
-async def connect_tracker(tracker_type: str, username: str, password: str, set_active: bool = False, first_tracker: str = "false"):
+async def connect_tracker(
+        tracker_type: str,
+        username: str,
+        password: str,
+        set_active: bool = False,
+        first_tracker: str = "false"
+):
     """Handle tracker connection"""
     try:
         save_secrets(tracker_type, username, password)
