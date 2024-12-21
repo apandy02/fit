@@ -1,15 +1,15 @@
 from datetime import datetime
 
 import fasthtml.common as fh
-
 from fit.nutrition.data import Goals, MealBreakdown
 from fit.nutrition.targets import calculate_macro_targets
-from fit.web.common import (DB, active_tracker, micronutrient_goals,
+from fit.web.common import (DB, Markdown, active_tracker, micronutrient_goals,
                             nutrition_logger, nutritionist, page_outline)
 from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
                                get_visible_metrics, insert_meal,
                                set_visible_metrics)
 from fit.web.food_plots import create_plot
+from markdown import markdown
 
 
 def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, goal: float, burned: float = None, show_analysis: bool = True, allow_hide: bool = True):
@@ -56,87 +56,108 @@ def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, go
         id=f"{plot_id}-container"
     )
 
+def create_meal_prompt_form(
+    title: str,
+    textarea_label: str,
+    textarea_placeholder: str,
+    submit_text: str,
+    hx_post_url: str,
+    hx_target: str = "#text-input",
+    extra_fields: list = None,
+    header_buttons: list = None,
+    rows: int = 3
+):
+    """Create a form for meal description or refinement input.
+    
+    Args:
+        title: Form title
+        textarea_label: Label for the textarea
+        textarea_placeholder: Placeholder text for the textarea
+        submit_text: Text for the submit button
+        hx_post_url: HTMX post URL
+        hx_target: HTMX target selector
+        extra_fields: Additional form fields to include
+        header_buttons: Additional buttons to show in header
+        rows: Number of rows for the textarea
+    """
+    # Create header content
+    header_content = fh.H3(title, cls="text-xl font-bold text-primary-content")
+    if header_buttons:
+        header_content = fh.Div(
+            header_content,
+            *header_buttons,
+            cls="flex justify-between items-center"
+        )
+    
+    return fh.Card(
+        fh.Div(
+            fh.Header(
+                header_content,
+                cls="mb-6"
+            ),
+            fh.Form(
+                hx_post=hx_post_url,
+                hx_target=hx_target,
+                hx_swap="outerHTML",
+                cls="space-y-4"
+            )(
+                fh.Div(
+                    fh.Label(textarea_label, cls="label text-primary-content"),
+                    fh.Textarea(
+                        name="meal_description" if "analyze" in hx_post_url else "feedback",
+                        placeholder=textarea_placeholder,
+                        rows=rows,
+                        cls="textarea textarea-bordered w-full bg-base-200 outline text-primary-content placeholder-slate-400"
+                    ),
+                    cls="form-control"
+                ),
+                *(extra_fields or []),
+                fh.Button(
+                    submit_text,
+                    type="submit",
+                    cls="btn bg-primary"
+                )
+            ),
+            cls="p-6"
+        ),
+        cls="bg-base-200 rounded-lg"
+    )
+
 def create_text_input_form(is_feedback: bool = False):
     """Create the text input form for meal description"""
     if not is_feedback:
-        return fh.Card(
-            fh.Div(
-                fh.Header(
-                    fh.H3("Describe Your Meal", cls="text-xl font-bold text-primary-content"),
-                    cls="mb-6"
-                ),
-                fh.Form(
-                    hx_post="/analyze_text",
-                    hx_target="#text-input",
-                    hx_swap="outerHTML",
-                    cls="space-y-4"
-                )(
-                    fh.Div(
-                        fh.Label("Meal Description", cls="label text-primary-content"),
-                        fh.Textarea(
-                            name="meal_description",
-                            placeholder="Example: I had a grilled chicken sandwich with lettuce, tomato and mayo",
-                            rows=3,
-                            cls="textarea textarea-bordered w-full bg-base-200 outline  text-primary-content placeholder-slate-400"
-                        ),
-                        cls="form-control"
-                    ),
-                    fh.Button(
-                        "Analyze Description",
-                        type="submit",
-                        cls="btn bg-primary"
-                    )
-                ),
-                cls="p-6"
-            ),
-            cls="bg-base-200 rounded-lg"
+        return create_meal_prompt_form(
+            title="Describe Your Meal",
+            textarea_label="Meal Description",
+            textarea_placeholder="Example: I had a grilled chicken sandwich with lettuce, tomato and mayo",
+            submit_text="Analyze Description",
+            hx_post_url="/analyze_text",
+            rows=3
         )
     else:
-        return fh.Card(
-            fh.Div(
-                fh.Header(
-                    fh.Div(
-                        fh.H3("Refine Analysis", cls="text-xl font-bold text-primary-content"),
-                        fh.Button(
-                            "↺",
-                            hx_post="/reset_text_form",
-                            hx_target="#text-input",
-                            cls="btn btn-ghost text-xl text-primary-content"
-                        ),
-                        cls="flex justify-between items-center"
-                    ),
-                    cls="mb-6"
-                ),
-                fh.Form(
-                    hx_post="/regenerate_analysis",
-                    hx_target="#text-result",
-                    cls="space-y-4"
-                )(
-                    fh.Div(
-                        fh.Label("Suggest Edits", cls="label text-primary-content"),
-                        fh.Textarea(
-                            name="feedback",
-                            placeholder="Suggest edits to improve the analysis",
-                            rows=2,
-                            cls="textarea textarea-bordered w-full bg-base-200 outline  text-primary-content placeholder-slate-400"
-                        ),
-                        cls="form-control"
-                    ),
-                    fh.Input(
-                        type="hidden",
-                        name="original_description",
-                        id="original_description"
-                    ),
-                    fh.Button(
-                        "Regenerate",
-                        type="submit",
-                        cls="btn bg-primary"
-                    ),
-                    fh.Div(id="text-result", cls="mt-4")
-                ),
-                cls="p-6"
-            ),
-            cls="bg-base-200 rounded-lg"
+        return create_meal_prompt_form(
+            title="Refine Analysis",
+            textarea_label="Suggest Edits",
+            textarea_placeholder="Suggest edits to improve the analysis",
+            submit_text="Regenerate",
+            hx_post_url="/regenerate_analysis",
+            hx_target="#text-result",
+            rows=2,
+            extra_fields=[
+                fh.Input(
+                    type="hidden",
+                    name="original_description",
+                    id="original_description"
+                )
+            ],
+            header_buttons=[
+                fh.Button(
+                    "↺",
+                    hx_post="/reset_text_form",
+                    hx_target="#text-input",
+                    cls="btn btn-ghost text-xl text-primary-content"
+                )
+            ]
         )
 
 def create_image_upload_form():
@@ -537,7 +558,7 @@ async def generate_overview():
         fh.Div(
             *[
                 fh.Div(
-                    fh.P(fh.NotStr(line.strip()), cls="text-primary-content mb-1"),
+                    fh.P(line.strip(), cls="text-primary-content mb-1"),
                     cls="mb-2"
                 )
                 for line in analysis.split('\n')
@@ -692,48 +713,7 @@ async def analyze_text(meal_description: str):
         fh.Div(
             # Feedback form section
             fh.Div(
-                fh.Header(
-                    fh.Div(
-                        fh.H3("Refine Analysis", cls="text-xl font-bold text-primary-content"),
-                        fh.Button(
-                            "↺",
-                            hx_post="/reset_text_form",
-                            hx_target="#text-input",
-                            hx_swap="outerHTML",
-                            cls="btn btn-ghost text-xl text-primary-content"
-                        ),
-                        cls="flex justify-between items-center"
-                    ),
-                    cls="mb-6"
-                ),
-                fh.Form(
-                    hx_post="/regenerate_analysis",
-                    hx_target="#nutrition-card",
-                    cls="space-y-4"
-                )(
-                    fh.Div(
-                        fh.Label("Suggest Edits", cls="label text-primary-content"),
-                        fh.Textarea(
-                            name="feedback",
-                            placeholder="Suggest edits to improve the analysis",
-                            rows=2,
-                            cls="textarea textarea-bordered w-full bg-base-200 outline  text-primary-content placeholder-slate-400"
-                        ),
-                        cls="form-control"
-                    ),
-                    fh.Input(
-                        type="hidden",
-                        name="original_description",
-                        id="original_description",
-                        value=meal_description
-                    ),
-                    fh.Button(
-                        "Regenerate",
-                        type="submit",
-                        cls="btn bg-primary"
-                    )
-                ),
-                cls="mb-6"
+                create_text_input_form(is_feedback=True)
             ),
             # Nutrition card section
             fh.Div(
@@ -883,59 +863,4 @@ def create_metrics_container(data):
         ),
         cls="w-full",
         id="metrics-container"
-    )
-
-async def toggle_dropdown(dropdown_id: str):
-    """Toggle the visibility of a dropdown"""
-    visible_metrics = get_visible_metrics(DB, "default")
-    
-    # Get the appropriate metrics list based on the section
-    if "macro" in dropdown_id:
-        all_metrics = [
-            {"name": "Calories", "column_name": "calories", "unit": "", "plot_id": "calories"},
-            {"name": "Protein", "column_name": "protein", "unit": "g", "plot_id": "protein"},
-            {"name": "Carbohydrates", "column_name": "carbs", "unit": "g", "plot_id": "carbs"},
-            {"name": "Fat", "column_name": "fat", "unit": "g", "plot_id": "fat"}
-        ]
-    elif "micro" in dropdown_id:
-        all_metrics = [
-            {"name": "Vitamin A", "column_name": "vitamin_a", "unit": "IU", "plot_id": "vitamin_a"},
-            {"name": "Vitamin C", "column_name": "vitamin_c", "unit": "mg", "plot_id": "vitamin_c"},
-            {"name": "Iron", "column_name": "iron", "unit": "mg", "plot_id": "iron"},
-            {"name": "Calcium", "column_name": "calcium", "unit": "mg", "plot_id": "calcium"}
-        ]
-    elif "conditional" in dropdown_id:
-        all_metrics = [
-            {"name": "Creatine", "column_name": "creatine", "unit": "g", "plot_id": "creatine"}
-        ]
-    else:
-        return ""  # Return empty for unknown sections
-    
-    # Get hidden metrics
-    hidden_metrics = [
-        metric for metric in all_metrics 
-        if metric["column_name"].lower() not in visible_metrics
-    ]
-    
-    # Return the dropdown with its content
-    return fh.Div(
-        *[
-            fh.A(
-                metric["name"],
-                cls="block w-full text-left px-4 py-2 text-sm text-primary-content hover:bg-base-200 outline  cursor-pointer",
-                onclick=f"""
-                    fetch('/show_metric/{metric["plot_id"]}', {{method: 'POST'}})
-                        .then(response => response.text())
-                        .then(html => {{
-                            document.getElementById('metrics-container').outerHTML = html;
-                            document.getElementById('{dropdown_id}').classList.add('hidden');
-                        }});
-                    return false;
-                """,
-                href="#"
-            )
-            for metric in hidden_metrics
-        ],
-        cls="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-base-200 outline  ring-1 ring-black ring-opacity-5 z-10 block",  # Removed hidden class
-        id=dropdown_id
     )
