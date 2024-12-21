@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import json
 import fasthtml.common as fh
 
 from fit.nutrition.data import Goals, MealBreakdown
@@ -7,11 +7,11 @@ from fit.nutrition.targets import calculate_macro_targets
 from fit.web.common import (DB, Markdown, active_tracker, micronutrient_goals,
                             nutrition_logger, nutritionist, page_outline)
 from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
-                               insert_meal)
+                               insert_meal, get_visible_metrics, set_visible_metrics)
 from fit.web.food_plots import create_plot
 
 
-def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, goal: float, burned: float = None, show_analysis: bool = True):
+def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, goal: float, burned: float = None, show_analysis: bool = True, allow_hide: bool = True):
     """Create a card containing a metric plot"""
     plot_data, plot_layout = create_plot(title, y_axis_title, consumed, goal, burned)
     
@@ -22,8 +22,21 @@ def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, go
             macro_name = "carbohydrate"
         analysis_text = nutritionist.macro_analysis(macro_name, consumed, goal)
     
+    # Add hide button if metric is hideable and not mandatory
+    hide_button = None
+    if allow_hide and title.lower() not in ["calories", "water", "creatine"]:
+        hide_button = fh.Button(
+            "×",
+            cls="absolute right-2 top-2 text-xl font-light text-slate-400 hover:text-slate-200 focus:outline-none focus:ring-0 border-none outline-none",
+            style="outline: none; box-shadow: none;",
+            hx_post=f"/hide_metric/{plot_id}",
+            hx_target=f"#{plot_id}-container",
+            hx_swap="outerHTML"
+        )
+    
     return fh.Card(
         fh.Div(
+            hide_button if hide_button else None,
             fh.Div(id=plot_id, cls="w-full h-full"),
             fh.Script(
                 f"""
@@ -36,9 +49,10 @@ def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, go
                 """
             ),
             fh.P(analysis_text, cls="text-sm text-slate-300 mt-4") if analysis_text else None,
-            cls="p-4"
+            cls="p-4 relative"  # Added relative positioning for absolute hide button
         ),
-        cls="bg-slate-800 rounded-lg h-full text-slate-200"
+        cls="bg-slate-800 rounded-lg h-full text-slate-200",
+        id=f"{plot_id}-container"
     )
 
 def create_text_input_form(is_feedback: bool = False):
@@ -361,12 +375,43 @@ def create_page_header():
         cls="mb-8"
     )
 
-def create_metric_overview_section(title, metrics_data, metrics_config):
+def create_metric_overview_section(title, metrics_data, filtered_metrics, all_metrics=None):
     """Create a metrics overview section with configurable metrics"""
-    metric_rows = [metrics_config[i:i+2] for i in range(0, len(metrics_config), 2)]
+    metric_rows = [filtered_metrics[i:i+2] for i in range(0, len(filtered_metrics), 2)]
+    
+    # Create dropdown of hidden metrics if all_metrics is provided
+    add_button = None
+    if all_metrics:
+        # Get metrics that are hidden (in all_metrics but not in filtered_metrics)
+        hidden_metrics = [
+            metric for metric in all_metrics 
+            if metric["column_name"] not in [m["column_name"] for m in filtered_metrics]
+        ]
+        
+        if hidden_metrics:
+            dropdown_id = f"dropdown-{title.lower().replace(' ', '-')}"
+            add_button = fh.Div(
+                fh.Button(
+                    "+",
+                    cls="text-xl font-light text-slate-400 hover:text-slate-200 focus:outline-none focus:ring-0 border-none outline-none",
+                    hx_get=f"/toggle_dropdown/{dropdown_id}",
+                    hx_target=f"#{dropdown_id}",
+                    hx_swap="innerHTML",
+                    onclick=f"document.getElementById('{dropdown_id}').classList.toggle('hidden')"
+                ),
+                fh.Div(
+                    cls="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-slate-800 ring-1 ring-black ring-opacity-5 z-10",
+                    id=dropdown_id
+                ),
+                cls="relative inline-block text-left ml-2"
+            )
     
     return fh.Section(
-        fh.H3(f"{title}", cls="text-2xl font-bold text-center mb-8 text-slate-200"),
+        fh.Div(
+            fh.H3(f"{title}", cls="text-2xl font-bold text-center mb-8 text-slate-200"),
+            add_button if add_button else None,
+            cls="flex items-center justify-center"
+        ),
         fh.Div(
             *[fh.Div(
                 *[metric_card(
@@ -375,62 +420,81 @@ def create_metric_overview_section(title, metrics_data, metrics_config):
                     metric["plot_id"],
                     metrics_data[metric["column_name"]]["consumed"],
                     metrics_data[metric["column_name"]]["goal"],
-                    metrics_data[metric["column_name"]].get("burned")
+                    metrics_data[metric["column_name"]].get("burned"),
+                    allow_hide=metric["name"].lower() not in ["calories", "water", "creatine"]
                 ) for metric in row],
-                cls="grid grid-cols-2 gap-6 mb-6"
+                cls=f"{'w-1/2 mx-auto' if len(row) == 1 else 'grid grid-cols-2 gap-6'} mb-6"
             ) for row in metric_rows],
             cls="w-full"
         ),
         cls="w-full"
     )
 
-def create_macro_section(data):
+def create_macro_section(data, visible_metrics):
     """Create the macronutrient metrics section"""
     macro_metrics = [
-        {"name": "Calories", "column_name": "calories", "unit": "", "plot_id": "calories-plot"},
-        {"name": "Protein", "column_name": "protein", "unit": "g", "plot_id": "protein-plot"},
-        {"name": "Carbohydrates", "column_name": "carbs", "unit": "g", "plot_id": "carbs-plot"},
-        {"name": "Fat", "column_name": "fat", "unit": "g", "plot_id": "fat-plot"}
+        {"name": "Calories", "column_name": "calories", "unit": "", "plot_id": "calories"},
+        {"name": "Protein", "column_name": "protein", "unit": "g", "plot_id": "protein"},
+        {"name": "Carbohydrates", "column_name": "carbs", "unit": "g", "plot_id": "carbs"},
+        {"name": "Fat", "column_name": "fat", "unit": "g", "plot_id": "fat"}
     ]
-    return create_metric_overview_section("Macronutrients", data, macro_metrics)
 
-def create_micro_section(data):
+    filtered_metrics = [
+        metric for metric in macro_metrics 
+        if metric["column_name"].lower() in visible_metrics
+    ]
+
+    return create_metric_overview_section("Macronutrients", data, filtered_metrics, macro_metrics)
+
+def create_micro_section(data, visible_metrics):
     """Create the micronutrient metrics section"""
     micro_metrics = [
-        {"name": "Vitamin A", "column_name": "vitamin_a", "unit": "IU", "plot_id": "vitamin-a-plot"},
-        {"name": "Vitamin C", "column_name": "vitamin_c", "unit": "mg", "plot_id": "vitamin-c-plot"},
-        {"name": "Iron", "column_name": "iron", "unit": "mg", "plot_id": "iron-plot"},
-        {"name": "Calcium", "column_name": "calcium", "unit": "mg", "plot_id": "calcium-plot"}
+        {"name": "Vitamin A", "column_name": "vitamin_a", "unit": "IU", "plot_id": "vitamin_a"},
+        {"name": "Vitamin C", "column_name": "vitamin_c", "unit": "mg", "plot_id": "vitamin_c"},
+        {"name": "Iron", "column_name": "iron", "unit": "mg", "plot_id": "iron"},
+        {"name": "Calcium", "column_name": "calcium", "unit": "mg", "plot_id": "calcium"}
     ]
-    return create_metric_overview_section("Micronutrients", data, micro_metrics)
+    filtered_metrics = [
+        metric for metric in micro_metrics 
+        if metric["column_name"].lower() in visible_metrics
+    ]
+    return create_metric_overview_section("Micronutrients", data, filtered_metrics, micro_metrics)
+
+def create_conditional_section(data, visible_metrics):
+    """Create the conditionally essential nutrients section"""
+    conditional_metrics = [
+        {"name": "Creatine", "column_name": "creatine", "unit": "g", "plot_id": "creatine"}
+    ]
+    filtered_metrics = [
+        metric for metric in conditional_metrics 
+        if metric["column_name"].lower() in visible_metrics
+    ]
+    return create_metric_overview_section("Conditionally Essential Nutrients", data, filtered_metrics, conditional_metrics)
 
 def create_water_section(data):
     """Create the water metrics section"""
-    return fh.Section(
-        fh.H3("Hydration", cls="text-2xl font-bold text-center mb-6 text-slate-200"),
-        fh.Div(
-            fh.Div(
-                metric_card(
-                    "Water", "Water (oz)", "water-plot",
-                    data["water"]["consumed"],
-                    data["water"]["goal"],
-                    show_analysis=False
-                ),
-                cls="w-1/2 mx-auto"  # Centered with max width of 50%
-            ),
-            cls="w-full"
-        ),
-        cls="w-full"
-    )
+    water_metrics = [
+        {"name": "Water", "column_name": "water", "unit": "oz", "plot_id": "water-plot"}
+    ]
+    return create_metric_overview_section("Hydration", data, water_metrics)
 
 def create_metrics_grid(data):
     """Create the grid of metric cards"""
+    visible_metrics = get_visible_metrics(DB, "default") # TODO: get user_id from session, hardcoded for now
+
+    sections = [
+        create_overview_card(),
+        create_macro_section(data, visible_metrics),
+        create_micro_section(data, visible_metrics),
+        create_conditional_section(data, visible_metrics),
+        create_water_section(data)
+    ]
+    # Filter out None sections (those with all metrics hidden)
+    sections = [section for section in sections if section is not None]
+    
     return fh.Div(
         fh.Div(
-            create_overview_card(),
-            create_macro_section(data),
-            create_micro_section(data),
-            create_water_section(data),
+            *sections,
             cls="w-full space-y-12"
         ),
         cls="w-full"
@@ -498,7 +562,8 @@ def get():
         "vitamin_c": {"consumed": daily_consumption.vitamin_c, "goal": micronutrient_goals["vitamin_c"]},
         "iron": {"consumed": daily_consumption.iron, "goal": micronutrient_goals["iron"]},
         "calcium": {"consumed": daily_consumption.calcium, "goal": micronutrient_goals["calcium"]},
-        "water": {"consumed": 40, "goal": 64}
+        "water": {"consumed": 40, "goal": 64},
+        "creatine": {"consumed": 2.0, "goal": 5.0}  # Added creatine with default values
     }
 
     content = fh.Article(
@@ -752,3 +817,128 @@ async def regenerate_analysis(feedback: str, original_description: str):
     # Then improve it based on feedback
     improved_info = nutrition_logger.improve_breakdown(original_info, feedback)
     return create_nutrition_card(improved_info)
+
+async def hide_metric(plot_id: str):
+    """Hide a metric by removing it from visible_metrics"""
+    visible_metrics = get_visible_metrics(DB, "default")
+
+    if plot_id in visible_metrics:
+        visible_metrics.remove(plot_id)
+        set_visible_metrics(DB, visible_metrics, "default")
+    return ""  # Return empty string to remove the card
+
+async def show_metric(plot_id: str):
+    """Show a previously hidden metric"""
+    visible_metrics = get_visible_metrics(DB, "default")
+    
+    # Add the metric back to visible metrics
+    # Extract the column name from plot_id by removing any suffixes
+    column_name = plot_id.replace("-plot", "").replace("_", "")
+    if column_name not in visible_metrics:
+        visible_metrics.append(column_name)
+        set_visible_metrics(DB, visible_metrics, "default")
+    
+    # Return the refreshed metrics grid
+    return create_metrics_container(get_nutrition_data())
+
+def get_nutrition_data():
+    """Get the current nutrition data for display"""
+    calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
+    goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
+    daily_consumption = get_daily_cumulative_nutrition(DB, datetime.date(datetime.today()))
+
+    return {
+        "calories": {"consumed": daily_consumption.calories, "goal": goals["calories"], "burned": calories_burned},
+        "protein": {"consumed": daily_consumption.protein, "goal": goals["protein"]},
+        "carbs": {"consumed": daily_consumption.carbs, "goal": goals["carbs"]},
+        "fat": {"consumed": daily_consumption.fat, "goal": goals["fat"]},
+        "vitamin_a": {"consumed": daily_consumption.vitamin_a, "goal": micronutrient_goals["vitamin_a"]},
+        "vitamin_c": {"consumed": daily_consumption.vitamin_c, "goal": micronutrient_goals["vitamin_c"]},
+        "iron": {"consumed": daily_consumption.iron, "goal": micronutrient_goals["iron"]},
+        "calcium": {"consumed": daily_consumption.calcium, "goal": micronutrient_goals["calcium"]},
+        "water": {"consumed": 40, "goal": 64},
+        "creatine": {"consumed": 2.0, "goal": 5.0}
+    }
+
+def create_metrics_container(data):
+    """Create the metrics grid with its container"""
+    visible_metrics = get_visible_metrics(DB, "default")
+    
+    sections = [
+        create_overview_card(),
+        create_macro_section(data, visible_metrics),
+        create_micro_section(data, visible_metrics),
+        create_conditional_section(data, visible_metrics),
+        create_water_section(data)
+    ]
+    # Filter out None sections (those with all metrics hidden)
+    sections = [section for section in sections if section is not None]
+    
+    return fh.Div(
+        fh.Div(
+            *sections,
+            cls="w-full space-y-12"
+        ),
+        cls="w-full",
+        id="metrics-container"
+    )
+
+async def toggle_dropdown(dropdown_id: str):
+    """Toggle the visibility of a dropdown"""
+    # Get the section title from the dropdown ID
+    section_title = dropdown_id.replace("dropdown-", "").replace("-", " ").title()
+    
+    # Get the current metrics data and visible metrics
+    data = get_nutrition_data()
+    visible_metrics = get_visible_metrics(DB, "default")
+    
+    # Get the appropriate metrics list based on the section
+    if "macro" in dropdown_id:
+        all_metrics = [
+            {"name": "Calories", "column_name": "calories", "unit": "", "plot_id": "calories"},
+            {"name": "Protein", "column_name": "protein", "unit": "g", "plot_id": "protein"},
+            {"name": "Carbohydrates", "column_name": "carbs", "unit": "g", "plot_id": "carbs"},
+            {"name": "Fat", "column_name": "fat", "unit": "g", "plot_id": "fat"}
+        ]
+    elif "micro" in dropdown_id:
+        all_metrics = [
+            {"name": "Vitamin A", "column_name": "vitamin_a", "unit": "IU", "plot_id": "vitamin_a"},
+            {"name": "Vitamin C", "column_name": "vitamin_c", "unit": "mg", "plot_id": "vitamin_c"},
+            {"name": "Iron", "column_name": "iron", "unit": "mg", "plot_id": "iron"},
+            {"name": "Calcium", "column_name": "calcium", "unit": "mg", "plot_id": "calcium"}
+        ]
+    elif "conditional" in dropdown_id:
+        all_metrics = [
+            {"name": "Creatine", "column_name": "creatine", "unit": "g", "plot_id": "creatine"}
+        ]
+    else:
+        return ""  # Return empty for unknown sections
+    
+    # Get hidden metrics
+    hidden_metrics = [
+        metric for metric in all_metrics 
+        if metric["column_name"].lower() not in visible_metrics
+    ]
+    
+    # Return the dropdown with its content
+    return fh.Div(
+        *[
+            fh.A(
+                metric["name"],
+                cls="block w-full text-left px-4 py-2 text-sm text-slate-200 hover:bg-slate-700 cursor-pointer",
+                onclick=f"""
+                    fetch('/show_metric/{metric["plot_id"]}', {{method: 'POST'}})
+                        .then(response => response.text())
+                        .then(html => {{
+                            document.getElementById('metrics-container').outerHTML = html;
+                            document.getElementById('{dropdown_id}').classList.add('hidden');
+                        }});
+                    return false;
+                """,
+                href="#"
+            )
+            for metric in hidden_metrics
+        ],
+        cls="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-slate-800 ring-1 ring-black ring-opacity-5 z-10 block",  # Removed hidden class
+        id=dropdown_id
+    )

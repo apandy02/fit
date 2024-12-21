@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 import fasthtml.common as fh
 
@@ -6,11 +7,12 @@ from fit.nutrition.data import MealBreakdown, NutritionalInformation
 
 # TODO: consider creating a class for the database
 
-def init_db(database_path: str):
+def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
     """
     Initialize the database and create tables if they don't exist.
     """
     db = fh.database(database_path)
+    user_id = "default" # TODO: get user id from auth, hardcode for now
 
     meals_table = db.t.meals
     if meals_table not in db.t:
@@ -48,6 +50,21 @@ def init_db(database_path: str):
                 weight=float,
             ),
             pk='uuid'
+        )
+    
+    visible_metrics_table = db.t.visible_metrics
+    if visible_metrics_table not in db.t:
+        visible_metrics_table.create(
+            dict(
+                user_id=str,
+                metrics=str,
+            ),
+            pk='user_id'
+        )
+        metrics = json.dumps(metrics)
+        visible_metrics_table.insert(
+            user_id=user_id,
+            metrics=metrics
         )
 
     return db
@@ -149,3 +166,25 @@ def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdow
         sodium=meal.sodium,
         fiber=meal.fiber
     )
+
+
+def get_visible_metrics(database: fh.Database, user_id: str):
+    """
+    Get the visible metrics from the database.
+    """
+    query = """
+        select metrics from visible_metrics where user_id = ?
+    """
+    result = database.execute(query, (user_id,)).fetchone()
+    return json.loads(result[0])
+
+def set_visible_metrics(database: fh.Database, metrics: list[str], user_id: str):
+    """
+    Set the visible metrics in the database.
+    """
+    query = """
+        update visible_metrics set metrics = ? where user_id = ?
+    """
+    metrics = json.dumps(metrics)
+    print(metrics)
+    database.execute(query, (metrics, user_id))

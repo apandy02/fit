@@ -10,12 +10,30 @@ from fit.web.databases import init_db
 DB_PATH = "data/nutrition.db"
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
 
+ALL_METRICS = [
+    "calories",
+    "protein",
+    "carbs", 
+    "fat",
+    "fiber",
+    "vitamin_a",
+    "vitamin_c",
+    "vitamin_d", 
+    "calcium",
+    "iron",
+    "potassium",
+    "sodium",
+    "water",
+    "creatine"
+]
 
-DB = init_db(DB_PATH)
+
+DB = init_db(DB_PATH, ALL_METRICS, "default")
 nutrition_logger = NutritionLogger()
 active_tracker = get_active_tracker()
 nutritionist = Nutritionist()
 micronutrient_goals = MICRO_GOALS["male"]
+
 
 
 def create_fab_menu(buttons):

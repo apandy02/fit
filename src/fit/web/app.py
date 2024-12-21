@@ -21,6 +21,9 @@ app.post("/generate_overview")(food.generate_overview)
 app.post("/save_meal")(food.save_meal)
 app.post("/reset_text_form")(food.reset_text_form)
 app.post("/regenerate_analysis")(food.regenerate_analysis)
+app.post("/hide_metric/{plot_id}")(food.hide_metric)
+app.post("/show_metric/{plot_id}")(food.show_metric)
+app.get("/toggle_dropdown/{dropdown_id}")(food.toggle_dropdown)
 
 # Progress routes
 app.get("/progress")(progress.get)
