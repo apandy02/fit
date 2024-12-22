@@ -14,7 +14,7 @@ def get():
     weights = [m[1] for m in measurements]
     
     plot_data, plot_layout = create_weight_plot()
-    
+
     fab_buttons = [
         ("Weight", "⚖️", "openModal('weight-modal')"),
         ("Height", "📏", "openModal('height-modal')"),
@@ -32,7 +32,6 @@ def get():
                     ),
                     cls="mb-6 bg-base-200"
                 ),
-                # Plot container and script
                 fh.Div(
                     fh.Div(id="weight-plot", cls="w-full"),
                     fh.Script(
@@ -77,15 +76,17 @@ def create_progress_modal_card(title: str, create_fn, modal_id: str):
         modal_id
     )
 
-async def update_weight(weight: float):
-    """Handle weight update"""
-    DB.execute(
-        "INSERT INTO measurements (datetime, weight) VALUES (?, ?)",
-        (datetime.now().isoformat(), weight)
-    )
-    return fh.P(
-        "Weight updated successfully!",
-        cls="text-green-600 font-semibold text-center mt-4"
+def create_input_section(label: str, name: str, width: str = "w-full", **input_props):
+    """Create a form input section with label and input"""
+    return fh.Div(
+        fh.Label(label, cls="label text-primary-content"),
+        fh.Input(
+            type="number",
+            name=name,
+            cls=f"input input-bordered {width} bg-base-200 text-primary-content placeholder-slate-400",
+            **input_props
+        ),
+        cls="form-control"
     )
 
 def create_weight_form():
@@ -95,18 +96,7 @@ def create_weight_form():
         hx_target="#weight-result",
         cls="space-y-4"
     )(
-        fh.Div(
-            fh.Label("Weight (lbs)", cls="label text-primary-content"),
-            fh.Input(
-                type="number",
-                name="weight",
-                min="0",
-                step="0.1",
-                placeholder="Enter your weight",
-                cls="input input-bordered w-full bg-base-200 text-primary-content placeholder-slate-400"
-            ),
-            cls="form-control"
-        ),
+        create_input_section("Weight (lbs)", "weight", "0", "0.1", "Enter your weight"),
         fh.Button(
             "Update Weight",
             type="submit",
@@ -125,30 +115,8 @@ def create_height_form():
         fh.Div(
             fh.Label("Height", cls="label text-primary-content"),
             fh.Div(
-                fh.Div(
-                    fh.Label("Feet", cls="label text-primary-content"),
-                    fh.Input(
-                        type="number",
-                        name="height_feet",
-                        min="0",
-                        max="9",
-                        placeholder="ft",
-                        cls="input input-bordered w-24 bg-base-200 text-primary-content placeholder-slate-400"
-                    ),
-                    cls="form-control"
-                ),
-                fh.Div(
-                    fh.Label("Inches", cls="label text-primary-content"),
-                    fh.Input(
-                        type="number",
-                        name="height_inches",
-                        min="0",
-                        max="11",
-                        placeholder="in",
-                        cls="input input-bordered w-24 bg-base-200 text-primary-content placeholder-slate-400"
-                    ),
-                    cls="form-control"
-                ),
+                create_input_section("Feet", "height_feet", "w-24", "0", "9", "ft"),
+                create_input_section("Inches", "height_inches", "w-24", "0", "11", "in"),
                 cls="flex space-x-4"
             )
         ),
@@ -230,35 +198,28 @@ def create_weight_plot():
     
     return plot_data, plot_layout
 
-def create_stats_grid(weights):
-    """Create the statistics grid"""
-    return fh.Grid(
-        fh.Card(
-            fh.H5("Current Weight", cls="text-sm text-primary-content"),
-            fh.P(
-                f"{weights[-1]:.1f} lbs" if weights else "No data",
-                cls="text-2xl font-bold text-secondary-content"
-            ),
-            cls="p-4 text-center bg-base-300"
+def create_stats_grid(weights: list):
+    """Create a grid of statistics cards"""
+    current_weight = f"{weights[-1]:.1f} lbs" if weights else "No data"
+    total_change = f"{(weights[-1] - weights[0]):.1f} lbs" if len(weights) > 1 else "No change"
+    measurement_count = str(len(weights))
+
+    return fh.Div(
+        create_stats_card("Current Weight", current_weight),
+        create_stats_card("Total Change", total_change),
+        create_stats_card("Measurements", measurement_count),
+        cls="grid grid-cols-3 gap-4"
+    )
+
+def create_stats_card(title: str, value: str):
+    """Create a card displaying a statistic with title and value"""
+    return fh.Card(
+        fh.H5(title, cls="text-sm text-primary-content"),
+        fh.P(
+            value,
+            cls="text-2xl font-bold text-secondary-content"
         ),
-        fh.Card(
-            fh.H5("Total Change", cls="text-sm text-primary-content"),
-            fh.P(
-                f"{(weights[-1] - weights[0]):.1f} lbs" if len(weights) > 1 else "No change",
-                cls="text-2xl font-bold text-secondary-content"
-            ),
-            cls="p-4 text-center bg-base-300"
-        ),
-        fh.Card(
-            fh.H5("Measurements", cls="text-sm text-primary-content"),
-            fh.P(
-                str(len(weights)),
-                cls="text-2xl font-bold text-secondary-content"
-            ),
-            cls="p-4 text-center bg-base-300"
-        ),
-        cols=3,
-        cls="gap-4 mt-6"
+        cls="p-4 text-center bg-base-300"
     )
 
 async def update_height(height_feet: int, height_inches: int):
@@ -283,3 +244,14 @@ async def update_goal(fitness_goal: str):
         "Goal updated successfully!",
         cls="text-green-600 font-semibold text-center mt-4"
     ) 
+
+async def update_weight(weight: float):
+    """Handle weight update"""
+    DB.execute(
+        "INSERT INTO measurements (datetime, weight) VALUES (?, ?)",
+        (datetime.now().isoformat(), weight)
+    )
+    return fh.P(
+        "Weight updated successfully!",
+        cls="text-green-600 font-semibold text-center mt-4"
+    )
