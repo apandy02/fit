@@ -146,7 +146,7 @@ def page_outline(selidx, title, *c):
                 fh.Div(
                     fh.A(
                         "Food",
-                        href="/food",
+                        href="/nutrition",
                         cls="btn btn-ghost text-white",
                     ),
                     fh.A(

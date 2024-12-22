@@ -122,12 +122,13 @@ class Nutritionist:
             <b>Micronutrients</b>
             <b>Suggestions</b>
 
-            Format as plain text paragraphs without bullets, markdown, or special formatting 
+            Format as plain text paragraphs without bullets, markdown, or special formatting , you are 
+            speaking to the user directly as their nutritionist. 
             (except section headers in <b> tags). Each section should flow naturally in paragraph form."""
             meals_str = "Here are the meals the user has logged today:\n"
             
             for i, meal in enumerate(meals, 1):
-                meals_str += f"Meal {i}: {meal.summary} - {meal.calories} calories, "
+                meals_str += f"Meal {meal.summary} - {meal.calories} calories, "
                 meals_str += f"{meal.protein}g protein, {meal.carbs}g carbs, {meal.fat}g fat\n"
                 meals_str += f"Micros: {meal.vitamin_a}IU vit A, {meal.vitamin_c}mg vit C, "
                 meals_str += f"{meal.iron}mg iron, {meal.calcium}mg calcium, "

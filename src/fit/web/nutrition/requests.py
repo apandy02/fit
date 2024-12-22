@@ -246,7 +246,7 @@ async def generate_overview():
         fh.Div(
             *[
                 fh.Div(
-                    fh.P(line.strip(), cls="text-primary-content mb-1"),
+                    fh.P(fh.NotStr(line.strip()), cls="text-primary-content mb-1"),
                     cls="mb-2"
                 )
                 for line in analysis.split('\n')
