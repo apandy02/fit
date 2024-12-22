@@ -1,12 +1,11 @@
 from datetime import datetime
 
 import fasthtml.common as fh
-
 from fit.nutrition.data import Goals, MealBreakdown
 from fit.nutrition.targets import calculate_macro_targets
-from fit.web.common import (DB, active_tracker,
-                            create_fab_menu, micronutrient_goals,
-                            nutrition_logger, nutritionist, page_outline)
+from fit.web.common import (DB, active_tracker, create_fab_menu,
+                            micronutrient_goals, nutrition_logger,
+                            nutritionist, page_outline)
 from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
                                get_visible_metrics, insert_meal,
                                set_visible_metrics)

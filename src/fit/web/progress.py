@@ -2,18 +2,14 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
-
 from fit.nutrition.data import Goals
 from fit.web.common import DB, create_fab_menu, create_modal, page_outline
 
+
 def get():
     """Return the progress tracking page content"""
-    measurements = DB.execute(
-        "SELECT datetime, weight FROM measurements ORDER BY datetime"
-    ).fetchall()
-    weights = [m[1] for m in measurements]
-    
-    plot_data, plot_layout = create_weight_plot()
+    measurements = DB.execute("SELECT datetime, weight FROM measurements ORDER BY datetime").fetchall()
+    plot_data, plot_layout = create_weight_plot(measurements)
 
     fab_buttons = [
         ("Weight", "⚖️", "openModal('weight-modal')"),
@@ -49,7 +45,7 @@ def get():
                 fh.Div(
                     fh.Div(
                         fh.H4("Statistics", cls="text-lg font-semibold mb-4 text-primary-content"),
-                        create_stats_grid(weights),
+                        create_stats_grid(measurements),
                     ),
                     cls="mt-8"
                 ),
@@ -76,7 +72,7 @@ def create_progress_modal_card(title: str, create_fn, modal_id: str):
         modal_id
     )
 
-def create_input_section(label: str, name: str, width: str = "w-full", **input_props):
+def create_measurement_input_section(label: str, name: str, width: str = "w-full", **input_props):
     """Create a form input section with label and input"""
     return fh.Div(
         fh.Label(label, cls="label text-primary-content"),
@@ -96,7 +92,7 @@ def create_weight_form():
         hx_target="#weight-result",
         cls="space-y-4"
     )(
-        create_input_section("Weight (lbs)", "weight", "0", "0.1", "Enter your weight"),
+        create_measurement_input_section("Weight (lbs)", "weight", "0", "0.1", "Enter your weight"),
         fh.Button(
             "Update Weight",
             type="submit",
@@ -115,8 +111,8 @@ def create_height_form():
         fh.Div(
             fh.Label("Height", cls="label text-primary-content"),
             fh.Div(
-                create_input_section("Feet", "height_feet", "w-24", "0", "9", "ft"),
-                create_input_section("Inches", "height_inches", "w-24", "0", "11", "in"),
+                create_measurement_input_section("Feet", "height_feet", "w-24", "0", "9", "ft"),
+                create_measurement_input_section("Inches", "height_inches", "w-24", "0", "11", "in"),
                 cls="flex space-x-4"
             )
         ),
@@ -155,12 +151,8 @@ def create_goal_form():
         fh.Div(id="goal-result")
     )
 
-def create_weight_plot():
+def create_weight_plot(measurements: list[tuple[str, float]]):
     """Create the weight progress plot"""
-    measurements = DB.execute(
-        "SELECT datetime, weight FROM measurements ORDER BY datetime"
-    ).fetchall()
-    
     dates = [m[0].split("T")[0] for m in measurements]
     weights = [m[1] for m in measurements]
     
@@ -198,8 +190,9 @@ def create_weight_plot():
     
     return plot_data, plot_layout
 
-def create_stats_grid(weights: list):
+def create_stats_grid(measurements: list[tuple[str, float]]):
     """Create a grid of statistics cards"""
+    weights = [m[1] for m in measurements]
     current_weight = f"{weights[-1]:.1f} lbs" if weights else "No data"
     total_change = f"{(weights[-1] - weights[0]):.1f} lbs" if len(weights) > 1 else "No change"
     measurement_count = str(len(weights))
