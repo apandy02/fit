@@ -3,4 +3,4 @@ secrets.json
 *.pyc
 *.sesskey
 *.DS_Store
-uv.lock
+/uv.lock
