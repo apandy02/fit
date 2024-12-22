@@ -4,9 +4,22 @@ from fit.trackers.manager import (get_active_tracker_type, load_secrets,
 from fit.web.common import page_outline
 
 
+def get():
+    """Return the tracker integration page content"""
+    content = fh.Article(
+        fh.Div(
+            active_tracker_info(),
+            credentials_section(),
+            change_tracker_section(),
+            cls="max-w-lg mx-auto p-6 space-y-6"
+        ),
+        cls="bg-base-100"
+    )
+    return page_outline(4, "Tracker Management", content)
+
 def active_tracker_info():
     """Return information about the currently active tracker"""
-    secrets = load_secrets()
+    secrets = load_secrets() # change secrets to db
     active_type = get_active_tracker_type()
     
     if not active_type or active_type not in secrets:
@@ -38,6 +51,20 @@ def active_tracker_info():
             cls="text-primary-content bg-base-200"
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6"
+    )
+
+def create_login_input_section(label: str, name: str, input_type: str = "text", **input_props):
+    """Create a form input section with label and input, styled for login forms"""
+    return fh.Div(
+        fh.Label(label, cls="label text-primary-content"),
+        fh.Input(
+            type=input_type,
+            name=name,
+            cls="input input-bordered w-full bg-base-200 outline outline-1 outline-primary-content text-primary-content placeholder-primary-content placeholder-opacity-50",
+            required=True,
+            **input_props
+        ),
+        cls="form-control"
     )
 
 def credentials_section():
@@ -73,29 +100,8 @@ def credentials_section():
                 ),
                 cls="form-control"
             ),
-            fh.Div(
-                fh.Label("Username/Email", cls="label text-primary-content"),
-                fh.Input(
-                    type="text",
-                    name="username",
-                    placeholder="Enter your tracker account username or email",
-                    cls="input input-bordered w-full bg-base-200 outline outline-1 outline-primary-content text-primary-content placeholder-primary-content placeholder-opacity-50",
-                    required=True
-                ),
-                cls="form-control"
-            ),
-            fh.Div(
-                fh.Label("Password", cls="label text-primary-content"),
-                fh.Input(
-                    type="password",
-                    name="password",
-                    placeholder="Enter your tracker account password",
-                    cls="input input-bordered w-full bg-base-200 outline outline-1 outline-primary-content text-primary-content placeholder-primary-content placeholder-opacity-50",
-                    required=True
-                ),
-                cls="form-control"
-            ),
-            # Only show "Set as active" checkbox if there's already an active tracker
+            create_login_input_section("Username/Email","username", placeholder="Enter username or email"),
+            create_login_input_section("Password","password","password", placeholder="Enter password"),
             fh.Div(
                 fh.Label(
                     fh.Input(
@@ -116,11 +122,11 @@ def credentials_section():
             fh.Button(
                 "Save Credentials",
                 type="submit",
-                cls="btn btn-primary outline outline-1 outline-slate-200 text-slate-200" # TODO: figure out why it isn't picking up the theme
+                cls="btn btn-primary outline outline-1"
             ),
             fh.Div(id="connection-result")
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6"
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6" 
     )
 
 def change_tracker_section():
@@ -171,19 +177,6 @@ def change_tracker_section():
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6"
     )
-
-def get():
-    """Return the tracker integration page content"""
-    content = fh.Article(
-        fh.Div(
-            active_tracker_info(),
-            credentials_section(),
-            change_tracker_section(),
-            cls="max-w-lg mx-auto p-6 space-y-6"
-        ),
-        cls="bg-base-100"
-    )
-    return page_outline(4, "Tracker Management", content)
 
 async def connect_tracker(
         tracker_type: str,
