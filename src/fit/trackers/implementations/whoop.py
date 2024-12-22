@@ -10,7 +10,6 @@ from fit.utils.conversions import kj_to_kcal
 
 
 class Whoop(FitnessTracker):
-    # TODO: cleanup class 
     """Fitness tracker subclass for WHOOP devices.
 
     Attributes:
@@ -172,7 +171,6 @@ class Whoop(FitnessTracker):
 
             if next_token := response["next_token"]:
                 params["nextToken"] = next_token
-
             else:
                 break
 

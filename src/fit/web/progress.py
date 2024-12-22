@@ -2,10 +2,88 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
-
 from fit.nutrition.data import Goals
 from fit.web.common import DB, create_fab_menu, create_modal, page_outline
 
+
+def get():
+    """Return the progress tracking page content"""
+    measurements = DB.execute("SELECT datetime, weight FROM measurements ORDER BY datetime").fetchall()
+    plot_data, plot_layout = create_weight_plot(measurements)
+
+    fab_buttons = [
+        ("Weight", "⚖️", "openModal('weight-modal')"),
+        ("Height", "📏", "openModal('height-modal')"),
+        ("Goal", "🎯", "openModal('goal-modal')")
+    ]
+    
+    content = fh.Article(
+        fh.Div(
+            fh.Card(
+                fh.Header(
+                    fh.H3("Your Progress", cls="text-2xl font-bold text-center mb-2 text-primary-content"),
+                    fh.P(
+                        "Track your weight changes over time",
+                        cls="text-slate-400 text-center"
+                    ),
+                    cls="mb-6 bg-base-200"
+                ),
+                fh.Div(
+                    fh.Div(id="weight-plot", cls="w-full"),
+                    fh.Script(
+                        f"""
+                        Plotly.newPlot(
+                            'weight-plot',
+                            {plot_data},
+                            {plot_layout},
+                            {{responsive: true}}
+                        );
+                        """
+                    ),
+                    cls="p-4 bg-base-200 rounded-lg shadow-lg"
+                ),
+                fh.Div(
+                    fh.Div(
+                        fh.H3("Statistics", cls="text-2xl font-semibold mb-4 text-primary-content text-center"),
+                        create_stats_grid(measurements),
+                    ),
+                    cls="mt-8"
+                ),
+                cls="bg-base-200 shadow-lg rounded-lg p-6"
+            ),
+            create_fab_menu(fab_buttons),
+            create_modal(create_progress_modal_card("Update Weight", create_weight_form, "weight-modal"),),
+            create_modal(create_progress_modal_card("Update Height", create_height_form, "height-modal")),
+            create_modal(create_progress_modal_card("Change Goal", create_goal_form, "goal-modal")),
+            cls="max-w-4xl mx-auto p-6 bg-base-100"
+        ),
+        cls="bg-base-100"
+    )
+    return page_outline(2, "Progress Tracking", content)
+
+def create_progress_modal_card(title: str, create_fn, modal_id: str):
+    """Create a modal card"""
+    return (
+        fh.Card(
+            fh.Header(fh.H3(title, cls="text-xl font-bold mb-4 text-primary-content")),
+            create_fn(),
+            cls="bg-base-200 shadow-lg rounded-lg"
+        ),
+        modal_id
+    )
+
+def create_measurement_input_section(label: str, name: str, width: str = "w-full", **input_props):
+    """Create a form input section with label and input"""
+    return fh.Div(
+        fh.Label(label, cls="label text-primary-content"),
+        fh.Input(
+            type="number",
+            name=name,
+            cls=f"input input-bordered {width} bg-base-200 text-primary-content placeholder-slate-400",
+            **input_props
+        ),
+        cls="form-control"
+    )
 
 def create_weight_form():
     """Create the weight input form"""
@@ -14,18 +92,7 @@ def create_weight_form():
         hx_target="#weight-result",
         cls="space-y-4"
     )(
-        fh.Div(
-            fh.Label("Weight (lbs)", cls="label text-primary-content"),
-            fh.Input(
-                type="number",
-                name="weight",
-                min="0",
-                step="0.1",
-                placeholder="Enter your weight",
-                cls="input input-bordered w-full bg-base-200 text-primary-content placeholder-slate-400"
-            ),
-            cls="form-control"
-        ),
+        create_measurement_input_section("Weight (lbs)","weight", min="0", step="0.1", placeholder="Enter your weight"),
         fh.Button(
             "Update Weight",
             type="submit",
@@ -44,30 +111,8 @@ def create_height_form():
         fh.Div(
             fh.Label("Height", cls="label text-primary-content"),
             fh.Div(
-                fh.Div(
-                    fh.Label("Feet", cls="label text-primary-content"),
-                    fh.Input(
-                        type="number",
-                        name="height_feet",
-                        min="0",
-                        max="9",
-                        placeholder="ft",
-                        cls="input input-bordered w-24 bg-base-200 text-primary-content placeholder-slate-400"
-                    ),
-                    cls="form-control"
-                ),
-                fh.Div(
-                    fh.Label("Inches", cls="label text-primary-content"),
-                    fh.Input(
-                        type="number",
-                        name="height_inches",
-                        min="0",
-                        max="11",
-                        placeholder="in",
-                        cls="input input-bordered w-24 bg-base-200 text-primary-content placeholder-slate-400"
-                    ),
-                    cls="form-control"
-                ),
+                create_measurement_input_section("Feet", "height_feet", "w-24", step="1", min="0", max="9", placeholder="ft"),
+                create_measurement_input_section("Inches", "height_inches", "w-24", min="0", max="11", placeholder="in"),
                 cls="flex space-x-4"
             )
         ),
@@ -106,12 +151,8 @@ def create_goal_form():
         fh.Div(id="goal-result")
     )
 
-def create_weight_plot():
+def create_weight_plot(measurements: list[tuple[str, float]]):
     """Create the weight progress plot"""
-    measurements = DB.execute(
-        "SELECT datetime, weight FROM measurements ORDER BY datetime"
-    ).fetchall()
-    
     dates = [m[0].split("T")[0] for m in measurements]
     weights = [m[1] for m in measurements]
     
@@ -146,133 +187,31 @@ def create_weight_plot():
         "plot_bgcolor": "rgba(0,0,0,0)",
         "font": {"color": "rgb(226, 232, 240)"}
     })
-    
     return plot_data, plot_layout
 
-def create_stats_grid(weights):
-    """Create the statistics grid"""
-    return fh.Grid(
-        fh.Card(
-            fh.H5("Current Weight", cls="text-sm text-primary-content"),
-            fh.P(
-                f"{weights[-1]:.1f} lbs" if weights else "No data",
-                cls="text-2xl font-bold text-secondary-content"
-            ),
-            cls="p-4 text-center bg-base-300"
-        ),
-        fh.Card(
-            fh.H5("Total Change", cls="text-sm text-primary-content"),
-            fh.P(
-                f"{(weights[-1] - weights[0]):.1f} lbs" if len(weights) > 1 else "No change",
-                cls="text-2xl font-bold text-secondary-content"
-            ),
-            cls="p-4 text-center bg-base-300"
-        ),
-        fh.Card(
-            fh.H5("Measurements", cls="text-sm text-primary-content"),
-            fh.P(
-                str(len(weights)),
-                cls="text-2xl font-bold text-secondary-content"
-            ),
-            cls="p-4 text-center bg-base-300"
-        ),
-        cols=3,
-        cls="gap-4 mt-6"
-    )
-
-def get():
-    """Return the progress tracking page content"""
-    measurements = DB.execute(
-        "SELECT datetime, weight FROM measurements ORDER BY datetime"
-    ).fetchall()
+def create_stats_grid(measurements: list[tuple[str, float]]):
+    """Create a grid of statistics cards"""
     weights = [m[1] for m in measurements]
-    
-    plot_data, plot_layout = create_weight_plot()
-    
-    # Create FAB menu buttons
-    fab_buttons = [
-        ("Weight", "⚖️", "openModal('weight-modal')"),
-        ("Height", "📏", "openModal('height-modal')"),
-        ("Goal", "🎯", "openModal('goal-modal')")
-    ]
-    
-    content = fh.Article(
-        fh.Div(
-            fh.Card(
-                fh.Header(
-                    fh.H3("Your Progress", cls="text-2xl font-bold text-center mb-2 text-primary-content"),
-                    fh.P(
-                        "Track your weight changes over time",
-                        cls="text-slate-400 text-center"
-                    ),
-                    cls="mb-6 bg-base-200"
-                ),
-                # Plot container and script
-                fh.Div(
-                    fh.Div(id="weight-plot", cls="w-full"),
-                    fh.Script(
-                        f"""
-                        Plotly.newPlot(
-                            'weight-plot',
-                            {plot_data},
-                            {plot_layout},
-                            {{responsive: true}}
-                        );
-                        """
-                    ),
-                    cls="p-4 bg-base-200 rounded-lg shadow-lg"
-                ),
-                fh.Div(
-                    fh.Div(
-                        fh.H4("Statistics", cls="text-lg font-semibold mb-4 text-primary-content"),
-                        create_stats_grid(weights),
-                    ),
-                    cls="mt-8"
-                ),
-                cls="bg-base-200 shadow-lg rounded-lg p-6"
-            ),
-            # Add FAB menu
-            create_fab_menu(fab_buttons),
-            # Add modals
-            create_modal(
-                fh.Card(
-                    fh.Header(fh.H3("Update Weight", cls="text-xl font-bold mb-4 text-primary-content")),
-                    create_weight_form(),
-                    cls="bg-base-200 shadow-lg rounded-lg"
-                ),
-                "weight-modal"
-            ),
-            create_modal(
-                fh.Card(
-                    fh.Header(fh.H3("Update Height", cls="text-xl font-bold mb-4 text-primary-content")),
-                    create_height_form(),
-                    cls="bg-base-200 shadow-lg rounded-lg"
-                ),
-                "height-modal"
-            ),
-            create_modal(
-                fh.Card(
-                    fh.Header(fh.H3("Change Goal", cls="text-xl font-bold mb-4 text-primary-content")),
-                    create_goal_form(),
-                    cls="bg-base-200 shadow-lg rounded-lg"
-                ),
-                "goal-modal"
-            ),
-            cls="max-w-4xl mx-auto p-6 bg-base-100"
-        ),
-        cls="bg-base-100"
-    )
-    return page_outline(2, "Progress Tracking", content)
+    current_weight = f"{weights[-1]:.1f} lbs" if weights else "No data"
+    total_change = f"{(weights[-1] - weights[0]):.1f} lbs" if len(weights) > 1 else "No change"
+    measurement_count = str(len(weights))
 
-async def update_weight(weight: float):
-    """Handle weight update"""
-    DB.execute(
-        "INSERT INTO measurements (datetime, weight) VALUES (?, ?)",
-        (datetime.now().isoformat(), weight)
+    return fh.Div(
+        create_stats_card("Current Weight", current_weight),
+        create_stats_card("Total Change", total_change),
+        create_stats_card("Measurements", measurement_count),
+        cls="grid grid-cols-3 gap-4"
     )
-    return fh.P(
-        "Weight updated successfully!",
-        cls="text-green-600 font-semibold text-center mt-4"
+
+def create_stats_card(title: str, value: str):
+    """Create a card displaying a statistic with title and value"""
+    return fh.Card(
+        fh.H5(title, cls="text-sm text-primary-content"),
+        fh.P(
+            value,
+            cls="text-lg font-bold text-secondary-content"
+        ),
+        cls="p-4 text-center bg-base-300"
     )
 
 async def update_height(height_feet: int, height_inches: int):
@@ -297,3 +236,14 @@ async def update_goal(fitness_goal: str):
         "Goal updated successfully!",
         cls="text-green-600 font-semibold text-center mt-4"
     ) 
+
+async def update_weight(weight: float):
+    """Handle weight update"""
+    DB.execute(
+        "INSERT INTO measurements (datetime, weight) VALUES (?, ?)",
+        (datetime.now().isoformat(), weight)
+    )
+    return fh.P(
+        "Weight updated successfully!",
+        cls="text-green-600 font-semibold text-center mt-4"
+    )

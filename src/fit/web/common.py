@@ -1,11 +1,10 @@
 import fasthtml.common as fh
 import fh_bootstrap as fhb
-from markdown import markdown
-
 from fit.nutrition.assistants import Nutritionist, NutritionLogger
 from fit.nutrition.targets import MICRO_GOALS
 from fit.trackers.manager import get_active_tracker
 from fit.web.databases import init_db
+from markdown import markdown
 
 DB_PATH = "data/nutrition.db"
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
@@ -33,7 +32,6 @@ nutrition_logger = NutritionLogger()
 active_tracker = get_active_tracker()
 nutritionist = Nutritionist()
 micronutrient_goals = MICRO_GOALS["male"]
-
 
 
 def create_fab_menu(buttons):
@@ -148,7 +146,7 @@ def page_outline(selidx, title, *c):
                 fh.Div(
                     fh.A(
                         "Food",
-                        href="/food",
+                        href="/nutrition",
                         cls="btn btn-ghost text-white",
                     ),
                     fh.A(
