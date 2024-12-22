@@ -11,10 +11,9 @@ def base_bar(x, y, name, color):
         "hoverinfo": "y",
         "showlegend": True
     }
+
 def create_plot(title: str, y_axis_title: str, consumed: float, goal: float, burned: float = None):
     """Create a plot with the provided data"""
-    
-    
     data = [
         base_bar("Today", consumed, "Consumed", "rgb(37, 99, 235)"),
         base_bar("Today", goal, "Consumption Goal", "rgb(96, 165, 250)")

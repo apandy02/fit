@@ -1,4 +1,5 @@
 import fasthtml.common as fh
+from datetime import datetime
 
 from fit.web.common import nutritionist
 from fit.web.nutrition.food_plots import create_plot
@@ -89,6 +90,17 @@ def create_meal_prompt_form(
                     ),
                     cls="form-control"
                 ),
+                fh.Div(
+                    fh.Label("Meal Time", cls="label text-primary-content"),
+                    fh.Input(
+                        type="time",
+                        name="meal_time",
+                        value=datetime.now().strftime("%H:%M"),
+                        required=True,
+                        cls="input input-bordered w-full bg-base-200 text-primary-content"
+                    ),
+                    cls="form-control"
+                ) if "analyze" in hx_post_url else None,
                 *(extra_fields or []),
                 fh.Button(
                     submit_text,
@@ -160,6 +172,17 @@ def create_image_upload_form():
                         name="food_image",
                         accept="image/*",
                         cls="file-input file-input-bordered w-full text-sm"
+                    ),
+                    cls="form-control"
+                ),
+                fh.Div(
+                    fh.Label("Meal Time", cls="label text-primary-content"),
+                    fh.Input(
+                        type="time",
+                        name="meal_time",
+                        value=datetime.now().strftime("%H:%M"),
+                        required=True,
+                        cls="input input-bordered w-full bg-base-200 text-primary-content"
                     ),
                     cls="form-control"
                 ),
@@ -518,7 +541,7 @@ def create_form_section(title, inputs, cls="mb-6"):
         cls=cls
     )
 
-def create_nutrition_card(nutrition_info):
+def create_nutrition_card(nutrition_info, meal_time: str = None):
     """Create a card containing ingredients text and editable nutrition form"""
     return fh.Card(
         fh.Div(
@@ -541,6 +564,11 @@ def create_nutrition_card(nutrition_info):
                     type="hidden",
                     name="ingredients",
                     value=nutrition_info.ingredients
+                ),
+                fh.Input(
+                    type="hidden",
+                    name="meal_time",
+                    value=meal_time
                 ),
                 create_form_section("Nutrition Information", [
                     create_form_input("Meal Title", "summary", nutrition_info.summary, input_type="text"),

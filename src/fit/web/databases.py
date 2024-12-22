@@ -73,28 +73,30 @@ def get_daily_meals(database: fh.Database, date: datetime):
     Get meals entered for a given date.
     """
     query = """
-        select llm_summary, ingredients, calories, protein, carbs, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
+        select llm_summary, ingredients, meal_time, calories, protein, carbs, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
         calcium, iron, potassium, sodium 
-        from
-        meals where date_entered = ?
+        from meals 
+        where date_entered = ?
+        order by meal_time
     """
     result = database.execute(query, (date,)).fetchall()
     return [
         MealBreakdown(
             summary=row[0],
             ingredients=row[1],
-            calories=row[2],
-            protein=row[3],
-            carbs=row[4],
-            fat=row[5],
-            fiber=row[6],
-            vitamin_a=row[7],
-            vitamin_c=row[8],
-            vitamin_d=row[9],
-            calcium=row[10],
-            iron=row[11],
-            potassium=row[12],
-            sodium=row[13]
+            meal_time=row[2],
+            calories=row[3],
+            protein=row[4],
+            carbs=row[5],
+            fat=row[6],
+            fiber=row[7],
+            vitamin_a=row[8],
+            vitamin_c=row[9],
+            vitamin_d=row[10],
+            calcium=row[11],
+            iron=row[12],
+            potassium=row[13],
+            sodium=row[14]
         ) for row in result
     ]
 
@@ -141,14 +143,14 @@ def get_daily_cumulative_nutrition(database: fh.Database, date: datetime):
 
     return result_info
 
-def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdown):
+def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdown, meal_time: str):
     """
     Insert a meal into the database.
     """
     meals_table = database.t.meals
     meals_table.insert(
         date_entered=datetime.date(datetime.today()),
-        meal_time=datetime.now().isoformat(),
+        meal_time=meal_time,
         user_description=meal_description,
         llm_summary=meal.summary,
         ingredients=meal.ingredients,

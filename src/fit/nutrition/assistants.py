@@ -1,4 +1,5 @@
 import ell
+from datetime import datetime
 
 from fit.nutrition.data import Goals, MealBreakdown
 
@@ -112,10 +113,12 @@ class Nutritionist:
             assessment in plain text format. Start with an overview comparing total intake to goals. 
             Then evaluate each meal's contribution to any excess - flag meals that significantly exceed 
             targets (e.g., >100% of a macro target in one meal) as problematic and suggest alternatives. 
+            if the current time of day is before 8PM and they're over their caloric target, suggest 
+            a workout that get them closer to a target range.
             For meals contributing to excess but not extreme, recommend portion adjustments. 
             For under-target scenarios, suggest realistic additions based on their evident food preferences 
             and eating patterns.
-            
+
             Break the analysis into four sections:
             An untitled general overview
             <b>Macronutrients</b>
@@ -125,7 +128,8 @@ class Nutritionist:
             Format as plain text paragraphs without bullets, markdown, or special formatting , you are 
             speaking to the user directly as their nutritionist. 
             (except section headers in <b> tags). Each section should flow naturally in paragraph form."""
-            meals_str = "Here are the meals the user has logged today:\n"
+            current_time = datetime.now().time()
+            meals_str = f"As of {current_time} are the meals the user has logged today:\n"
             
             for i, meal in enumerate(meals, 1):
                 meals_str += f"Meal {meal.summary} - {meal.calories} calories, "

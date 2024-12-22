@@ -111,16 +111,21 @@ async def toggle_dropdown(dropdown_id: str):
         id=dropdown_id
     )
 
-async def analyze_text(meal_description: str):
+async def analyze_text(meal_description: str, meal_time: str):
     """Handle meal description analysis"""
     nutrition_info = nutrition_logger.natural_language_macros(meal_description)
+    # Create ISO format datetime for meal time
+    today = datetime.today().date()
+    meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
+    meal_datetime = datetime.combine(today, meal_time_obj).isoformat()
+    
     return fh.Card(
         fh.Div(
             fh.Div(
                 create_text_input_form(is_feedback=True, original_description=meal_description)
             ),
             fh.Div(
-                create_nutrition_card(nutrition_info),
+                create_nutrition_card(nutrition_info, meal_time=meal_datetime),
                 id="nutrition-card"
             ),
             cls="p-6"
@@ -129,15 +134,24 @@ async def analyze_text(meal_description: str):
         id="text-input"  # Important: keep the same ID for proper replacement
     )
 
-async def analyze_image(food_image: fh.UploadFile):
+async def analyze_image(food_image: fh.UploadFile, meal_time: str):
     """Handle image upload and analysis"""
     nutrition_info = nutrition_logger.image_macros(food_image)
-    return create_nutrition_card(nutrition_info)
+    # Create ISO format datetime for meal time
+    today = datetime.today().date()
+    meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
+    meal_datetime = datetime.combine(today, meal_time_obj).isoformat()
+    
+    return create_nutrition_card(nutrition_info, meal_time=meal_datetime)
 
 async def save_meal(request: fh.Request):
     """Save the meal with user-adjusted nutrition values"""
     try:
         form = await request.form()
+        # The meal_time is already in ISO format from the hidden input
+        meal_datetime = form["meal_time"]
+        print(meal_datetime)
+        
         nutrition_info = MealBreakdown(
             summary=form["summary"],
             ingredients=form["ingredients"],
@@ -154,7 +168,7 @@ async def save_meal(request: fh.Request):
             potassium=form["potassium"],
             sodium=form["sodium"]
         )    
-        insert_meal(DB, form["summary"], nutrition_info)
+        insert_meal(DB, form["summary"], nutrition_info, meal_datetime)
         
         return fh.Div(
             fh.P(
