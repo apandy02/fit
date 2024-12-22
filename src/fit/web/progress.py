@@ -44,7 +44,7 @@ def get():
                 ),
                 fh.Div(
                     fh.Div(
-                        fh.H4("Statistics", cls="text-lg font-semibold mb-4 text-primary-content"),
+                        fh.H3("Statistics", cls="text-2xl font-semibold mb-4 text-primary-content text-center"),
                         create_stats_grid(measurements),
                     ),
                     cls="mt-8"
@@ -111,8 +111,8 @@ def create_height_form():
         fh.Div(
             fh.Label("Height", cls="label text-primary-content"),
             fh.Div(
-                create_measurement_input_section("Feet", "height_feet", "w-24", "0", "9", "ft"),
-                create_measurement_input_section("Inches", "height_inches", "w-24", "0", "11", "in"),
+                create_measurement_input_section("Feet", "height_feet", "w-24", step="1", min="0", max="9", placeholder="ft"),
+                create_measurement_input_section("Inches", "height_inches", "w-24", min="0", max="11", placeholder="in"),
                 cls="flex space-x-4"
             )
         ),
@@ -210,7 +210,7 @@ def create_stats_card(title: str, value: str):
         fh.H5(title, cls="text-sm text-primary-content"),
         fh.P(
             value,
-            cls="text-2xl font-bold text-secondary-content"
+            cls="text-lg font-bold text-secondary-content"
         ),
         cls="p-4 text-center bg-base-300"
     )
