@@ -103,7 +103,6 @@ class Nutritionist:
             meals: The user's meals for the day.
             target: The user's target for the day.
         """
-        
         if len(meals) == 0:
             return "No meals logged for today, please log your meals and try again."
 
@@ -118,7 +117,6 @@ class Nutritionist:
             and eating patterns.
             
             Break the analysis into four sections:
-
             An untitled general overview
             <b>Macronutrients</b>
             <b>Micronutrients</b>

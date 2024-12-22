@@ -187,7 +187,6 @@ def create_weight_plot(measurements: list[tuple[str, float]]):
         "plot_bgcolor": "rgba(0,0,0,0)",
         "font": {"color": "rgb(226, 232, 240)"}
     })
-    
     return plot_data, plot_layout
 
 def create_stats_grid(measurements: list[tuple[str, float]]):
