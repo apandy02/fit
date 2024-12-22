@@ -1,6 +1,7 @@
 import fasthtml.common as fh
+
 from fit.web.common import nutritionist
-from fit.web.food_plots import create_plot
+from fit.web.nutrition.food_plots import create_plot
 
 
 def metric_card(title: str, y_axis_title: str, plot_id: str, consumed: float, goal: float, burned: float = None, show_analysis: bool = True, allow_hide: bool = True):

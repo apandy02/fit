@@ -92,7 +92,7 @@ def create_weight_form():
         hx_target="#weight-result",
         cls="space-y-4"
     )(
-        create_measurement_input_section("Weight (lbs)", "weight", "0", "0.1", "Enter your weight"),
+        create_measurement_input_section("Weight (lbs)","weight", min="0", step="0.1", placeholder="Enter your weight"),
         fh.Button(
             "Update Weight",
             type="submit",
