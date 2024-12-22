@@ -155,8 +155,18 @@ def page_outline(selidx, title, *c):
                         cls="btn btn-ghost text-white",
                     ),
                     fh.A(
-                        "Trackers",
-                        href="/trackers",
+                        "Performance",
+                        href="/performance",
+                        cls="btn btn-ghost text-white",
+                    ),
+                    fh.A(
+                        "Rest",
+                        href="/rest",
+                        cls="btn btn-ghost text-white",
+                    ),
+                    fh.A(
+                        "Profile",
+                        href="/profile",
                         cls="btn btn-ghost text-white",
                     ),
                     cls="flex justify-center items-center flex-1",

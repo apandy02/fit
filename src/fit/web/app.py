@@ -1,7 +1,9 @@
 import fasthtml.common as fh
 import fit.web.nutrition.requests as nutrition
 import fit.web.progress as progress
-import fit.web.trackers as trackers
+import fit.web.rest as rest
+import fit.web.performance as performance
+import fit.web.user_profile as user_profile
 
 tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
 plotly = fh.Script(src="https://cdn.plot.ly/plotly-2.32.0.min.js")
@@ -30,10 +32,17 @@ app.post("/update_weight")(progress.update_weight)
 app.post("/update_height")(progress.update_height)
 app.post("/update_goal")(progress.update_goal)
 
-# Tracker routes
-app.get("/trackers")(trackers.get)
-app.post("/connect_tracker")(trackers.connect_tracker)
-app.post("/set_active_tracker")(trackers.set_active_tracker)
+# Profile routes
+app.get("/profile")(user_profile.get)
+app.post("/update_profile")(user_profile.update_profile)
+app.post("/connect_tracker")(user_profile.connect_tracker)
+app.post("/set_active_tracker")(user_profile.set_active_tracker)
+
+# rest routes
+app.get("/rest")(rest.get)
+
+# performance routes
+app.get("/performance")(performance.get)
 
 fh.reg_re_param("imgext", "png")
 

@@ -1,25 +1,135 @@
 import fasthtml.common as fh
-from fit.trackers.manager import (get_active_tracker_type, load_secrets,
-                                  save_secrets)
 from fit.web.common import page_outline
+from fit.nutrition.data import Goals
+from fit.trackers.manager import get_active_tracker_type, load_secrets, save_secrets
 
 
 def get():
-    """Return the tracker integration page content"""
+    """Return the profile page content"""
     content = fh.Article(
         fh.Div(
-            active_tracker_info(),
-            credentials_section(),
-            change_tracker_section(),
-            cls="max-w-lg mx-auto p-6 space-y-6"
+            # User Profile Section
+            fh.Card(
+                fh.Header(
+                    fh.H3("User Profile", cls="text-2xl font-bold text-center mb-2 text-primary-content"),
+                    cls="mb-6 bg-base-200"
+                ),
+                fh.Form(
+                    hx_post="/update_profile",
+                    hx_target="#profile-result",
+                    cls="space-y-6"
+                )(
+                    # Basic Information
+                    fh.Section(
+                        fh.H4("Basic Information", cls="text-xl font-semibold mb-4 text-primary-content"),
+                        fh.Div(
+                            # Name
+                            create_form_row("Name", fh.Input(
+                                type="text",
+                                name="name",
+                                placeholder="John Doe",
+                                required=True,
+                                cls="input input-bordered w-full bg-base-200 text-primary-content"
+                            )),
+                            # Email
+                            create_form_row("Email", fh.Input(
+                                type="email",
+                                name="email",
+                                placeholder="john@example.com",
+                                required=True,
+                                cls="input input-bordered w-full bg-base-200 text-primary-content"
+                            )),
+                            # Age
+                            create_form_row("Age", fh.Input(
+                                type="number",
+                                name="age",
+                                placeholder="30",
+                                required=True,
+                                cls="input input-bordered w-full bg-base-200 text-primary-content"
+                            )),
+                            cls="space-y-4"
+                        ),
+                        cls="mb-8"
+                    ),
+                    # Fitness Goals
+                    fh.Section(
+                        fh.H4("Fitness Goals", cls="text-xl font-semibold mb-4 text-primary-content"),
+                        fh.Div(
+                            # Primary Goal
+                            create_form_row("Primary Goal", fh.Select(
+                                *[
+                                    fh.Option(goal.value.title(), value=goal.value)
+                                    for goal in Goals
+                                ],
+                                name="fitness_goal",
+                                cls="select select-bordered w-full bg-base-200 text-primary-content"
+                            )),
+                            # Weekly Workout Target
+                            create_form_row("Weekly Workouts", fh.Input(
+                                type="number",
+                                name="workout_target",
+                                placeholder="5",
+                                required=True,
+                                cls="input input-bordered w-full bg-base-200 text-primary-content"
+                            )),
+                            cls="space-y-4"
+                        ),
+                        cls="mb-8"
+                    ),
+                    # Preferences
+                    fh.Section(
+                        fh.H4("Preferences", cls="text-xl font-semibold mb-4 text-primary-content"),
+                        fh.Div(
+                            # Units
+                            create_form_row("Units", fh.Select(
+                                fh.Option("Imperial (lbs, inches)", value="imperial", selected=True),
+                                fh.Option("Metric (kg, cm)", value="metric"),
+                                name="units",
+                                cls="select select-bordered w-full bg-base-200 text-primary-content"
+                            )),
+                            cls="space-y-4"
+                        ),
+                        cls="mb-8"
+                    ),
+                    fh.Button(
+                        "Save Changes",
+                        type="submit",
+                        cls="btn btn-primary w-full"
+                    ),
+                    fh.Div(id="profile-result")
+                ),
+                cls="bg-base-200 shadow-lg rounded-lg p-6 mb-8"
+            ),
+            # Tracker Management Section
+            fh.Card(
+                fh.Header(
+                    fh.H3("Fitness Trackers", cls="text-2xl font-bold text-center mb-2 text-primary-content"),
+                    cls="mb-6 bg-base-200"
+                ),
+                active_tracker_info(),
+                credentials_section(),
+                change_tracker_section(),
+                cls="bg-base-200 shadow-lg rounded-lg p-6"
+            ),
+            cls="max-w-2xl mx-auto p-6 space-y-6"
         ),
         cls="bg-base-100"
     )
-    return page_outline(4, "Tracker Management", content)
+    return page_outline(6, "Profile", content)
+
+
+def create_form_row(label: str, input_element):
+    """Create a form row with label on the left and input on the right"""
+    return fh.Div(
+        fh.Label(label, cls="text-primary-content w-1/3"),
+        fh.Div(input_element, cls="w-2/3"),
+        cls="flex items-center gap-4"
+    )
+
 
 def active_tracker_info():
     """Return information about the currently active tracker"""
-    secrets = load_secrets() # change secrets to db
+    secrets = load_secrets()
     active_type = get_active_tracker_type()
     
     if not active_type or active_type not in secrets:
@@ -53,19 +163,6 @@ def active_tracker_info():
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6"
     )
 
-def create_login_input_section(label: str, name: str, input_type: str = "text", **input_props):
-    """Create a form input section with label and input, styled for login forms"""
-    return fh.Div(
-        fh.Label(label, cls="label text-primary-content"),
-        fh.Input(
-            type=input_type,
-            name=name,
-            cls="input input-bordered w-full bg-base-200 outline outline-1 outline-primary-content text-primary-content placeholder-primary-content placeholder-opacity-50",
-            required=True,
-            **input_props
-        ),
-        cls="form-control"
-    )
 
 def credentials_section():
     """Return the credentials management section"""
@@ -100,8 +197,8 @@ def credentials_section():
                 ),
                 cls="form-control"
             ),
-            create_login_input_section("Username/Email","username", placeholder="Enter username or email"),
-            create_login_input_section("Password","password","password", placeholder="Enter password"),
+            create_login_input_section("Username/Email", "username", placeholder="Enter username or email"),
+            create_login_input_section("Password", "password", "password", placeholder="Enter password"),
             fh.Div(
                 fh.Label(
                     fh.Input(
@@ -126,8 +223,24 @@ def credentials_section():
             ),
             fh.Div(id="connection-result")
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6" 
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6"
     )
+
+
+def create_login_input_section(label: str, name: str, input_type: str = "text", **input_props):
+    """Create a form input section with label and input, styled for login forms"""
+    return fh.Div(
+        fh.Label(label, cls="label text-primary-content"),
+        fh.Input(
+            type=input_type,
+            name=name,
+            cls="input input-bordered w-full bg-base-200 outline outline-1 outline-primary-content text-primary-content placeholder-primary-content placeholder-opacity-50",
+            required=True,
+            **input_props
+        ),
+        cls="form-control"
+    )
+
 
 def change_tracker_section():
     """Return the section for changing active tracker"""
@@ -178,6 +291,23 @@ def change_tracker_section():
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6"
     )
 
+
+async def update_profile(request: fh.Request):
+    """Handle profile update"""
+    try:
+        form = await request.form()
+        # TODO: Save profile data to database
+        return fh.P(
+            "Profile updated successfully!",
+            cls="text-green-500 font-semibold text-center mt-4"
+        )
+    except Exception as e:
+        return fh.P(
+            f"Error updating profile: {str(e)}",
+            cls="text-red-500 font-semibold text-center mt-4"
+        )
+
+
 async def connect_tracker(
         tracker_type: str,
         username: str,
@@ -212,6 +342,7 @@ async def connect_tracker(
                 cls="text-primary-content opacity-70 text-center text-sm mt-1"
             )
         )
+
 
 async def set_active_tracker(active_tracker: str):
     """Handle setting the active tracker"""
