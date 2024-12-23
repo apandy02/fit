@@ -65,12 +65,12 @@ class Whoop(FitnessTracker):
         calories = kj_to_kcal(cycle_dict["score"]["kilojoule"])
         return calories
 
-    def get_recovery(self, cycle_id: str):
-        return self._make_request(
-            method="GET", url_slug=f"v1/cycle/{cycle_id}/recovery"
-        )
+    def get_daily_recovery(self, day: datetime.date) -> float:
+        start_dt = datetime.datetime.combine(day, datetime.time.min)
+        end_dt = datetime.datetime.combine(day, datetime.time.max)
+        return self._get_recovery_collection(start_date=start_dt, end_date=end_dt)
     
-    def get_workouts_for_day(self, day: datetime.date) -> list[dict[str, Any]]:
+    def get_daily_workouts(self, day: datetime.date) -> list[dict[str, Any]]:
         """Get all workouts for a given day.
         
         Args:
@@ -88,7 +88,7 @@ class Whoop(FitnessTracker):
                 workout["score"]["calories"] = kj_to_kcal(workout["score"]["kilojoule"])
         return workouts
     
-    def get_sleep_for_day(self, day: datetime.date) -> dict[str, Any]:
+    def get_daily_sleep(self, day: datetime.date) -> dict[str, Any]:
         """Get all sleep for a given day.
         
         Args:
@@ -195,6 +195,19 @@ class Whoop(FitnessTracker):
         return self._make_paginated_request(
             method="GET",
             url_slug="v1/cycle",
+            params={"start": start, "end": end, "limit": 25},
+        )
+    
+    def _get_recovery_collection(
+        self,
+        start_date: datetime.date,
+        end_date: datetime.date,
+    ) -> list[dict[str, Any]]:
+        start = start_date.isoformat() + "Z"
+        end = end_date.isoformat(timespec="seconds") + "Z"
+        return self._make_paginated_request(
+            method="GET",
+            url_slug="v1/recovery",
             params={"start": start, "end": end, "limit": 25},
         )
     

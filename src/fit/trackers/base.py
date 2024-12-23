@@ -1,7 +1,7 @@
 import datetime
 import logging
 from abc import ABC, abstractmethod
-
+from typing import Any
 
 class FitnessTracker(ABC):
     """
@@ -27,6 +27,14 @@ class FitnessTracker(ABC):
     @abstractmethod
     def get_daily_calories_burned(self, day: datetime.date) -> float:
         """Fetch calories burned for the most recent day."""
+    
+    @abstractmethod
+    def get_daily_sleep(self, day: datetime.date) -> float:
+        """Fetch sleep for a given day."""
+
+    @abstractmethod
+    def get_daily_workouts(self, day: datetime.date) -> list[dict[str, Any]]:
+        """Fetch workouts for a given day."""
     
     @abstractmethod
     def _authenticate(self):
