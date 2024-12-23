@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 from typing import Any
 
 from authlib.common.urls import extract_params
@@ -8,6 +9,10 @@ from authlib.integrations.requests_client import OAuth2Session
 from fit.trackers.base import FitnessTracker
 from fit.utils.conversions import kj_to_kcal
 
+json_path = os.path.join(os.path.dirname(__file__), "whoop_sports.json")
+
+with open(json_path, "r") as f:
+    SPORTS_MAP = json.load(f)["sports"]
 
 class Whoop(FitnessTracker):
     """Fitness tracker subclass for WHOOP devices.
@@ -64,6 +69,46 @@ class Whoop(FitnessTracker):
         return self._make_request(
             method="GET", url_slug=f"v1/cycle/{cycle_id}/recovery"
         )
+    
+    def get_workouts_for_day(self, day: datetime.date) -> list[dict[str, Any]]:
+        """Get all workouts for a given day.
+        
+        Args:
+            day (datetime.date): The date to get workouts for.
+        
+        Returns:
+            list[dict[str, Any]]: A list of workout dictionaries.
+        """
+        start_dt = datetime.datetime.combine(day, datetime.time.min)
+        end_dt = datetime.datetime.combine(day, datetime.time.max)
+        workouts = self._get_workout_collection(start_date=start_dt, end_date=end_dt)
+        for workout in workouts:
+            workout["sport"] = SPORTS_MAP[str(workout["sport_id"])]
+            if workout["score_state"] == "SCORED":
+                workout["score"]["calories"] = kj_to_kcal(workout["score"]["kilojoule"])
+        return workouts
+    
+    def get_sleep_for_day(self, day: datetime.date) -> dict[str, Any]:
+        """Get all sleep for a given day.
+        
+        Args:
+            day (datetime.date): The date to get sleep for.
+        
+        Returns:
+            dict[str, Any]: A dictionary of sleep data.
+            Dates are adjusted to the local timezone.
+        """
+        start_dt = datetime.datetime.combine(day, datetime.time.min)
+        end_dt = datetime.datetime.combine(day, datetime.time.max)
+        sleep = self._get_sleep_collection(start_date=start_dt, end_date=end_dt)
+        
+        for sleep_dict in sleep:
+            sleep_dict["start"] = datetime.datetime.fromisoformat(sleep_dict["start"].replace("Z", "+00:00"))
+            sleep_dict["start"] = self.adjust_datetime_by_offset(sleep_dict["start"], sleep_dict["timezone_offset"])
+            sleep_dict["end"] = datetime.datetime.fromisoformat(sleep_dict["end"].replace("Z", "+00:00"))
+            sleep_dict["end"] = self.adjust_datetime_by_offset(sleep_dict["end"], sleep_dict["timezone_offset"])
+        
+        return sleep
 
     def _get_cycles_for_day(self, day: datetime.date) -> list[dict[str, Any]]:
         start_dt = datetime.datetime.combine(day, datetime.time.min)
@@ -150,6 +195,64 @@ class Whoop(FitnessTracker):
         return self._make_paginated_request(
             method="GET",
             url_slug="v1/cycle",
+            params={"start": start, "end": end, "limit": 25},
+        )
+    
+    def _get_workout_collection(
+        self,
+        start_date: datetime.date,
+        end_date: datetime.date,
+    ) -> list[dict[str, Any]]:
+        """Make request to Get Cycle Collection endpoint.
+
+        Get all physiological cycles for a user. Results are sorted by start time in
+        descending order.
+
+        Returns:
+            list[dict[str, Any]]: Response JSON data loaded into an object. Example:
+                [
+                    {
+                        "id": 1043,
+                        "user_id": 9012,
+                        "created_at": "2022-04-24T11:25:44.774Z",
+                        "updated_at": "2022-04-24T14:25:44.774Z",
+                        "start": "2022-04-24T02:25:44.774Z",
+                        "end": "2022-04-24T10:25:44.774Z",
+                        "timezone_offset": "-05:00",
+                        "sport_id": 1,
+                        "score_state": "SCORED",
+                        "score": {
+                            "strain": 8.2463,
+                            "average_heart_rate": 123,
+                            "max_heart_rate": 146,
+                            "kilojoule": 1569.34033203125,
+                            "percent_recorded": 100,
+                            "distance_meter": 1772.77035916,
+                            "altitude_gain_meter": 46.64384460449,
+                            "altitude_change_meter": -0.781372010707855,
+                        "zone_duration": {}
+                    }
+                    ...
+                ]
+        """
+        start = start_date.isoformat() + "Z"
+        end = end_date.isoformat(timespec="seconds") + "Z"
+        return self._make_paginated_request(
+            method="GET",
+            url_slug="v1/activity/workout",
+            params={"start": start, "end": end, "limit": 25},
+        )
+    
+    def _get_sleep_collection(
+        self,
+        start_date: datetime.date,
+        end_date: datetime.date,
+    ) -> list[dict[str, Any]]:
+        start = start_date.isoformat() + "Z"
+        end = end_date.isoformat(timespec="seconds") + "Z"
+        return self._make_paginated_request(
+            method="GET",
+            url_slug="v1/activity/sleep",
             params={"start": start, "end": end, "limit": 25},
         )
     
