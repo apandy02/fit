@@ -13,27 +13,26 @@ from fit.web.nutrition.ui import (create_metrics_container,
                                   create_metrics_grid, create_nutrition_card,
                                   create_page_header, create_text_input_form,
                                   food_tracking_modal)
+from fit.utils.calendar import get_current_week_dates
 
 
-def get():
+
+def get_daily_overview():
     """Return the nutritional overview page content"""
-    calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
-    goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN) # goal hardcoded for now
-    daily_consumption = get_daily_cumulative_nutrition(DB, datetime.date(datetime.today()))
+    date = datetime.today()
+    data = get_daily_nutrition_data(date)
+    return overview_page_content(data)
 
-    data = {
-        "calories": {"consumed": daily_consumption.calories, "goal": goals["calories"], "burned": calories_burned},
-        "protein": {"consumed": daily_consumption.protein, "goal": goals["protein"]},
-        "carbs": {"consumed": daily_consumption.carbs, "goal": goals["carbs"]},
-        "fat": {"consumed": daily_consumption.fat, "goal": goals["fat"]},
-        "vitamin_a": {"consumed": daily_consumption.vitamin_a, "goal": micronutrient_goals["vitamin_a"]},
-        "vitamin_c": {"consumed": daily_consumption.vitamin_c, "goal": micronutrient_goals["vitamin_c"]},
-        "iron": {"consumed": daily_consumption.iron, "goal": micronutrient_goals["iron"]},
-        "calcium": {"consumed": daily_consumption.calcium, "goal": micronutrient_goals["calcium"]},
-        "water": {"consumed": 40, "goal": 64},
-        "creatine": {"consumed": 2.0, "goal": 5.0}  # Added creatine with default values
-    }
+    
 
+def get_weekly_overview():
+    """Return the weekly nutritional overview page content"""
+    week = get_current_week_dates()
+    data = get_weekly_nutrition_data(week)
+    return overview_page_content(data)
+
+
+def overview_page_content(data: list[dict]):
     menu_items = [
         ("Food", "🍽️", "openFoodModal()"),
         ("Water", "💧", None)  # No handler yet
@@ -56,23 +55,47 @@ def get():
     )
     return page_outline(1, "Nutritional Overview", content)
 
-def get_nutrition_data():
+def get_weekly_nutrition_data(date: datetime):
     """Get the current nutrition data for display"""
-    calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
+    week = get_current_week_dates()
+    data = {
+        "calories": {"consumed": [], "goal": [], "burned": []},
+        "protein": {"consumed": [], "goal": []},
+        "carbs": {"consumed": [], "goal": []}, 
+        "fat": {"consumed": [], "goal": []},
+        "vitamin_a": {"consumed": [], "goal": []},
+        "vitamin_c": {"consumed": [], "goal": []},
+        "iron": {"consumed": [], "goal": []},
+        "calcium": {"consumed": [], "goal": []},
+        "water": {"consumed": [], "goal": []},
+        "creatine": {"consumed": [], "goal": []}
+    }
+    
+    for date in week:
+        daily_data = get_daily_nutrition_data(date)
+        for metric, values in daily_data.items():
+            for key, value in values.items():
+                data[metric][key].extend(value)
+    
+    return data
+
+def get_daily_nutrition_data(date: datetime):
+    """Get the current nutrition data for display"""
+    calories_burned = active_tracker.get_daily_calories_burned(date)
     goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
-    daily_consumption = get_daily_cumulative_nutrition(DB, datetime.date(datetime.today()))
+    daily_consumption = get_daily_cumulative_nutrition(DB, date)
 
     return {
-        "calories": {"consumed": daily_consumption.calories, "goal": goals["calories"], "burned": calories_burned},
-        "protein": {"consumed": daily_consumption.protein, "goal": goals["protein"]},
-        "carbs": {"consumed": daily_consumption.carbs, "goal": goals["carbs"]},
-        "fat": {"consumed": daily_consumption.fat, "goal": goals["fat"]},
-        "vitamin_a": {"consumed": daily_consumption.vitamin_a, "goal": micronutrient_goals["vitamin_a"]},
-        "vitamin_c": {"consumed": daily_consumption.vitamin_c, "goal": micronutrient_goals["vitamin_c"]},
-        "iron": {"consumed": daily_consumption.iron, "goal": micronutrient_goals["iron"]},
-        "calcium": {"consumed": daily_consumption.calcium, "goal": micronutrient_goals["calcium"]},
-        "water": {"consumed": 40, "goal": 64},
-        "creatine": {"consumed": 2.0, "goal": 5.0}
+        "calories": {"consumed": [daily_consumption.calories], "goal": [goals["calories"]], "burned": [calories_burned]},
+        "protein": {"consumed": [daily_consumption.protein], "goal": [goals["protein"]]},
+        "carbs": {"consumed": [daily_consumption.carbs], "goal": [goals["carbs"]]},
+        "fat": {"consumed": [daily_consumption.fat], "goal": [goals["fat"]]},
+        "vitamin_a": {"consumed": [daily_consumption.vitamin_a], "goal": [micronutrient_goals["vitamin_a"]]},
+        "vitamin_c": {"consumed": [daily_consumption.vitamin_c], "goal": [micronutrient_goals["vitamin_c"]]},
+        "iron": {"consumed": [daily_consumption.iron], "goal": [micronutrient_goals["iron"]]},
+        "calcium": {"consumed": [daily_consumption.calcium], "goal": [micronutrient_goals["calcium"]]},
+        "water": {"consumed": [40], "goal": [64]},
+        "creatine": {"consumed": [2.0], "goal": [5.0]}
     }
 
 async def toggle_dropdown(dropdown_id: str):
@@ -114,7 +137,6 @@ async def toggle_dropdown(dropdown_id: str):
 async def analyze_text(meal_description: str, meal_time: str):
     """Handle meal description analysis"""
     nutrition_info = nutrition_logger.natural_language_macros(meal_description)
-    # Create ISO format datetime for meal time
     today = datetime.today().date()
     meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
     meal_datetime = datetime.combine(today, meal_time_obj).isoformat()
@@ -244,7 +266,8 @@ async def show_metric(plot_id: str):
         visible_metrics.append(column_name)
         set_visible_metrics(DB, visible_metrics, "default")
     
-    return create_metrics_container(get_nutrition_data(), visible_metrics)
+    date = datetime.today()
+    return create_metrics_container(get_daily_nutrition_data(date), visible_metrics)
 
 async def generate_overview():
     """Generate the daily overview analysis"""

@@ -15,7 +15,8 @@ modal_css = fh.Link(rel="stylesheet", href="/static/public/modal.css")
 app = fh.FastHTML(hdrs=(tlink, plotly, dlink, fh.picolink, modal_css))
 
 # Food routes
-app.get("/nutrition")(nutrition.get)
+app.get("/nutrition")(nutrition.get_daily_overview)
+app.get("/nutrition/weekly")(nutrition.get_weekly_overview)
 app.post("/analyze_text")(nutrition.analyze_text)
 app.post("/analyze_image")(nutrition.analyze_image)
 app.post("/generate_overview")(nutrition.generate_overview)
