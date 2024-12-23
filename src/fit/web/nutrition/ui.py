@@ -5,17 +5,23 @@ from fit.web.common import nutritionist
 from fit.web.nutrition.food_plots import create_plot
 
 
-def metric_card(title: str, y_axis_title: str, plot_id: str, data: list[tuple[float, float, float | None]], show_analysis: bool = False, allow_hide: bool = True):
+def metric_card(
+        title: str,
+        y_axis_title:
+        str, plot_id:
+        str, data:list[tuple[float, float, float | None]],
+        allow_hide: bool = True
+    ):
     """Create a card containing a metric plot"""
     plot_data, plot_layout = create_plot(title, y_axis_title, data)
     
-    analysis_text = None
-    if show_analysis:
-        macro_name = title.lower()
-        if macro_name == "carbohydrates":
-            macro_name = "carbohydrate"
-        analysis_text = nutritionist.macro_analysis(macro_name, data[0][0], data[0][1])
+    averages = sum(data[0]) / len(data[0]), sum(data[1]) / len(data[1]), # this can be made more efficient by averaging elsewhere, currently adds O(n)
+    macro_name = title.lower()
+    if macro_name == "carbohydrates":
+        macro_name = "carbohydrate"
     
+    analysis_text = nutritionist.macro_analysis(macro_name, averages[0], averages[1]) # analysis doesn't work for week
+
     hide_button = None
     if allow_hide and title.lower() not in ["calories", "water", "creatine"]:
         hide_button = fh.Button(

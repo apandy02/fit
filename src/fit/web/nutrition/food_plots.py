@@ -10,11 +10,11 @@ def base_bar(x, y, name, color, x_offset=0, show_legend=True):
         "name": name,
         "marker": {
             "color": color,
-            "width": 0.8  # Make bars thicker
+            "width": 1.0  # Make bars thicker
         },
         "hoverinfo": "y",
         "showlegend": show_legend,  # Only show legend for first day's bars
-        "width": 0.2,  # Control bar width
+        "width": 0.25,  # Control bar width
         "offset": x_offset  # Shift bars horizontally
     }
 
@@ -30,7 +30,6 @@ def create_plot(title: str, y_axis_title: str, data_points: tuple[list, ...]):
     has_burned = data_points[2] is not None
     
     if len(data_points[0]) == 1:
-        # Single day plot
         consumed = data_points[0][0]
         goal = data_points[1][0]
         data = [
@@ -40,10 +39,7 @@ def create_plot(title: str, y_axis_title: str, data_points: tuple[list, ...]):
         if has_burned:
             data.append(base_bar("Today", data_points[2][0], "Burned", "rgb(239, 68, 68)"))
     else:
-        # Weekly plot
         days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-        
-        # Add all bars for each day together
         for i in range(len(data_points[0])):
             # Only show legend for the first day's bars
             show_legend = (i == 0)
