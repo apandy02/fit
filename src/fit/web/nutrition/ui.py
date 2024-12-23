@@ -5,7 +5,7 @@ from fit.web.common import nutritionist
 from fit.web.nutrition.food_plots import create_plot
 
 
-def metric_card(title: str, y_axis_title: str, plot_id: str, data: list[tuple[float, float, float | None]], show_analysis: bool = True, allow_hide: bool = True):
+def metric_card(title: str, y_axis_title: str, plot_id: str, data: list[tuple[float, float, float | None]], show_analysis: bool = False, allow_hide: bool = True):
     """Create a card containing a metric plot"""
     plot_data, plot_layout = create_plot(title, y_axis_title, data)
     
@@ -394,14 +394,11 @@ def create_metric_overview_section(title, metrics_data, filtered_metrics, all_me
                         metric["name"],
                         f"{metric['name']} ({metric['unit']})" if metric["unit"] else metric["name"],
                         metric["plot_id"],
-                        [
-                            (
-                                data[metric["column_name"]]["consumed"],
-                                data[metric["column_name"]]["goal"],
-                                data[metric["column_name"]].get("burned")
-                            )
-                            for data in metrics_data # TODO get rid of nested loop
-                        ],
+                        (
+                            metrics_data[metric["column_name"]]["consumed"],
+                            metrics_data[metric["column_name"]]["goal"],
+                            metrics_data[metric["column_name"]].get("burned")
+                        ),
                         allow_hide=metric["name"].lower() not in ["calories", "water", "creatine"]
                     ),
                     cls="w-1/2 p-2" if i < len(filtered_metrics) - 1 or len(filtered_metrics) % 2 == 0 
