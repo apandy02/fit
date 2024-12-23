@@ -37,6 +37,8 @@ app.get("/profile")(user_profile.get)
 app.post("/update_profile")(user_profile.update_profile)
 app.post("/connect_tracker")(user_profile.connect_tracker)
 app.post("/set_active_tracker")(user_profile.set_active_tracker)
+app.post("/add_restriction")(user_profile.add_restriction)
+app.post("/remove_restriction")(user_profile.remove_restriction)
 
 # rest routes
 app.get("/rest")(rest.get)

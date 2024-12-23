@@ -20,8 +20,11 @@ def get():
                     cls="space-y-6"
                 )(
                     # Basic Information
-                    fh.Section(
-                        fh.H4("Basic Information", cls="text-xl font-semibold mb-4 text-primary-content"),
+                    fh.Card(
+                        fh.Header(
+                            fh.H3("Basic Information", cls="text-xl font-bold text-center mb-2 text-primary-content"),
+                            cls="mb-6 bg-base-200"
+                        ),
                         fh.Div(
                             # Name
                             create_form_row("Name", fh.Input(
@@ -49,11 +52,49 @@ def get():
                             )),
                             cls="space-y-4"
                         ),
-                        cls="mb-8"
+                        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6 mb-8"
+                    ),
+                    # Dietary Restrictions
+                    fh.Card(
+                        fh.Header(
+                            fh.H3("Dietary Restrictions", cls="text-xl font-bold text-center mb-2 text-primary-content"),
+                            cls="mb-6 bg-base-200"
+                        ),
+                        fh.Div(
+                            create_form_row("Restrictions", fh.Div(
+                                # Dropdown for adding restrictions
+                                fh.Select(
+                                    fh.Option("Select a restriction", value="", selected=True, disabled=True),
+                                    fh.Option("Vegetarian", value="vegetarian"),
+                                    fh.Option("Vegan", value="vegan"),
+                                    fh.Option("Gluten-Free", value="gluten_free"),
+                                    fh.Option("Dairy-Free", value="dairy_free"),
+                                    fh.Option("Nut-Free", value="nut_free"),
+                                    fh.Option("Kosher", value="kosher"),
+                                    fh.Option("Halal", value="halal"),
+                                    name="dietary_restriction",
+                                    hx_post="/add_restriction",
+                                    hx_target="#restrictions-list",
+                                    cls="select select-bordered w-full bg-base-200 text-primary-content mb-4"
+                                ),
+                                # Container for restriction tags
+                                fh.Div(
+                                    # Empty container for tags (will be populated dynamically)
+                                    id="restrictions-list",
+                                    cls="flex flex-wrap"
+                                ),
+                                cls="w-full"
+                            )),
+                            cls="space-y-4"
+                        ),
+                        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6 mb-8"
                     ),
                     # Fitness Goals
-                    fh.Section(
-                        fh.H4("Fitness Goals", cls="text-xl font-semibold mb-4 text-primary-content"),
+                    fh.Card(
+                        fh.Header(
+                            fh.H3("Fitness Goals", cls="text-xl font-bold text-center mb-2 text-primary-content"),
+                            cls="mb-6 bg-base-200"
+                        ),
                         fh.Div(
                             # Primary Goal
                             create_form_row("Primary Goal", fh.Select(
@@ -74,11 +115,14 @@ def get():
                             )),
                             cls="space-y-4"
                         ),
-                        cls="mb-8"
+                        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6 mb-8"
                     ),
                     # Preferences
-                    fh.Section(
-                        fh.H4("Preferences", cls="text-xl font-semibold mb-4 text-primary-content"),
+                    fh.Card(
+                        fh.Header(
+                            fh.H3("Preferences", cls="text-xl font-bold text-center mb-2 text-primary-content"),
+                            cls="mb-6 bg-base-200"
+                        ),
                         fh.Div(
                             # Units
                             create_form_row("Units", fh.Select(
@@ -89,12 +133,12 @@ def get():
                             )),
                             cls="space-y-4"
                         ),
-                        cls="mb-8"
+                        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6 mb-8"
                     ),
                     fh.Button(
                         "Save Changes",
                         type="submit",
-                        cls="btn btn-primary w-full"
+                        cls="btn btn-primary outline outline-1 outline-primary-content w-full"
                     ),
                     fh.Div(id="profile-result")
                 ),
@@ -121,9 +165,9 @@ def get():
 def create_form_row(label: str, input_element):
     """Create a form row with label on the left and input on the right"""
     return fh.Div(
-        fh.Label(label, cls="text-primary-content w-1/3"),
+        fh.Label(label, cls="text-primary-content w-1/3 h-12 flex items-center"),
         fh.Div(input_element, cls="w-2/3"),
-        cls="flex items-center gap-4"
+        cls="flex gap-4"
     )
 
 
@@ -364,4 +408,107 @@ async def set_active_tracker(active_tracker: str):
                 str(e),
                 cls="text-primary-content opacity-70 text-center text-sm mt-1"
             )
+        )
+
+
+async def add_restriction(request: fh.Request):
+    """Handle adding a dietary restriction"""
+    try:
+        form = await request.form()
+        restriction = form.get("dietary_restriction")
+        # TODO: Save restriction to database
+        
+        # Get existing restrictions from the form
+        existing_restrictions = form.getlist("existing_restrictions[]")
+        if restriction not in existing_restrictions:
+            existing_restrictions.append(restriction)
+        
+        # Create a div for each restriction
+        restriction_divs = [
+            fh.Div(
+                fh.Div(
+                    r.replace('_', ' ').title(),
+                    cls="flex-grow mr-8"
+                ),
+                fh.Button(
+                    "×",
+                    hx_post="/remove_restriction",
+                    hx_vals=f'{{"restriction": "{r}"}}',
+                    hx_target="#restrictions-list",
+                    cls="text-lg hover:text-error focus:outline-none focus:ring-0 border-none"
+                ),
+                cls="bg-neutral flex items-center justify-between px-4 py-2 rounded-lg mr-2 mb-2"
+            )
+            for r in existing_restrictions
+        ]
+        
+        return fh.Div(
+            *restriction_divs,
+            # Hidden inputs to maintain state
+            *[
+                fh.Input(
+                    type="hidden",
+                    name="existing_restrictions[]",
+                    value=r
+                )
+                for r in existing_restrictions
+            ],
+            id="restrictions-list",
+            cls="flex flex-wrap"
+        )
+    except Exception as e:
+        return fh.P(
+            f"Error adding restriction: {str(e)}",
+            cls="text-error text-sm mt-1"
+        )
+
+
+async def remove_restriction(request: fh.Request):
+    """Handle removing a dietary restriction"""
+    try:
+        form = await request.form()
+        restriction_to_remove = form.get("restriction")
+        existing_restrictions = form.getlist("existing_restrictions[]")
+        
+        # Remove the restriction
+        if restriction_to_remove in existing_restrictions:
+            existing_restrictions.remove(restriction_to_remove)
+        
+        # Create a div for each remaining restriction
+        restriction_divs = [
+            fh.Div(
+                fh.Div(
+                    r.replace('_', ' ').title(),
+                    cls="flex-grow mr-8"
+                ),
+                fh.Button(
+                    "×",
+                    hx_post="/remove_restriction",
+                    hx_vals=f'{{"restriction": "{r}"}}',
+                    hx_target="#restrictions-list",
+                    cls="text-lg hover:text-error focus:outline-none focus:ring-0 border-none"
+                ),
+                cls="bg-neutral flex items-center justify-between px-4 py-2 rounded-lg mr-2 mb-2"
+            )
+            for r in existing_restrictions
+        ]
+        
+        return fh.Div(
+            *restriction_divs,
+            # Hidden inputs to maintain state
+            *[
+                fh.Input(
+                    type="hidden",
+                    name="existing_restrictions[]",
+                    value=r
+                )
+                for r in existing_restrictions
+            ],
+            id="restrictions-list",
+            cls="flex flex-wrap"
+        )
+    except Exception as e:
+        return fh.P(
+            f"Error removing restriction: {str(e)}",
+            cls="text-error text-sm mt-1"
         ) 
