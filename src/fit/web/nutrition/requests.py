@@ -172,7 +172,6 @@ async def save_meal(request: fh.Request):
         form = await request.form()
         # The meal_time is already in ISO format from the hidden input
         meal_datetime = form["meal_time"]
-        print(meal_datetime)
         
         nutrition_info = MealBreakdown(
             summary=form["summary"],

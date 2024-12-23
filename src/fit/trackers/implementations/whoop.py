@@ -299,19 +299,18 @@ class Whoop(FitnessTracker):
         max_overlap = 0
         cycle_dict = None
         
-        day_start = datetime.datetime.combine(day, datetime.time.min)
-        day_end = datetime.datetime.combine(day, datetime.time.max)
-        
+        day_start = datetime.datetime.combine(day, datetime.time.min).astimezone(datetime.timezone.utc)
+        day_end = datetime.datetime.combine(day, datetime.time.max).astimezone(datetime.timezone.utc)
+
         for cycle in cycles:
             cycle_start = datetime.datetime.fromisoformat(cycle["start"].replace("Z", "+00:00"))
-            cycle_start = self.adjust_datetime_by_offset(cycle_start, cycle["timezone_offset"])
+            cycle_start = self.adjust_datetime_by_offset(cycle_start, cycle["timezone_offset"])            
             
             if "end" not in cycle or cycle["end"] is None:
-                return cycle # if no end, then it's the current cycle. TODO: improve the fault tolerance here
+                return cycle # if no end, then it's the current cycle. TODO: improve the fault tolerance here"""
             
             cycle_end = datetime.datetime.fromisoformat(cycle["end"].replace("Z", "+00:00"))
             cycle_end = self.adjust_datetime_by_offset(cycle_end, cycle["timezone_offset"])
-
             overlap_start = max(day_start, cycle_start)
             overlap_end = min(day_end, cycle_end)
             
