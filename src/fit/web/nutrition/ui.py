@@ -311,7 +311,7 @@ def food_tracking_modal():
                 
                 // Show selected input form
                 if (type === 'image') {
-                    document.getElementById('image-input').classList.remove('hidden');
+                    document.getElementById('image-input').classget-List.remove('hidden');
                     document.getElementById('text-input').classList.add('hidden');
                 } else {
                     document.getElementById('text-input').classList.remove('hidden');
@@ -342,21 +342,29 @@ def food_tracking_modal():
         """)
     )
 
-def create_page_header():
+def create_page_header(current_view: str):
     """Create the page header with title and time filter"""
     return fh.Div(
         fh.P("Nutritional Overview", cls="text-3xl font-bold text-center mb-6 text-primary-content"),
         fh.Div(
-            fh.Select(
-                fh.Option("Today", value="today", selected=True),
-                fh.Option("This Week", value="week"),
-                fh.Option("This Month", value="month"),
-                name="time_filter",
-                cls="select select-bordered w-full max-w-xs"
-            ),
+            create_time_filter(current_view),
             cls="flex justify-center mb-8"
         ),
         cls="mb-8"
+    )
+
+def create_time_filter(current_view: str):
+    """Create the time filter toggle"""
+    return fh.Div(
+        fh.Select(
+            fh.Option("Today", value="daily", selected=True),
+            fh.Option("This Week", value="weekly"),
+            name="time_filter",
+            cls="select select-bordered w-full max-w-xs",
+            hx_redirect="/nutrition" if current_view == "daily" else "/nutrition/weekly",
+            hx_trigger="change",
+        ),
+        cls="mb-6 flex justify-end"
     )
 
 def create_metric_overview_section(title, metrics_data, filtered_metrics, all_metrics=None):

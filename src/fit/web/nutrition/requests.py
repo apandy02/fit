@@ -22,7 +22,7 @@ def get_daily_overview():
     date = datetime.today().date()
     data = get_daily_nutrition_data(date)
     print(data)
-    return overview_page_content(data)
+    return overview_page_content(data, "daily")
 
     
 
@@ -30,10 +30,10 @@ def get_weekly_overview():
     """Return the weekly nutritional overview page content"""
     week = get_current_week_dates()
     data = get_weekly_nutrition_data(week)
-    return overview_page_content(data)
+    return overview_page_content(data, "weekly")
 
 
-def overview_page_content(data: list[dict]):
+def overview_page_content(data: list[dict], current_view: str):
     menu_items = [
         ("Food", "🍽️", "openFoodModal()"),
         ("Water", "💧", None)  # No handler yet
@@ -46,7 +46,7 @@ def overview_page_content(data: list[dict]):
 
     content = fh.Article(
         fh.Div(
-            create_page_header(),
+            create_page_header(current_view),
             create_metrics_grid(data, visible_metrics, water_metrics),
             food_tracking_modal(),
             create_fab_menu(menu_items),
@@ -72,11 +72,18 @@ def get_weekly_nutrition_data(date: datetime):
         "creatine": {"consumed": [], "goal": []}
     }
     
+    today = datetime.today().date()
     for date in week:
-        daily_data = get_daily_nutrition_data(date)
-        for metric, values in daily_data.items():
-            for key, value in values.items():
-                data[metric][key].extend(value)
+        if date > today:
+            # For future dates, extend with 0s
+            for metric in data:
+                for key in data[metric]:
+                    data[metric][key].extend([0])
+        else:
+            daily_data = get_daily_nutrition_data(date)
+            for metric, values in daily_data.items():
+                for key, value in values.items():
+                    data[metric][key].extend(value)
     
     return data
 

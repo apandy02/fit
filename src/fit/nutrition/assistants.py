@@ -97,7 +97,7 @@ class Nutritionist:
         
         return _make_recommendations(caloric_burn, goal, prior_intake)
     
-    def daily_io_analysis(self, meals: list[MealBreakdown], target: dict[str, float]) -> str:
+    def daily_io_analysis(self, meals: list[MealBreakdown], target: dict[str, float], restrictions: list[str]) -> str:
         """
         Analyzes the user's daily intake and target and produces an overview with feedback.
 
@@ -109,16 +109,20 @@ class Nutritionist:
             return "No meals logged for today, please log your meals and try again."
 
         @ell.simple(model=self.model)
-        def _daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float]) -> str:
+        def _daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float], restrictions: list[str]) -> str:
             """Analyze the user's daily nutritional intake versus their targets and provide a detailed 
             assessment in plain text format. Start with an overview comparing total intake to goals. 
             Then evaluate each meal's contribution to any excess - flag meals that significantly exceed 
             targets (e.g., >100% of a macro target in one meal) as problematic and suggest alternatives. 
             if the current time of day is before 8PM and they're over their caloric target, suggest 
             a workout that get them closer to a target range.
+            
             For meals contributing to excess but not extreme, recommend portion adjustments. 
             For under-target scenarios, suggest realistic additions based on their evident food preferences 
             and eating patterns.
+
+            You will be provided with the user's dietary restrictions, make sure not to recommend any foods
+            that are restricted.
 
             Break the analysis into four sections:
             An untitled general overview
@@ -146,8 +150,9 @@ class Nutritionist:
                 Iron: {target["iron"]}mg, Calcium: {target["calcium"]}mg,
                 Sodium: {target["sodium"]}mg, Potassium: {target["potassium"]}mg
             """
-            
-            return f"{meals_str}\n{targets_str}"
+            restrictions_str = f"The user's dietary restrictions are: {restrictions}"
+
+            return f"{meals_str}\n{targets_str}\n{restrictions_str}"
         
         return _daily_io_analysis(meals, target)
     
