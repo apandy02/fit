@@ -10,9 +10,8 @@ from fit.web.common import (DB, active_tracker, create_fab_menu,
                             nutritionist, page_outline)
 from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
                                get_dietary_restrictions, get_visible_metrics,
-                               insert_meal, set_visible_metrics)
-from fit.web.nutrition.ui import (create_metrics_container,
-                                  create_metrics_grid, create_nutrition_card,
+                               get_weekly_meals, insert_meal, set_visible_metrics)
+from fit.web.nutrition.ui import (create_metrics_grid, create_nutrition_card,
                                   create_page_header, create_text_input_form,
                                   food_tracking_modal)
 
@@ -46,7 +45,7 @@ def overview_page_content(data: list[dict], current_view: str):
     content = fh.Article(
         fh.Div(
             create_page_header(current_view),
-            create_metrics_grid(data, visible_metrics, water_metrics),
+            create_metrics_grid(data, visible_metrics, water_metrics, current_view),
             food_tracking_modal(),
             create_fab_menu(menu_items),
             cls="max-w-6xl mx-auto p-6"
@@ -263,7 +262,7 @@ async def hide_metric(plot_id: str):
         set_visible_metrics(DB, visible_metrics, "default")
     return ""  # Return empty string to remove the card
 
-async def show_metric(plot_id: str):
+async def show_metric(plot_id: str, view_type: str):
     """Show a previously hidden metric"""
     visible_metrics = get_visible_metrics(DB, "default")
     column_name = plot_id.replace("-plot", "").replace("_", "")
@@ -272,10 +271,46 @@ async def show_metric(plot_id: str):
         set_visible_metrics(DB, visible_metrics, "default")
     
     date = datetime.today().date()
-    return create_metrics_container(get_daily_nutrition_data(date), visible_metrics)
+    return create_metrics_grid(get_daily_nutrition_data(date), visible_metrics, view_type)
 
-async def generate_overview():
-    """Generate the daily overview analysis"""
+
+async def generate_weekly_overview():
+    """
+    Generate the weekly overview analysis by getting the user's meals for the week,
+    their dietary restrictions, their calories burned for the week, and calculating their targets for the week.
+    Then, passing these to the weekly_io_analysis LMP.
+    """
+    week = get_current_week_dates()
+    meals = get_weekly_meals(DB, week)
+    
+    dietary_restrictions = get_dietary_restrictions(DB, "default")
+    calories_burned = [active_tracker.get_daily_calories_burned(day) for day in week]
+    targets = [calculate_macro_targets(calories_burned, Goals.MAINTAIN) for calories_burned in calories_burned]
+    [target.update(micronutrient_goals) for target in targets]
+
+    analysis = nutritionist.weekly_io_analysis(meals, targets, dietary_restrictions)
+    
+    return fh.Card(
+        fh.Div(
+            *[
+                fh.Div(
+                    fh.P(fh.NotStr(line.strip()), cls="text-primary-content mb-1"),
+                    cls="mb-2"
+                )
+                for line in analysis.split('\n')
+                if line.strip() 
+            ],
+            cls="p-4 space-y-2 mt-2"
+        ),
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-4"
+    )
+
+async def generate_daily_overview():
+    """
+    Generate the daily overview analysis by getting the user's meals for the day,
+    their dietary restrictions, their calories burned for the day, and calculating their targets for the day.
+    Then, passing these to the daily_io_analysis LMP.
+    """
     today = datetime.date(datetime.today())
     meals = get_daily_meals(DB, today)
     

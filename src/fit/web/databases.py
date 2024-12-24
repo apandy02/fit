@@ -118,6 +118,12 @@ def get_daily_meals(database: fh.Database, date: datetime):
         ) for row in result
     ]
 
+def get_weekly_meals(database: fh.Database, week: list[datetime]):
+    """
+    Get the meals for a given week.
+    """
+    return {day: get_daily_meals(database, day) for day in week}
+
 def get_daily_cumulative_nutrition(database: fh.Database, date: datetime):
     """
     Get the cumulative daily nutrition for a given date.

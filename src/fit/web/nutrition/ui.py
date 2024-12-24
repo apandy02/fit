@@ -465,10 +465,10 @@ def create_conditional_section(data, visible_metrics):
     ]
     return create_metric_overview_section("Conditionally Essential Nutrients", data, filtered_metrics, conditional_metrics)
 
-def create_metrics_grid(data, visible_metrics, water_metrics):
+def create_metrics_grid(data, visible_metrics, water_metrics, view_type: str):
     """Create the grid of metric cards"""
     sections = [
-        create_overview_card(),
+        create_overview_card(view_type),
         create_macro_section(data, visible_metrics),
         create_micro_section(data, visible_metrics),
         create_conditional_section(data, visible_metrics),
@@ -484,15 +484,15 @@ def create_metrics_grid(data, visible_metrics, water_metrics):
         cls="w-full"
     )
 
-def create_overview_card():
+def create_overview_card(view_type: str):
     """Create the overview card with analysis button"""
     return fh.Card(
         fh.Div(
             fh.Div(
                 fh.Button(
-                    "Generate Daily Analysis",
+                    "Generate Daily Analysis" if view_type == "daily" else "Generate Weekly Analysis",
                     cls="btn btn-primary outline outline-1 outline-primary-content",
-                    hx_post="/generate_overview",
+                    hx_post="/generate_daily_overview" if view_type == "daily" else "/generate_weekly_overview",
                     hx_target="#analysis-content"
                 ),
                 cls="flex justify-center mb-4"
@@ -613,24 +613,4 @@ def create_nutrition_card(nutrition_info, meal_time: str = None):
     )
 
 
-def create_metrics_container(data, visible_metrics):
-    """Create the metrics grid with its container"""
-    water_metrics = [{"name": "Water", "column_name": "water", "unit": "oz", "plot_id": "water-plot"}]
-    sections = [
-        create_overview_card(),
-        create_macro_section(data, visible_metrics),
-        create_micro_section(data, visible_metrics),
-        create_conditional_section(data, visible_metrics),
-        create_metric_overview_section("Hydration", data, water_metrics)
-    ]
-    sections = [section for section in sections if section is not None]
-    
-    return fh.Div(
-        fh.Div(
-            *sections,
-            cls="w-full space-y-12"
-        ),
-        cls="w-full",
-        id="metrics-container"
-    )
 
