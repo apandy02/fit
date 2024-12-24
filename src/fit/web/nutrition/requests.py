@@ -1,19 +1,15 @@
 from datetime import datetime
 
 import fasthtml.common as fh
+
+import fit.web.common as common
+import fit.web.databases as databases
+import fit.web.nutrition.ui as ui
 from fit.nutrition.data import Goals, MealBreakdown
 from fit.nutrition.targets import calculate_macro_targets
 from fit.utils.calendar import get_current_week_dates
-from fit.web.common import (DB, active_tracker, create_fab_menu,
-                            micronutrient_goals, nutrition_logger,
-                            nutritionist, page_outline)
-from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
-                               get_dietary_restrictions, get_visible_metrics,
-                               get_weekly_meals, insert_meal,
-                               set_visible_metrics)
-from fit.web.nutrition.ui import (create_metrics_grid, create_nutrition_card,
-                                  create_page_header, create_text_input_form,
-                                  food_tracking_modal)
+from fit.web.common import (DB, active_tracker, micronutrient_goals,
+                            nutrition_logger, nutritionist)
 
 
 def get_daily_overview():
@@ -37,22 +33,22 @@ def overview_page_content(data: list[dict], current_view: str):
         ("Water", "💧", None)  # No handler yet
     ]
 
-    visible_metrics = get_visible_metrics(DB, "default") # TODO: get user_id from session, hardcoded for now
+    visible_metrics = databases.get_visible_metrics(DB, "default") # TODO: get user_id from session, hardcoded for now
     water_metrics = [
         {"name": "Water", "column_name": "water", "unit": "oz", "plot_id": "water-plot"}
     ]
 
     content = fh.Article(
         fh.Div(
-            create_page_header(current_view),
-            create_metrics_grid(data, visible_metrics, water_metrics, current_view),
-            food_tracking_modal(),
-            create_fab_menu(menu_items),
+            ui.create_page_header(current_view),
+            ui.create_metrics_grid(data, visible_metrics, water_metrics, current_view),
+            ui.food_tracking_modal(),
+            common.create_fab_menu(menu_items),
             cls="max-w-6xl mx-auto p-6"
         ),
         cls="bg-base-100",
     )
-    return page_outline(1, "Nutritional Overview", content)
+    return common.page_outline(1, "Nutritional Overview", content)
 
 def get_weekly_nutrition_data(date: datetime):
     """Get the current nutrition data for display"""
@@ -89,7 +85,7 @@ def get_daily_nutrition_data(date: datetime):
     """Get the current nutrition data for display"""
     calories_burned = active_tracker.get_daily_calories_burned(date)
     goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
-    daily_consumption = get_daily_cumulative_nutrition(DB, date)
+    daily_consumption = databases.get_daily_cumulative_nutrition(DB, date)
     return {
         "calories": {"consumed": [daily_consumption.calories], "goal": [goals["calories"]], "burned": [calories_burned]},
         "protein": {"consumed": [daily_consumption.protein], "goal": [goals["protein"]]},
@@ -105,7 +101,7 @@ def get_daily_nutrition_data(date: datetime):
 
 async def toggle_dropdown(dropdown_id: str):
     """Toggle the visibility of a dropdown"""
-    visible = get_visible_metrics(DB, "default")
+    visible = databases.get_visible_metrics(DB, "default")
     if "macro" in dropdown_id:
         all_metrics = ["Calories", "Protein", "Carbohydrates", "Fat"]
     elif "micro" in dropdown_id:
@@ -149,10 +145,10 @@ async def analyze_text(meal_description: str, meal_time: str):
     return fh.Card(
         fh.Div(
             fh.Div(
-                create_text_input_form(is_feedback=True, original_description=meal_description)
+                ui.create_text_input_form(is_feedback=True, original_description=meal_description)
             ),
             fh.Div(
-                create_nutrition_card(nutrition_info, meal_time=meal_datetime),
+                ui.create_nutrition_card(nutrition_info, meal_time=meal_datetime),
                 id="nutrition-card"
             ),
             cls="p-6"
@@ -169,7 +165,7 @@ async def analyze_image(food_image: fh.UploadFile, meal_time: str):
     meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
     meal_datetime = datetime.combine(today, meal_time_obj).isoformat()
     
-    return create_nutrition_card(nutrition_info, meal_time=meal_datetime)
+    return ui.create_nutrition_card(nutrition_info, meal_time=meal_datetime)
 
 async def save_meal(request: fh.Request):
     """Save the meal with user-adjusted nutrition values"""
@@ -194,7 +190,7 @@ async def save_meal(request: fh.Request):
             potassium=form["potassium"],
             sodium=form["sodium"]
         )    
-        insert_meal(DB, form["summary"], nutrition_info, meal_datetime)
+        databases.insert_meal(DB, form["summary"], nutrition_info, meal_datetime)
         
         return fh.Div(
             fh.P(
@@ -232,7 +228,7 @@ async def save_meal(request: fh.Request):
 
 async def reset_text_form():
     """Reset the text form to its original state"""
-    return create_text_input_form(is_feedback=False)
+    return ui.create_text_input_form(is_feedback=False)
 
 async def regenerate_analysis(feedback: str, original_description: str):
     """Regenerate analysis based on feedback"""
@@ -241,10 +237,10 @@ async def regenerate_analysis(feedback: str, original_description: str):
     return fh.Card(
         fh.Div(
             fh.Div(
-                create_text_input_form(is_feedback=True)
+                ui.create_text_input_form(is_feedback=True)
             ),
             fh.Div(
-                create_nutrition_card(improved_info),
+                ui.create_nutrition_card(improved_info),
                 id="nutrition-card"
             ),
             cls="p-6"
@@ -255,23 +251,23 @@ async def regenerate_analysis(feedback: str, original_description: str):
 
 async def hide_metric(plot_id: str):
     """Hide a metric by removing it from visible_metrics"""
-    visible_metrics = get_visible_metrics(DB, "default")
+    visible_metrics = databases.get_visible_metrics(DB, "default")
 
     if plot_id in visible_metrics:
         visible_metrics.remove(plot_id)
-        set_visible_metrics(DB, visible_metrics, "default")
+        databases.set_visible_metrics(DB, visible_metrics, "default")
     return ""  # Return empty string to remove the card
 
 async def show_metric(plot_id: str, view_type: str):
     """Show a previously hidden metric"""
-    visible_metrics = get_visible_metrics(DB, "default")
+    visible_metrics = databases.get_visible_metrics(DB, "default")
     column_name = plot_id.replace("-plot", "").replace("_", "")
     if column_name not in visible_metrics:
         visible_metrics.append(column_name)
-        set_visible_metrics(DB, visible_metrics, "default")
+        databases.set_visible_metrics(DB, visible_metrics, "default")
     
     date = datetime.today().date()
-    return create_metrics_grid(get_daily_nutrition_data(date), visible_metrics, view_type)
+    return ui.create_metrics_grid(get_daily_nutrition_data(date), visible_metrics, view_type)
 
 
 async def generate_weekly_overview():
@@ -281,9 +277,9 @@ async def generate_weekly_overview():
     Then, passing these to the weekly_io_analysis LMP.
     """
     week = get_current_week_dates()
-    meals = get_weekly_meals(DB, week)
+    meals = databases.get_weekly_meals(DB, week)
     
-    dietary_restrictions = get_dietary_restrictions(DB, "default")
+    dietary_restrictions = databases.get_dietary_restrictions(DB, "default")
     calories_burned = [active_tracker.get_daily_calories_burned(day) for day in week]
     targets = [calculate_macro_targets(calories_burned, Goals.MAINTAIN) for calories_burned in calories_burned]
     [target.update(micronutrient_goals) for target in targets]
@@ -312,9 +308,9 @@ async def generate_daily_overview():
     Then, passing these to the daily_io_analysis LMP.
     """
     today = datetime.date(datetime.today())
-    meals = get_daily_meals(DB, today)
+    meals = databases.get_daily_meals(DB, today)
     
-    dietary_restrictions = get_dietary_restrictions(DB, "default")
+    dietary_restrictions = databases.get_dietary_restrictions(DB, "default")
 
     calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)

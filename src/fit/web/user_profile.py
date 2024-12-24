@@ -1,4 +1,5 @@
 import fasthtml.common as fh
+
 from fit.trackers.manager import (get_active_tracker_type, load_secrets,
                                   save_secrets)
 from fit.web.common import DB, page_outline
@@ -17,18 +18,18 @@ def create_editable_input(name: str, value: str, input_type: str = "text", place
                 value=value,
                 placeholder=placeholder,
                 required=required,
-                readonly=bool(value),  # readonly if there's a value
+                readonly=bool(value), 
                 cls="input input-bordered w-full bg-base-200 text-primary-content"
             ),
-            cls="w-11/12"  # Make input take up most but not all of the space
+            cls="w-11/12" 
         ),
         fh.Button(
             "✎",  # pen symbol
             type="button",
             onclick=f"document.getElementById('{input_id}').readOnly = false; document.getElementById('{input_id}').focus();",
             cls="flex items-center justify-center h-12 w-12 hover:bg-slate-700 focus:bg-slate-700 rounded-lg bg-slate-600 border-none outline-none"
-        ) if value else "",  # only show edit button if there's a value
-        cls="flex items-center gap-2"  # Use flex to align items and add gap
+        ) if value else "", 
+        cls="flex items-center gap-2" 
     )
 
 
@@ -63,7 +64,6 @@ def get():
                                 user_data.get("name", ""),
                                 placeholder="John Doe"
                             )),
-                            # Email
                             create_form_row("Email", create_editable_input(
                                 "email",
                                 user_data.get("email", ""),

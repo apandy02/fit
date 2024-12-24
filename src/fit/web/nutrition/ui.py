@@ -1,8 +1,9 @@
 from datetime import datetime
 
 import fasthtml.common as fh
-from fit.web.common import nutritionist
+
 import fit.web.nutrition.food_plots as food_plots
+from fit.web.common import nutritionist
 
 
 def metric_card(
@@ -14,13 +15,11 @@ def metric_card(
         view_type: str = "daily"
     ):
     """Create a card containing a metric plot"""
-    # Route to appropriate plotting function based on view_type
     if view_type == "daily":
-        plot_data, plot_layout, js_code = food_plots.create_amcharts_donut(title, y_axis_title, data)
+        plot_data, plot_layout, js_code = food_plots.create_amcharts_donut(data)
     else:
         plot_data, plot_layout, js_code = food_plots.create_plotly_bars(title, y_axis_title, data)
     
-    # Calculate averages only for non-None values
     consumed_values = [x for x in data[0] if x is not None]
     goal_values = [x for x in data[1] if x is not None]
     
@@ -56,10 +55,8 @@ def metric_card(
                 fh.Div(id=plot_id, cls="w-full h-[300px]"),
                 cls="w-full"
             ),
-            # For daily view, use amCharts
             fh.Div(
                 fh.Script(js_code.replace("{plot_id}", plot_id)) if view_type == "daily" else
-                # For weekly view, use Plotly
                 fh.Script(
                     f"""
                     var data = {plot_data};
@@ -67,7 +64,7 @@ def metric_card(
                     Plotly.newPlot('{plot_id}', data, layout, {{responsive: true}});
                     """
                 ),
-                cls="w-1/2"
+                cls="w-"
             ),
             fh.P(analysis_text, cls="text-sm text-primary-content mt-4") if analysis_text else None,
             cls="p-4 relative"
@@ -635,6 +632,3 @@ def create_nutrition_card(nutrition_info, meal_time: str = None):
         ),
         cls="bg-base-200 outline  rounded-lg p-6"
     )
-
-
-

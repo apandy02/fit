@@ -10,15 +10,15 @@ def base_bar(x, y, name, color, x_offset=0, show_legend=True):
         "name": name,
         "marker": {
             "color": color,
-            "width": 1.0  # Make bars thicker
+            "width": 1.0 
         },
         "hoverinfo": "y",
-        "showlegend": show_legend,  # Only show legend for first day's bars
-        "width": 0.25,  # Control bar width
-        "offset": x_offset  # Shift bars horizontally
+        "showlegend": show_legend, 
+        "width": 0.25, 
+        "offset": x_offset 
     }
 
-def create_amcharts_donut(title: str, y_axis_title: str, data_points: tuple[list, ...]):
+def create_amcharts_donut(data_points: tuple[list, ...]):
     """Create an amCharts donut plot for daily view
     
     Args:
@@ -29,12 +29,10 @@ def create_amcharts_donut(title: str, y_axis_title: str, data_points: tuple[list
     consumed = data_points[0][0] if data_points[0][0] is not None else 0
     goal = data_points[1][0] if data_points[1][0] is not None else 0
     
-    # Calculate percentages for the donut
     percentage = (consumed / goal * 100) if goal > 0 else 0
     percentage = min(percentage, 100)  # Cap at 100%
     remaining = goal - consumed
     
-    # Create amCharts data
     data = [
         {
             "category": "Consumed",
@@ -52,7 +50,6 @@ def create_amcharts_donut(title: str, y_axis_title: str, data_points: tuple[list
         }
     ]
     
-    # Create the JavaScript to initialize the chart
     js_code = f"""
     // Create root element
     var root = am5.Root.new("{{plot_id}}");
@@ -140,8 +137,8 @@ def create_plotly_bars(title: str, y_axis_title: str, data_points: tuple[list, .
             "gridcolor": "rgb(71, 85, 105)",
             "zerolinecolor": "rgb(71, 85, 105)"
         },
-        "bargap": 0.15,  # Gap between groups of bars
-        "bargroupgap": 0  # No gap between bars in a group
+        "bargap": 0.15, 
+        "bargroupgap": 0 
     }
     
-    return json.dumps(data), json.dumps(layout), ""  # Empty string for js_code since using Plotly
+    return json.dumps(data), json.dumps(layout), "" 
