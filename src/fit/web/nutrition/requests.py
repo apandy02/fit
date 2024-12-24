@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import fasthtml.common as fh
-
 import fit.web.common as common
 import fit.web.databases as databases
 import fit.web.nutrition.ui as ui

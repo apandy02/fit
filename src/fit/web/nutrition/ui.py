@@ -1,13 +1,13 @@
 from datetime import datetime
 
 import fasthtml.common as fh
-
 import fit.web.nutrition.food_plots as food_plots
 from fit.web.common import nutritionist
 
 
 def metric_card(
         title: str,
+        unit: str,
         y_axis_title:
         str, plot_id:
         str, data:list[tuple[float, float, float | None]],
@@ -20,15 +20,20 @@ def metric_card(
     else:
         plot_data, plot_layout, js_code = food_plots.create_plotly_bars(title, y_axis_title, data)
     
-    consumed_values = [x for x in data[0] if x is not None]
-    goal_values = [x for x in data[1] if x is not None]
+    # Calculate averages only for non-None values and non-zero goals
+    consumed_values = []
+    goal_values = []
+    for i in range(len(data[0])):
+        if data[0][i] is not None and data[1][i] is not None and data[1][i] > 0:
+            consumed_values.append(data[0][i])
+            goal_values.append(data[1][i])
     
+    print(f"for {title}, consumed_values: {consumed_values}, goal_values: {goal_values}")
     if consumed_values and goal_values:
         averages = sum(consumed_values) / len(consumed_values), sum(goal_values) / len(goal_values)
-        macro_name = title.lower()
-        if macro_name == "carbohydrates":
-            macro_name = "carbohydrate"
-        analysis_text = nutritionist.macro_analysis(macro_name, averages[0], averages[1])
+        analysis_text = nutritionist.nutrient_analysis(
+            title, unit, averages[0], averages[1], multiple_days=view_type == "weekly"
+        )
     else:
         analysis_text = None
 
@@ -390,7 +395,6 @@ def create_metric_overview_section(title, metrics_data, filtered_metrics, all_me
     # Create dropdown of hidden metrics if all_metrics is provided
     add_button = None
     hidden_metrics = []
-    print(f"title: {title}, all_metrics: {all_metrics}, filtered_metrics: {filtered_metrics}")
     if all_metrics is not None:
         hidden_metrics = [
             metric for metric in all_metrics 
@@ -426,6 +430,7 @@ def create_metric_overview_section(title, metrics_data, filtered_metrics, all_me
                 *[fh.Div(
                     metric_card(
                         metric["name"],
+                        metric["unit"],
                         f"{metric['name']} ({metric['unit']})" if metric["unit"] else metric["name"],
                         metric["plot_id"],
                         (
