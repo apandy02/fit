@@ -9,8 +9,8 @@ from fit.web.common import (DB, active_tracker, create_fab_menu,
                             micronutrient_goals, nutrition_logger,
                             nutritionist, page_outline)
 from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
-                               get_visible_metrics, insert_meal,
-                               set_visible_metrics, get_dietary_restrictions)
+                               get_dietary_restrictions, get_visible_metrics,
+                               insert_meal, set_visible_metrics)
 from fit.web.nutrition.ui import (create_metrics_container,
                                   create_metrics_grid, create_nutrition_card,
                                   create_page_header, create_text_input_form,
