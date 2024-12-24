@@ -27,18 +27,18 @@ def create_plot(title: str, y_axis_title: str, data_points: tuple[list, ...]):
         data_points: Tuple of lists containing (consumed, goal) or (consumed, goal, burned) data
     """
     data = []
-    has_burned = data_points[2] is not None
+    has_burned = len(data_points) > 2 and data_points[2] is not None
     
     if len(data_points[0]) == 1:
-        consumed = data_points[0][0]
-        goal = data_points[1][0]
+        # Single day plot
         data = [
-            base_bar("Today", consumed, "Consumed", "rgb(37, 99, 235)"),
-            base_bar("Today", goal, "Consumption Goal", "rgb(96, 165, 250)")
+            base_bar("Today", data_points[0][0], "Consumed", "rgb(37, 99, 235)", -0.2),
+            base_bar("Today", data_points[1][0], "Consumption Goal", "rgb(96, 165, 250)", 0)
         ]
         if has_burned:
-            data.append(base_bar("Today", data_points[2][0], "Burned", "rgb(239, 68, 68)"))
+            data.append(base_bar("Today", data_points[2][0], "Burned", "rgb(239, 68, 68)", 0.2))
     else:
+        # Weekly plot
         days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
         for i in range(len(data_points[0])):
             # Only show legend for the first day's bars

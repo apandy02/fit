@@ -10,7 +10,7 @@ from fit.web.common import (DB, active_tracker, create_fab_menu,
                             nutritionist, page_outline)
 from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
                                get_visible_metrics, insert_meal,
-                               set_visible_metrics)
+                               set_visible_metrics, get_dietary_restrictions)
 from fit.web.nutrition.ui import (create_metrics_container,
                                   create_metrics_grid, create_nutrition_card,
                                   create_page_header, create_text_input_form,
@@ -19,8 +19,9 @@ from fit.web.nutrition.ui import (create_metrics_container,
 
 def get_daily_overview():
     """Return the nutritional overview page content"""
-    date = datetime.today()
+    date = datetime.today().date()
     data = get_daily_nutrition_data(date)
+    print(data)
     return overview_page_content(data)
 
     
@@ -84,7 +85,7 @@ def get_daily_nutrition_data(date: datetime):
     calories_burned = active_tracker.get_daily_calories_burned(date)
     goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     daily_consumption = get_daily_cumulative_nutrition(DB, date)
-
+    print(daily_consumption)
     return {
         "calories": {"consumed": [daily_consumption.calories], "goal": [goals["calories"]], "burned": [calories_burned]},
         "protein": {"consumed": [daily_consumption.protein], "goal": [goals["protein"]]},
@@ -265,18 +266,20 @@ async def show_metric(plot_id: str):
         visible_metrics.append(column_name)
         set_visible_metrics(DB, visible_metrics, "default")
     
-    date = datetime.today()
+    date = datetime.today().date()
     return create_metrics_container(get_daily_nutrition_data(date), visible_metrics)
 
 async def generate_overview():
     """Generate the daily overview analysis"""
     today = datetime.date(datetime.today())
     meals = get_daily_meals(DB, today)
+    
+    dietary_restrictions = get_dietary_restrictions(DB, "default")
 
     calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
-    analysis = nutritionist.daily_io_analysis(meals, targets)
+    analysis = nutritionist.daily_io_analysis(meals, targets, dietary_restrictions)
     
     return fh.Card(
         fh.Div(

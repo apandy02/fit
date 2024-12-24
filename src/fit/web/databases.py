@@ -222,3 +222,12 @@ def get_user_data(db: fh.Database, user_id="default"):
             "dietary_restrictions": result[4]
         }
     return {}
+
+
+def get_dietary_restrictions(database: fh.Database, user_id: str):
+    """Get the dietary restrictions from the database"""
+    query = """
+        select dietary_restrictions from user_data where user_id = ?
+    """
+    result = database.execute(query, (user_id,)).fetchone()
+    return result[0]

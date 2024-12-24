@@ -15,7 +15,7 @@ def metric_card(
     ):
     """Create a card containing a metric plot"""
     plot_data, plot_layout = create_plot(title, y_axis_title, data)
-    
+    print(data)
     averages = sum(data[0]) / len(data[0]), sum(data[1]) / len(data[1]), # TODO: this can be made more efficient by averaging elsewhere, currently adds O(n)
     macro_name = title.lower()
     if macro_name == "carbohydrates":
@@ -431,7 +431,6 @@ def create_macro_section(data, visible_metrics):
         metric for metric in macro_metrics 
         if metric["column_name"].lower() in visible_metrics
     ]
-
     return create_metric_overview_section("Macronutrients", data, filtered_metrics, macro_metrics)
 
 def create_micro_section(data, visible_metrics):
