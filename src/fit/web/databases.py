@@ -66,6 +66,23 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
             metrics=metrics
         )
 
+    user_data_table = db.t.user_data
+    if user_data_table not in db.t:
+        user_data_table.create(
+            dict(
+                user_id=str,
+                name=str,
+                email=str,
+                date_of_birth=str,
+                units=str,
+                dietary_restrictions=str,
+            ),
+            pk='user_id'
+        )
+        user_data_table.insert(
+            user_id=user_id,
+        )
+
     return db
 
 def get_daily_meals(database: fh.Database, date: datetime):
@@ -187,5 +204,20 @@ def set_visible_metrics(database: fh.Database, metrics: list[str], user_id: str)
         update visible_metrics set metrics = ? where user_id = ?
     """
     metrics = json.dumps(metrics)
-    print(metrics)
     database.execute(query, (metrics, user_id))
+
+def get_user_data(db: fh.Database, user_id="default"):
+    """Get user data from the database"""
+    query = """
+            SELECT name, email, date_of_birth, units, dietary_restrictions FROM user_data WHERE user_id = ?
+    """
+    result = db.execute(query, (user_id,)).fetchone()
+    if result:
+        return {
+            "name": result[0],
+            "email": result[1],
+            "date_of_birth": result[2],
+            "units": result[3],
+            "dietary_restrictions": result[4]
+        }
+    return {}

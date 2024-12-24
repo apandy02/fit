@@ -1,11 +1,44 @@
 import fasthtml.common as fh
-from fit.web.common import page_outline
+from fit.web.common import page_outline, DB
 from fit.nutrition.data import Goals
 from fit.trackers.manager import get_active_tracker_type, load_secrets, save_secrets
+from fit.web.databases import get_user_data
+
+
+
+
+def create_editable_input(name: str, value: str, input_type: str = "text", placeholder: str = "", required: bool = True):
+    """Create an input field that can be toggled between read-only and editable"""
+    input_id = f"{name}-input"
+    return fh.Div(
+        fh.Div(
+            fh.Input(
+                type=input_type,
+                name=name,
+                id=input_id,
+                value=value,
+                placeholder=placeholder,
+                required=required,
+                readonly=bool(value),  # readonly if there's a value
+                cls="input input-bordered w-full bg-base-200 text-primary-content"
+            ),
+            cls="w-11/12"  # Make input take up most but not all of the space
+        ),
+        fh.Button(
+            "✎",  # pen symbol
+            type="button",
+            onclick=f"document.getElementById('{input_id}').readOnly = false; document.getElementById('{input_id}').focus();",
+            cls="flex items-center justify-center h-12 w-12 hover:bg-slate-700 focus:bg-slate-700 rounded-lg bg-slate-600 border-none outline-none"
+        ) if value else "",  # only show edit button if there's a value
+        cls="flex items-center gap-2"  # Use flex to align items and add gap
+    )
 
 
 def get():
     """Return the profile page content"""
+    # Get user data
+    user_data = get_user_data(DB)
+    
     content = fh.Article(
         fh.Div(
             # User Profile Section
@@ -27,28 +60,24 @@ def get():
                         ),
                         fh.Div(
                             # Name
-                            create_form_row("Name", fh.Input(
-                                type="text",
-                                name="name",
-                                placeholder="John Doe",
-                                required=True,
-                                cls="input input-bordered w-full bg-base-200 text-primary-content"
+                            create_form_row("Name", create_editable_input(
+                                "name",
+                                user_data.get("name", ""),
+                                placeholder="John Doe"
                             )),
                             # Email
-                            create_form_row("Email", fh.Input(
-                                type="email",
-                                name="email",
-                                placeholder="john@example.com",
-                                required=True,
-                                cls="input input-bordered w-full bg-base-200 text-primary-content"
+                            create_form_row("Email", create_editable_input(
+                                "email",
+                                user_data.get("email", ""),
+                                input_type="email",
+                                placeholder="john@example.com"
                             )),
-                            # Age
-                            create_form_row("Age", fh.Input(
-                                type="number",
-                                name="age",
-                                placeholder="30",
-                                required=True,
-                                cls="input input-bordered w-full bg-base-200 text-primary-content"
+                            # Date of Birth
+                            create_form_row("Date of Birth", create_editable_input(
+                                "date_of_birth",
+                                user_data.get("date_of_birth", ""),
+                                input_type="date",
+                                placeholder="MM/DD/YYYY"
                             )),
                             cls="space-y-4"
                         ),
@@ -72,46 +101,46 @@ def get():
                                     fh.Option("Nut-Free", value="nut_free"),
                                     fh.Option("Kosher", value="kosher"),
                                     fh.Option("Halal", value="halal"),
-                                    name="dietary_restriction",
+                                    name="dietary_restrictions",
                                     hx_post="/add_restriction",
                                     hx_target="#restrictions-list",
                                     cls="select select-bordered w-full bg-base-200 text-primary-content mb-4"
                                 ),
                                 # Container for restriction tags
                                 fh.Div(
-                                    # Empty container for tags (will be populated dynamically)
+                                    # Pre-populate existing restrictions
+                                    *[
+                                        fh.Div(
+                                            fh.Div(
+                                                r.replace('_', ' ').title(),
+                                                cls="flex-grow mr-8"
+                                            ),
+                                            fh.Button(
+                                                "×",
+                                                hx_post="/remove_restriction",
+                                                hx_vals=f'{{"restriction": "{r}"}}',
+                                                hx_target="#restrictions-list",
+                                                cls="text-lg hover:text-error focus:outline-none focus:ring-0 border-none"
+                                            ),
+                                            cls="bg-neutral flex items-center justify-between px-4 py-2 rounded-lg mr-2 mb-2"
+                                        )
+                                        for r in user_data.get("dietary_restrictions", "").split(",")
+                                        if r
+                                    ],
+                                    # Hidden inputs to maintain state
+                                    *[
+                                        fh.Input(
+                                            type="hidden",
+                                            name="existing_restrictions[]",
+                                            value=r
+                                        )
+                                        for r in user_data.get("dietary_restrictions", "").split(",")
+                                        if r
+                                    ],
                                     id="restrictions-list",
                                     cls="flex flex-wrap"
                                 ),
                                 cls="w-full"
-                            )),
-                            cls="space-y-4"
-                        ),
-                        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6 mb-8"
-                    ),
-                    # Fitness Goals
-                    fh.Card(
-                        fh.Header(
-                            fh.H3("Fitness Goals", cls="text-xl font-bold text-center mb-2 text-primary-content"),
-                            cls="mb-6 bg-base-200"
-                        ),
-                        fh.Div(
-                            # Primary Goal
-                            create_form_row("Primary Goal", fh.Select(
-                                *[
-                                    fh.Option(goal.value.title(), value=goal.value)
-                                    for goal in Goals
-                                ],
-                                name="fitness_goal",
-                                cls="select select-bordered w-full bg-base-200 text-primary-content"
-                            )),
-                            # Weekly Workout Target
-                            create_form_row("Weekly Workouts", fh.Input(
-                                type="number",
-                                name="workout_target",
-                                placeholder="5",
-                                required=True,
-                                cls="input input-bordered w-full bg-base-200 text-primary-content"
                             )),
                             cls="space-y-4"
                         ),
@@ -124,10 +153,9 @@ def get():
                             cls="mb-6 bg-base-200"
                         ),
                         fh.Div(
-                            # Units
                             create_form_row("Units", fh.Select(
-                                fh.Option("Imperial (lbs, inches)", value="imperial", selected=True),
-                                fh.Option("Metric (kg, cm)", value="metric"),
+                                fh.Option("Imperial (lbs, inches)", value="imperial", selected=user_data.get("units") == "imperial"),
+                                fh.Option("Metric (kg, cm)", value="metric", selected=user_data.get("units") == "metric"),
                                 name="units",
                                 cls="select select-bordered w-full bg-base-200 text-primary-content"
                             )),
@@ -340,15 +368,29 @@ async def update_profile(request: fh.Request):
     """Handle profile update"""
     try:
         form = await request.form()
-        # TODO: Save profile data to database
+        
+        # Get all dietary restrictions and combine them into a comma-separated string
+        restrictions = form.getlist("existing_restrictions[]")
+        form_data = dict(form)
+        form_data["dietary_restrictions"] = ",".join(restrictions) if restrictions else ""
+        
+        # Add user_id and remove the array field
+        form_data["user_id"] = "default"
+        if "existing_restrictions[]" in form_data:
+            form_data.pop("existing_restrictions[]")
+        
+        # Update the database
+        DB.t.user_data.update(form_data)
+        
         return fh.P(
             "Profile updated successfully!",
-            cls="text-green-500 font-semibold text-center mt-4"
+            cls="text-success font-semibold text-center mt-4"
         )
     except Exception as e:
+        print(e)
         return fh.P(
             f"Error updating profile: {str(e)}",
-            cls="text-red-500 font-semibold text-center mt-4"
+            cls="text-error font-semibold text-center mt-4"
         )
 
 
@@ -415,8 +457,7 @@ async def add_restriction(request: fh.Request):
     """Handle adding a dietary restriction"""
     try:
         form = await request.form()
-        restriction = form.get("dietary_restriction")
-        # TODO: Save restriction to database
+        restriction = form.get("dietary_restrictions")
         
         # Get existing restrictions from the form
         existing_restrictions = form.getlist("existing_restrictions[]")
