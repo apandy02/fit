@@ -21,7 +21,6 @@ def get_daily_overview():
     """Return the nutritional overview page content"""
     date = datetime.today().date()
     data = get_daily_nutrition_data(date)
-    print(data)
     return overview_page_content(data, "daily")
 
     
@@ -92,7 +91,6 @@ def get_daily_nutrition_data(date: datetime):
     calories_burned = active_tracker.get_daily_calories_burned(date)
     goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     daily_consumption = get_daily_cumulative_nutrition(DB, date)
-    print(daily_consumption)
     return {
         "calories": {"consumed": [daily_consumption.calories], "goal": [goals["calories"]], "burned": [calories_burned]},
         "protein": {"consumed": [daily_consumption.protein], "goal": [goals["protein"]]},
@@ -302,3 +300,12 @@ async def generate_overview():
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-4"
     )
+
+async def nutrition_redirect(request: fh.Request):
+    """Redirect to the nutrition page"""
+    form = await request.form()
+    current_view = form["time_filter"]
+    if current_view == "daily":
+        return fh.Response(headers={"HX-Redirect": "/nutrition"}, status_code=200)
+    elif current_view == "weekly":
+        return fh.Response(headers={"HX-Redirect": "/nutrition/weekly"}, status_code=200)

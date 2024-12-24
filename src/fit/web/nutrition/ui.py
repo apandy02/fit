@@ -15,7 +15,6 @@ def metric_card(
     ):
     """Create a card containing a metric plot"""
     plot_data, plot_layout = create_plot(title, y_axis_title, data)
-    print(data)
     averages = sum(data[0]) / len(data[0]), sum(data[1]) / len(data[1]), # TODO: this can be made more efficient by averaging elsewhere, currently adds O(n)
     macro_name = title.lower()
     if macro_name == "carbohydrates":
@@ -357,11 +356,11 @@ def create_time_filter(current_view: str):
     """Create the time filter toggle"""
     return fh.Div(
         fh.Select(
-            fh.Option("Today", value="daily", selected=True),
-            fh.Option("This Week", value="weekly"),
+            fh.Option("Today", value="daily", selected=current_view == "daily"),
+            fh.Option("This Week", value="weekly", selected=current_view == "weekly"),
             name="time_filter",
             cls="select select-bordered w-full max-w-xs",
-            hx_redirect="/nutrition" if current_view == "daily" else "/nutrition/weekly",
+            hx_post="/nutrition_redirect",
             hx_trigger="change",
         ),
         cls="mb-6 flex justify-end"
