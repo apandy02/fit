@@ -1,5 +1,6 @@
 import fasthtml.common as fh
-from fit.web.common import page_outline, create_fab_menu
+
+from fit.web.common import create_fab_menu, page_outline
 
 
 def get():

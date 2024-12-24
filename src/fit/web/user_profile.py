@@ -1,10 +1,9 @@
 import fasthtml.common as fh
-from fit.web.common import page_outline, DB
-from fit.nutrition.data import Goals
-from fit.trackers.manager import get_active_tracker_type, load_secrets, save_secrets
+
+from fit.trackers.manager import (get_active_tracker_type, load_secrets,
+                                  save_secrets)
+from fit.web.common import DB, page_outline
 from fit.web.databases import get_user_data
-
-
 
 
 def create_editable_input(name: str, value: str, input_type: str = "text", placeholder: str = "", required: bool = True):

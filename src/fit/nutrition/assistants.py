@@ -1,5 +1,6 @@
-import ell
 from datetime import datetime
+
+import ell
 
 from fit.nutrition.data import Goals, MealBreakdown
 
