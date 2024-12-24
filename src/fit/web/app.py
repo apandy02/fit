@@ -6,13 +6,19 @@ import fit.web.rest as rest
 import fit.web.user_profile as user_profile
 
 tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
+amcharts = [
+    fh.Script(src="https://cdn.amcharts.com/lib/5/index.js"),
+    fh.Script(src="https://cdn.amcharts.com/lib/5/percent.js"),
+    fh.Script(src="https://cdn.amcharts.com/lib/5/themes/Dark.js")
+]
 plotly = fh.Script(src="https://cdn.plot.ly/plotly-2.32.0.min.js")
+
 dlink = fh.Link(
     rel="stylesheet",
     href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.css",
 )
 modal_css = fh.Link(rel="stylesheet", href="/static/public/modal.css")
-app = fh.FastHTML(hdrs=(tlink, plotly, dlink, fh.picolink, modal_css))
+app = fh.FastHTML(hdrs=(tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
 
 # Food routes
 app.get("/nutrition")(nutrition.get_daily_overview)

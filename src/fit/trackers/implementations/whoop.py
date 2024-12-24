@@ -59,7 +59,6 @@ class Whoop(FitnessTracker):
 
     def get_daily_calories_burned(self, day: datetime.date) -> float:
         cycle_dict = self._max_overlap_cycle(day=day, cycles=self._get_cycles_for_day(day))
-        print(f"for date {day}, cycle_dict: {cycle_dict}")
         if cycle_dict is None:
             raise ValueError(f"No cycle found for day {day}")
         
@@ -193,7 +192,6 @@ class Whoop(FitnessTracker):
         """
         start = start_date.isoformat() + "Z"
         end = end_date.isoformat(timespec="seconds") + "Z"
-        print(f"for date {start_date}, start: {start}, end: {end}")
         return self._make_paginated_request(
             method="GET",
             url_slug="v1/cycle",

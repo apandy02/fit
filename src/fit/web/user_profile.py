@@ -154,8 +154,8 @@ def get():
                             create_form_row("Units", fh.Select(
                                 fh.Option("Imperial (lbs, inches)", value="imperial", selected=user_data.get("units") == "imperial"),
                                 fh.Option("Metric (kg, cm)", value="metric", selected=user_data.get("units") == "metric"),
-                                name="units",
-                                cls="select select-bordered w-full bg-base-200 text-primary-content"
+                                    name="units",
+                                    cls="select select-bordered w-full bg-base-200 text-primary-content"
                             )),
                             cls="space-y-4"
                         ),
