@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import fasthtml.common as fh
-
 from fit.nutrition.data import Goals, MealBreakdown
 from fit.nutrition.targets import calculate_macro_targets
 from fit.utils.calendar import get_current_week_dates
@@ -10,7 +9,8 @@ from fit.web.common import (DB, active_tracker, create_fab_menu,
                             nutritionist, page_outline)
 from fit.web.databases import (get_daily_cumulative_nutrition, get_daily_meals,
                                get_dietary_restrictions, get_visible_metrics,
-                               get_weekly_meals, insert_meal, set_visible_metrics)
+                               get_weekly_meals, insert_meal,
+                               set_visible_metrics)
 from fit.web.nutrition.ui import (create_metrics_grid, create_nutrition_card,
                                   create_page_header, create_text_input_form,
                                   food_tracking_modal)

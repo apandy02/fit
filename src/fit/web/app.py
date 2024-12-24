@@ -1,5 +1,4 @@
 import fasthtml.common as fh
-
 import fit.web.nutrition.requests as nutrition
 import fit.web.performance as performance
 import fit.web.progress as progress

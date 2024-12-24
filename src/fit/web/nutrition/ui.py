@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import fasthtml.common as fh
-
 from fit.web.common import nutritionist
 from fit.web.nutrition.food_plots import create_plot
 
