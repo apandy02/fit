@@ -213,23 +213,47 @@ class Nutritionist:
         
         return _weekly_io_analysis(meals, target, restrictions)
     
-    def macro_analysis(self, macro: str, intake: float, target: float) -> str:
-        """Analyze if user is over/under their target for a specific macro.
+    def nutrient_analysis(
+            self,
+            nutrient: str,
+            unit: str,
+            intake: float,
+            target: float,
+            multiple_days: bool = False
+        ) -> str:
+        """Analyze if user is over/under their target for a specific nutrient.
         
         Args:
-            macro: The macro being analyzed (e.g. 'protein', 'carbs', 'fat')
-            intake: The user's intake for this macro
-            target: The target amount for this macro
+            nutrient: The nutrient being analyzed (e.g. 'vitamin_a', 'vitamin_c', 'iron', 'calcium', 'sodium', 'potassium')
+            intake: The user's intake for this nutrient
+            target: The target amount for this nutrient
         
         Returns:
             A string indicating if user is over/under target and by how much
         """
-        prefix = "Based on the information logged so far, "
+        nutrient = nutrient.lower()
+        
         difference = intake - target
-        if difference > 0:
-            return f"{prefix}you are currently {abs(difference):.1f}g over your {macro} target"
-        elif difference < 0:
-            return f"{prefix}you are currently {abs(difference):.1f}g under your {macro} target"
+        if nutrient == "calories":
+            nutrient = "caloric"
+        elif nutrient == "carbohydrate":
+            nutrient = "carbohydrates"
+        
+        prefix = "Based on the information logged so far, "
+        if multiple_days:
+            prefix += "you have been"
         else:
-            return f"{prefix}you are currently in line with your {macro} target"
+            prefix += "you are currently"
+        
+        if difference > 0:
+            analysis = f"{abs(difference):.1f}{unit} over your {nutrient} target"
+        elif difference < 0:
+            analysis = f"{abs(difference):.1f}{unit} under your {nutrient} target"
+        else:
+            analysis = f"in line with your {nutrient} target"
+        
+        if multiple_days:
+            analysis = f"{analysis} on average"
+        
+        return f"{prefix} {analysis}"
             

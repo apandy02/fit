@@ -29,7 +29,8 @@ def get_weekly_overview():
 def overview_page_content(data: list[dict], current_view: str):
     menu_items = [
         ("Food", "🍽️", "openFoodModal()"),
-        ("Water", "💧", None)  # No handler yet
+        ("Water", "💧", None),  # No handler yet
+        ("Supplement", "💊", "openSupplementModal()")
     ]
 
     visible_metrics = databases.get_visible_metrics(DB, "default") # TODO: get user_id from session, hardcoded for now

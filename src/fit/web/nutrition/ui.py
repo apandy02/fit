@@ -1,7 +1,9 @@
 from datetime import datetime
 
 import fasthtml.common as fh
+import fit.web.common as common
 import fit.web.nutrition.food_plots as food_plots
+from fit.nutrition.data import MealBreakdown
 from fit.web.common import nutritionist
 
 
@@ -373,6 +375,7 @@ def create_page_header(current_view: str):
             create_time_filter(current_view),
             cls="flex justify-center mb-8"
         ),
+        supplement_modal(),
         cls="mb-8"
     )
 
@@ -582,8 +585,7 @@ def create_form_section(title, inputs, cls="mb-6"):
         cls=cls
     )
 
-def create_nutrition_card(nutrition_info, meal_time: str = None):
-    """Create a card containing ingredients text and editable nutrition form"""
+def create_meal_breakdown(nutrition_info, meal_time: str = None):
     return fh.Card(
         fh.Div(
             fh.H4("Ingredients", cls="font-medium mb-2 text-primary-content"),
@@ -611,21 +613,8 @@ def create_nutrition_card(nutrition_info, meal_time: str = None):
                     name="meal_time",
                     value=meal_time
                 ),
-                create_form_section("Nutrition Information", [
-                    create_form_input("Meal Title", "summary", nutrition_info.summary, input_type="text"),
-                    create_form_input("Calories (kcal)", "calories", nutrition_info.calories),
-                    create_form_input("Protein (g)", "protein", nutrition_info.protein),
-                    create_form_input("Carbs (g)", "carbs", nutrition_info.carbs),
-                    create_form_input("Fat (g)", "fat", nutrition_info.fat),
-                    create_form_input("Fiber (g)", "fiber", nutrition_info.fiber),
-                    create_form_input("Vitamin A (IU)", "vitamin_a", nutrition_info.vitamin_a),
-                    create_form_input("Vitamin C (mg)", "vitamin_c", nutrition_info.vitamin_c),
-                    create_form_input("Vitamin D (IU)", "vitamin_d", nutrition_info.vitamin_d),
-                    create_form_input("Calcium (mg)", "calcium", nutrition_info.calcium),
-                    create_form_input("Iron (mg)", "iron", nutrition_info.iron),
-                    create_form_input("Potassium (mg)", "potassium", nutrition_info.potassium),
-                    create_form_input("Sodium (mg)", "sodium", nutrition_info.sodium),
-                ]),
+                create_nutrition_card(nutrition_info, meal_time),
+
                 fh.Button(
                     "Save Meal",
                     type="submit",
@@ -636,4 +625,114 @@ def create_nutrition_card(nutrition_info, meal_time: str = None):
             cls="space-y-4"
         ),
         cls="bg-base-200 outline  rounded-lg p-6"
+    )
+
+
+def create_nutrition_card(nutrition_info: MealBreakdown | None):
+    """Create a card containing ingredients text and editable nutrition form"""
+    return (
+            create_form_section("Nutrition Information", [
+                    create_form_input("Meal Title", "summary", nutrition_info.summary if nutrition_info else None, input_type="text"),
+                    create_form_input("Calories (kcal)", "calories", nutrition_info.calories if nutrition_info else None),
+                    create_form_input("Protein (g)", "protein", nutrition_info.protein if nutrition_info else None),
+                    create_form_input("Carbs (g)", "carbs", nutrition_info.carbs if nutrition_info else None),
+                    create_form_input("Fat (g)", "fat", nutrition_info.fat if nutrition_info else None),
+                    create_form_input("Fiber (g)", "fiber", nutrition_info.fiber if nutrition_info else None),
+                    create_form_input("Vitamin A (IU)", "vitamin_a", nutrition_info.vitamin_a if nutrition_info else None),
+                    create_form_input("Vitamin C (mg)", "vitamin_c", nutrition_info.vitamin_c if nutrition_info else None),
+                    create_form_input("Vitamin D (IU)", "vitamin_d", nutrition_info.vitamin_d if nutrition_info else None),
+                    create_form_input("Calcium (mg)", "calcium", nutrition_info.calcium if nutrition_info else None),
+                    create_form_input("Iron (mg)", "iron", nutrition_info.iron if nutrition_info else None),
+                    create_form_input("Potassium (mg)", "potassium", nutrition_info.potassium if nutrition_info else None),
+                    create_form_input("Sodium (mg)", "sodium", nutrition_info.sodium if nutrition_info else None),
+                ]
+            )
+    ) #TODO: make this more dynamic
+
+def supplement_modal():
+    """Create the supplement tracking modal"""
+    return fh.Div(
+        fh.Dialog(
+            fh.Div(
+                # Initial selection view
+                fh.Div(
+                    fh.H3("How would you like to log your supplement?", cls="text-xl font-bold text-center mb-8 text-primary-content"),
+                    fh.Div(
+                        # Log existing supplement option
+                        fh.Button(
+                            fh.Div(
+                                fh.Img(
+                                    src="/static/images/supplement.png",
+                                    cls="h-12 w-auto object-contain mb-3"
+                                ),
+                                fh.P("Log an existing supplement", cls="text-primary-content mb-2"),
+                                cls="flex flex-col items-center justify-center h-full"
+                            ),
+                            cls="p-6 bg-base-200 bg-opacity-70 outline outline-1 outline-primary-content rounded-lg hover:bg-base-200 hover:bg-opacity-90 transition-colors w-full focus:outline-none mb-4 h-32",
+                            onclick="alert('Coming soon!')"  # Placeholder
+                        ),
+                        # Add new supplement option
+                        fh.Button(
+                            fh.Div(
+                                fh.Img(
+                                    src="/static/images/add_supplement.png",
+                                    cls="h-12 w-auto object-contain mb-3"
+                                ),
+                                fh.P("Add and log new supplement", cls="text-primary-content mb-2"),
+                                cls="flex flex-col items-center justify-center h-full"
+                            ),
+                            cls="p-6 bg-base-200 bg-opacity-70 outline outline-1 outline-primary-content rounded-lg hover:bg-base-200 hover:bg-opacity-90 transition-colors w-full focus:outline-none h-32",
+                            onclick="""
+                                document.getElementById('supplement-options').classList.add('hidden');
+                                document.getElementById('supplement-form').classList.remove('hidden');
+                                document.getElementById('supplement-back-button').classList.remove('hidden');
+                            """
+                        ),
+                        cls="flex flex-col space-y-4"
+                    ),
+                    id="supplement-options",
+                    cls="p-6"
+                ),
+                # Back button
+                fh.Button(
+                    "←",
+                    cls="absolute left-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 focus:ring-offset-0 border-none outline-none hidden",
+                    onclick="""
+                        document.getElementById('supplement-options').classList.remove('hidden');
+                        document.getElementById('supplement-form').classList.add('hidden');
+                        this.classList.add('hidden');
+                    """,
+                    style="outline: none; box-shadow: none;",
+                    id="supplement-back-button"
+                ),
+                # Close button
+                fh.Button(
+                    "×",
+                    cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 focus:ring-offset-0 border-none outline-none",
+                    onclick="closeSupplementModal()",
+                    style="outline: none; box-shadow: none;"
+                ),
+                # Form view
+                fh.Div(
+                    create_nutrition_card(None),
+                    id="supplement-form",
+                    cls="hidden p-6"
+                ),
+                cls="space-y-6 overflow-y-auto max-h-[80vh] bg-base-200 bg-opacity-70 rounded-lg relative w-full max-w-lg"
+            ),
+            id="supplement-modal",
+            cls="modal"
+        ),
+        fh.Script("""
+            function openSupplementModal() {
+                document.getElementById('supplement-modal').showModal();
+                document.getElementById('supplement-options').classList.remove('hidden');
+                document.getElementById('supplement-form').classList.add('hidden');
+                document.getElementById('supplement-back-button').classList.add('hidden');
+            }
+            
+            function closeSupplementModal() {
+                document.getElementById('supplement-modal').close();
+            }
+        """)
     )
