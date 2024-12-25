@@ -148,7 +148,7 @@ async def analyze_text(meal_description: str, meal_time: str):
                 ui.create_text_input_form(is_feedback=True, original_description=meal_description)
             ),
             fh.Div(
-                ui.create_nutrition_card(nutrition_info, meal_time=meal_datetime),
+                ui.create_meal_breakdown(nutrition_info, meal_time=meal_datetime),
                 id="nutrition-card"
             ),
             cls="p-6"

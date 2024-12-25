@@ -613,7 +613,7 @@ def create_meal_breakdown(nutrition_info, meal_time: str = None):
                     name="meal_time",
                     value=meal_time
                 ),
-                create_nutrition_card(nutrition_info, meal_time),
+                create_nutrition_card(nutrition_info),
 
                 fh.Button(
                     "Save Meal",
@@ -628,10 +628,10 @@ def create_meal_breakdown(nutrition_info, meal_time: str = None):
     )
 
 
-def create_nutrition_card(nutrition_info: MealBreakdown | None):
+def create_nutrition_card(nutrition_info: MealBreakdown | None, title_field: str = "summary"):
     """Create a card containing ingredients text and editable nutrition form"""
     return (
-            create_form_section("Nutrition Information", [
+            create_form_section("Nutrition Information", [# separate the title from the actual nutriotioanl form so it can be used for multiple purposes
                     create_form_input("Meal Title", "summary", nutrition_info.summary if nutrition_info else None, input_type="text"),
                     create_form_input("Calories (kcal)", "calories", nutrition_info.calories if nutrition_info else None),
                     create_form_input("Protein (g)", "protein", nutrition_info.protein if nutrition_info else None),
@@ -661,10 +661,6 @@ def supplement_modal():
                         # Log existing supplement option
                         fh.Button(
                             fh.Div(
-                                fh.Img(
-                                    src="/static/images/supplement.png",
-                                    cls="h-12 w-auto object-contain mb-3"
-                                ),
                                 fh.P("Log an existing supplement", cls="text-primary-content mb-2"),
                                 cls="flex flex-col items-center justify-center h-full"
                             ),
@@ -674,10 +670,6 @@ def supplement_modal():
                         # Add new supplement option
                         fh.Button(
                             fh.Div(
-                                fh.Img(
-                                    src="/static/images/add_supplement.png",
-                                    cls="h-12 w-auto object-contain mb-3"
-                                ),
                                 fh.P("Add and log new supplement", cls="text-primary-content mb-2"),
                                 cls="flex flex-col items-center justify-center h-full"
                             ),
@@ -693,32 +685,45 @@ def supplement_modal():
                     id="supplement-options",
                     cls="p-6"
                 ),
-                # Back button
-                fh.Button(
-                    "←",
-                    cls="absolute left-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 focus:ring-offset-0 border-none outline-none hidden",
-                    onclick="""
-                        document.getElementById('supplement-options').classList.remove('hidden');
-                        document.getElementById('supplement-form').classList.add('hidden');
-                        this.classList.add('hidden');
-                    """,
-                    style="outline: none; box-shadow: none;",
-                    id="supplement-back-button"
-                ),
-                # Close button
-                fh.Button(
-                    "×",
-                    cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 focus:ring-offset-0 border-none outline-none",
-                    onclick="closeSupplementModal()",
-                    style="outline: none; box-shadow: none;"
-                ),
                 # Form view
                 fh.Div(
-                    create_nutrition_card(None),
+                    fh.Div(
+                        fh.Button(
+                            "←",
+                            cls="text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                            onclick="""
+                                document.getElementById('supplement-options').classList.remove('hidden');
+                                document.getElementById('supplement-form').classList.add('hidden');
+                                this.classList.add('hidden');
+                            """,
+                            style="outline: none; box-shadow: none;",
+                            id="supplement-back-button"
+                        ),
+                        fh.H3("Nutrition Information", cls="text-xl font-bold text-primary-content"),
+                        fh.Button(
+                            "×",
+                            cls="text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                            onclick="closeSupplementModal()",
+                            style="outline: none; box-shadow: none;"
+                        ),
+                        cls="flex justify-between items-center px-6 py-4 border-b border-primary-content bg-base-200 sticky top-0"
+                    ),
+                    fh.Div(
+                        fh.Form(
+                            create_nutrition_card(None, title_field="Supplement Name"), # todo: make this code mor
+                            fh.Button(
+                                "Save Supplement",
+                                cls="btn btn-primary w-full mt-6",
+                                onclick="saveSupplement()"
+                            ),
+                            cls="w-[90%] mx-auto"
+                        ),
+                        cls="p-6 overflow-y-auto max-h-[70vh]"
+                    ),
                     id="supplement-form",
-                    cls="hidden p-6"
+                    cls="hidden h-[80vh]"
                 ),
-                cls="space-y-6 overflow-y-auto max-h-[80vh] bg-base-200 bg-opacity-70 rounded-lg relative w-full max-w-lg"
+                cls="bg-base-200 rounded-lg relative w-full max-w-lg"
             ),
             id="supplement-modal",
             cls="modal"
@@ -733,6 +738,11 @@ def supplement_modal():
             
             function closeSupplementModal() {
                 document.getElementById('supplement-modal').close();
+            }
+            
+            function saveSupplement() {
+                // TODO: Implement save functionality
+                alert('Save functionality coming soon!');
             }
         """)
     )
