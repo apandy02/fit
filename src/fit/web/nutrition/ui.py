@@ -336,7 +336,7 @@ def food_tracking_modal():
                 
                 // Show selected input form
                 if (type === 'image') {
-                    document.getElementById('image-input').classget-List.remove('hidden');
+                    document.getElementById('image-input').classList.remove('hidden');
                     document.getElementById('text-input').classList.add('hidden');
                 } else {
                     document.getElementById('text-input').classList.remove('hidden');
