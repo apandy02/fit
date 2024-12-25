@@ -1,4 +1,5 @@
 import fasthtml.common as fh
+from datetime import datetime
 
 from fit.web.common import nutritionist
 from fit.web.nutrition.food_plots import create_plot
@@ -163,6 +164,17 @@ def create_image_upload_form():
                     ),
                     cls="form-control"
                 ),
+                fh.Div(
+                    fh.Label("Meal Time", cls="label text-primary-content"),
+                    fh.Input(
+                        type="time",
+                        name="meal_time",
+                        value=datetime.now().strftime("%H:%M"),
+                        required=True,
+                        cls="input input-bordered w-full bg-base-200 text-primary-content"
+                    ),
+                    cls="form-control"
+                ),
                 fh.Button(
                     "Upload & Analyze",
                     type="submit",
@@ -281,7 +293,7 @@ def food_tracking_modal():
                 
                 // Show selected input form
                 if (type === 'image') {
-                    document.getElementById('image-input').classList.remove('hidden');
+                    document.getElementById('image-input').classget-List.remove('hidden');
                     document.getElementById('text-input').classList.add('hidden');
                 } else {
                     document.getElementById('text-input').classList.remove('hidden');
