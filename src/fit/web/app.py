@@ -41,6 +41,7 @@ app.get("/progress")(progress.get)
 app.post("/update_weight")(progress.update_weight)
 app.post("/update_height")(progress.update_height)
 app.post("/update_goal")(progress.update_goal)
+app.post("/log_supplement_consumption")(nutrition.log_supplement_consumption)
 
 # Profile routes
 app.get("/profile")(user_profile.get)

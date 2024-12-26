@@ -292,13 +292,12 @@ async def log_supplement_consumption(request: fh.Request):
         form = await request.form()
         supplement_name = form["supplement_name"]
         time_consumed = form["time_consumed"]
-        servings = float(form["servings"])
         
         supplement_info = databases.get_supplement(DB, supplement_name)
         databases.insert_supplement(
             DB, 
             name=supplement_name,
-            meal_time=time_consumed,
+            consumption_time=time_consumed,
             nutritional_info=supplement_info
         )
         
