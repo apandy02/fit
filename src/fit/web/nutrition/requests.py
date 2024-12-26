@@ -1,10 +1,11 @@
 from datetime import datetime
 
 import fasthtml.common as fh
+
 import fit.web.common as common
 import fit.web.databases as databases
 import fit.web.nutrition.ui as ui
-from fit.nutrition.data import Goals, MealBreakdown, NutritionalInformation    
+from fit.nutrition.data import Goals, MealBreakdown, NutritionalInformation
 from fit.nutrition.targets import calculate_macro_targets
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import (DB, active_tracker, micronutrient_goals,
