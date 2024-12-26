@@ -246,7 +246,7 @@ async def save_supplement(request: fh.Request):
             potassium=form["potassium"],
             sodium=form["sodium"]
         )    
-        databases.insert_supplement(DB, name=form["summary"], nutritional_info=nutrition_info)
+        databases.insert_supplement(DB, name=form["summary"], consumption_time=form["time_consumed"], nutritional_info=nutrition_info)
         
         return fh.Div(
             fh.P(
@@ -273,7 +273,6 @@ async def save_supplement(request: fh.Request):
 async def get_supplements():
     """Get all supplements for the dropdown"""
     supplements = databases.get_supplement_names(DB)
-    print(supplements)
     return fh.Select(
         *[
             fh.Option(

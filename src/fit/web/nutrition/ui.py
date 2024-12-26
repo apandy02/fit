@@ -21,7 +21,6 @@ def metric_card(
     else:
         plot_data, plot_layout, js_code = food_plots.create_plotly_bars(title, y_axis_title, data)
     
-    # Calculate averages only for non-None values and non-zero goals
     consumed_values = []
     goal_values = []
     for i in range(len(data[0])):
@@ -802,6 +801,17 @@ def supplement_modal():
                             hx_target="#save-supplement-result",
                             cls="w-[90%] mx-auto"
                         )(
+                            fh.Div(
+                                fh.Label("Time Taken", cls="label text-primary-content"),
+                                fh.Input(
+                                    type="time",
+                                    name="time_consumed",
+                                    value=datetime.now().strftime("%H:%M"),
+                                    required=True,
+                                    cls="input input-bordered w-full bg-base-200 text-primary-content"
+                                ),
+                                cls="form-control mb-4"
+                            ),
                             create_nutrition_card(None, title_field="Supplement Name", card_title="Supplement Information"),
                             fh.Button(
                                 "Save Supplement",

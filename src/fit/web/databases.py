@@ -266,6 +266,22 @@ def insert_supplement(database: fh.Database, name: str, consumption_time: str, n
     """
     Insert or update a supplement definition in the database.
     """
+    supplements_table = database.t.supplements
+    supplements_table.insert(
+        name=name,
+        calories=nutritional_info.calories,
+        protein=nutritional_info.protein,
+        carbs=nutritional_info.carbs,
+        fat=nutritional_info.fat,
+        fiber=nutritional_info.fiber,
+        vitamin_a=nutritional_info.vitamin_a,
+        vitamin_c=nutritional_info.vitamin_c,
+        vitamin_d=nutritional_info.vitamin_d,
+        calcium=nutritional_info.calcium,
+        iron=nutritional_info.iron,
+        potassium=nutritional_info.potassium,
+        sodium=nutritional_info.sodium,
+    )
     meals_table = database.t.meals
     meals_table.insert(
         llm_summary=name,# change column name 
