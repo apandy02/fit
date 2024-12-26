@@ -46,7 +46,6 @@ def create_fab_menu(buttons):
         fh.Div(
             *[
                 fh.Div(
-                    fh.Span(label, cls="text-slate-700 text-sm font-medium"),
                     fh.Button(
                         fh.Span(emoji, cls="text-lg"),
                         cls="btn btn-primary btn-circle shadow-lg ml-3",

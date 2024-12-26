@@ -238,12 +238,11 @@ class Nutritionist:
             nutrient = "caloric"
         elif nutrient == "carbohydrate":
             nutrient = "carbohydrates"
-        
-        prefix = "Based on the information logged so far, "
+
         if multiple_days:
-            prefix += "you have been"
+            prefix = "You have been"
         else:
-            prefix += "you are currently"
+            prefix = "You are currently"
         
         if difference > 0:
             analysis = f"{abs(difference):.1f}{unit} over your {nutrient} target"

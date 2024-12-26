@@ -30,7 +30,6 @@ def metric_card(
             consumed_values.append(data[0][i])
             goal_values.append(data[1][i])
     
-    print(f"for {title}, consumed_values: {consumed_values}, goal_values: {goal_values}")
     if consumed_values and goal_values:
         averages = sum(consumed_values) / len(consumed_values), sum(goal_values) / len(goal_values)
         analysis_text = nutritionist.nutrient_analysis(
@@ -73,7 +72,7 @@ def metric_card(
                 ),
                 cls="w-"
             ),
-            fh.P(analysis_text, cls="text-sm text-primary-content mt-4") if analysis_text else None,
+            fh.P(analysis_text, cls="text-md text-primary-content mt-4 text-center") if analysis_text else None,
             cls="p-4 relative"
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg h-full text-primary-content",
@@ -628,11 +627,11 @@ def create_meal_breakdown(nutrition_info, meal_time: str = None):
     )
 
 
-def create_nutrition_card(nutrition_info: MealBreakdown | None, title_field: str = "summary"):
+def create_nutrition_card(nutrition_info: MealBreakdown | None, card_title: str = "Nutrition Information", title_field: str = "Meal Title"):
     """Create a card containing ingredients text and editable nutrition form"""
     return (
-            create_form_section("Nutrition Information", [# separate the title from the actual nutriotioanl form so it can be used for multiple purposes
-                    create_form_input("Meal Title", "summary", nutrition_info.summary if nutrition_info else None, input_type="text"),
+            create_form_section(card_title, [# separate the title from the actual nutriotioanl form so it can be used for multiple purposes
+                    create_form_input(title_field, "summary", nutrition_info.summary if nutrition_info else None, input_type="text"),
                     create_form_input("Calories (kcal)", "calories", nutrition_info.calories if nutrition_info else None),
                     create_form_input("Protein (g)", "protein", nutrition_info.protein if nutrition_info else None),
                     create_form_input("Carbs (g)", "carbs", nutrition_info.carbs if nutrition_info else None),
@@ -656,7 +655,16 @@ def supplement_modal():
             fh.Div(
                 # Initial selection view
                 fh.Div(
-                    fh.H3("How would you like to log your supplement?", cls="text-xl font-bold text-center mb-8 text-primary-content"),
+                    fh.Div(
+                        fh.Button(
+                            "×",
+                            cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                            onclick="closeSupplementModal()",
+                            style="outline: none; box-shadow: none;"
+                        ),
+                        cls="relative h-8"  # Add height to create space
+                    ),
+                    fh.H3("Suppementation", cls="text-xl font-bold text-center mb-8 text-primary-content"),
                     fh.Div(
                         # Log existing supplement option
                         fh.Button(
@@ -699,7 +707,6 @@ def supplement_modal():
                             style="outline: none; box-shadow: none;",
                             id="supplement-back-button"
                         ),
-                        fh.H3("Nutrition Information", cls="text-xl font-bold text-primary-content"),
                         fh.Button(
                             "×",
                             cls="text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
@@ -710,19 +717,24 @@ def supplement_modal():
                     ),
                     fh.Div(
                         fh.Form(
-                            create_nutrition_card(None, title_field="Supplement Name"), # todo: make this code mor
+                            
+                            hx_post="/save_supplement",
+                            hx_target="#save-supplement-result",
+                            cls="w-[90%] mx-auto"
+                        )(
+                            create_nutrition_card(None, title_field="Supplement Name", card_title="Supplement Information"), # todo: make this code more dynamic
                             fh.Button(
                                 "Save Supplement",
                                 cls="btn btn-primary w-full mt-6",
-                                onclick="saveSupplement()"
+                                
                             ),
-                            cls="w-[90%] mx-auto"
                         ),
                         cls="p-6 overflow-y-auto max-h-[70vh]"
                     ),
                     id="supplement-form",
                     cls="hidden h-[80vh]"
                 ),
+                fh.Div(id="save-supplement-result", cls="mt-4"),
                 cls="bg-base-200 rounded-lg relative w-full max-w-lg"
             ),
             id="supplement-modal",
@@ -738,11 +750,6 @@ def supplement_modal():
             
             function closeSupplementModal() {
                 document.getElementById('supplement-modal').close();
-            }
-            
-            function saveSupplement() {
-                // TODO: Implement save functionality
-                alert('Save functionality coming soon!');
             }
         """)
     )

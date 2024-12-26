@@ -35,7 +35,43 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
                 iron=float,
                 potassium=float,
                 sodium=float,
-                
+            ),
+            pk='uuid'
+        )
+
+    # Table for storing supplement definitions
+    supplements_table = db.t.supplements
+    if supplements_table not in db.t:
+        supplements_table.create(
+            dict(
+                name=str, 
+                description=str,
+                calories=float,
+                protein=float,
+                carbs=float,
+                fat=float,
+                fiber=float,
+                vitamin_a=float,
+                vitamin_c=float,
+                vitamin_d=float,
+                calcium=float,
+                iron=float,
+                potassium=float,
+                sodium=float,
+                creatine=float,
+            ),
+            pk='name'
+        )
+
+    supplement_entries_table = db.t.supplement_entries
+    if supplement_entries_table not in db.t:
+        supplement_entries_table.create(
+            dict(
+                uuid=str,
+                user_id=str,
+                supplement_name=str,  # Foreign key to supplements table
+                datetime_consumed=str,
+                servings=float,
             ),
             pk='uuid'
         )
@@ -236,3 +272,113 @@ def get_dietary_restrictions(database: fh.Database, user_id: str):
     """
     result = database.execute(query, (user_id,)).fetchone()
     return result[0]
+
+def insert_supplement(database: fh.Database, name: str, nutritional_info: NutritionalInformation):
+    """
+    Insert or update a supplement definition in the database.
+    """
+    supplements_table = database.t.supplements
+    supplements_table.insert(
+        name=name,
+        calories=nutritional_info.calories,
+        protein=nutritional_info.protein,
+        carbs=nutritional_info.carbs,
+        fat=nutritional_info.fat,
+        fiber=nutritional_info.fiber,
+        vitamin_a=nutritional_info.vitamin_a,
+        vitamin_c=nutritional_info.vitamin_c,
+        vitamin_d=nutritional_info.vitamin_d,
+        calcium=nutritional_info.calcium,
+        iron=nutritional_info.iron,
+        potassium=nutritional_info.potassium,
+        sodium=nutritional_info.sodium,
+    )
+
+def log_supplement_consumption(database: fh.Database, user_id: str, supplement_name: str, servings: float, time_consumed: str):
+    """
+    Log a supplement consumption entry.
+    """
+    supplement_entries_table = database.t.supplement_entries
+    supplement_entries_table.insert(
+        user_id=user_id,
+        supplement_name=supplement_name,
+        date_consumed=datetime.date(datetime.today()),
+        time_consumed=time_consumed,
+        servings=servings,
+    )
+
+def get_supplement(database: fh.Database, name: str) -> NutritionalInformation | None:
+    """
+    Get a supplement's nutritional information by name.
+    """
+    query = """
+        SELECT calories, protein, carbs, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
+               calcium, iron, potassium, sodium
+        FROM supplements 
+        WHERE name = ?
+    """
+    result = database.execute(query, (name,)).fetchone()
+    if result is None:
+        return None
+    
+    return NutritionalInformation(
+        calories=result[0],
+        protein=result[1],
+        carbs=result[2],
+        fat=result[3],
+        fiber=result[4],
+        vitamin_a=result[5],
+        vitamin_c=result[6],
+        vitamin_d=result[7],
+        calcium=result[8],
+        iron=result[9],
+        potassium=result[10],
+        sodium=result[11]
+    )
+
+def get_all_supplements(database: fh.Database) -> list[tuple[str, str, NutritionalInformation]]:
+    """
+    Get all supplements and their nutritional information.
+    Returns a list of tuples containing (name, description, nutritional_info)
+    """
+    query = """
+        SELECT name, description, calories, protein, carbs, fat, fiber, vitamin_a, 
+               vitamin_c, vitamin_d, calcium, iron, potassium, sodium
+        FROM supplements
+    """
+    results = database.execute(query).fetchall()
+    return [
+        (
+            row[0],  # name
+            row[1],  # description
+            NutritionalInformation(
+                calories=row[2],
+                protein=row[3],
+                carbs=row[4],
+                fat=row[5],
+                fiber=row[6],
+                vitamin_a=row[7],
+                vitamin_c=row[8],
+                vitamin_d=row[9],
+                calcium=row[10],
+                iron=row[11],
+                potassium=row[12],
+                sodium=row[13]
+            )
+        )
+        for row in results
+    ]
+
+def get_daily_supplement_entries(database: fh.Database, user_id: str, date: datetime) -> list[tuple[str, float, str]]:
+    """
+    Get all supplement entries for a user on a given date.
+    Returns a list of tuples containing (supplement_name, servings, time_consumed)
+    """
+    query = """
+        SELECT supplement_name, servings, time_consumed
+        FROM supplement_entries
+        WHERE user_id = ? AND date_consumed = ?
+        ORDER BY time_consumed
+    """
+    results = database.execute(query, (user_id, date)).fetchall()
+    return [(row[0], row[1], row[2]) for row in results]

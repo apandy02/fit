@@ -4,7 +4,7 @@ import fasthtml.common as fh
 import fit.web.common as common
 import fit.web.databases as databases
 import fit.web.nutrition.ui as ui
-from fit.nutrition.data import Goals, MealBreakdown
+from fit.nutrition.data import Goals, MealBreakdown, NutritionalInformation    
 from fit.nutrition.targets import calculate_macro_targets
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import (DB, active_tracker, micronutrient_goals,
@@ -200,18 +200,6 @@ async def save_meal(request: fh.Request):
             fh.Script("""
                 // Show success message briefly
                 setTimeout(() => {
-                    // Reset text form
-                    const textForm = document.querySelector('#text-result');
-                    if (textForm) textForm.innerHTML = '';
-                    const textArea = document.querySelector('textarea[name="meal_description"]');
-                    if (textArea) textArea.value = '';
-                    
-                    // Reset image form
-                    const imageForm = document.querySelector('#image-result');
-                    if (imageForm) imageForm.innerHTML = '';
-                    const fileInput = document.querySelector('input[type="file"]');
-                    if (fileInput) fileInput.value = '';
-                    
                     // Close the modal
                     closeModal();
                     
@@ -223,6 +211,50 @@ async def save_meal(request: fh.Request):
     except Exception as e:
         return fh.P(
             f"Error saving meal: {str(e)}",
+            cls="text-red-500 font-semibold text-center"
+        )
+    
+
+async def save_supplement(request: fh.Request):
+    """Save the supplement with user-adjusted nutrition values"""
+    try:
+        form = await request.form()
+
+        nutrition_info = NutritionalInformation(
+            calories=form["calories"],
+            protein=form["protein"],
+            carbs=form["carbs"],
+            fat=form["fat"],
+            fiber=form["fiber"],
+            vitamin_a=form["vitamin_a"],
+            vitamin_c=form["vitamin_c"],
+            vitamin_d=form["vitamin_d"],
+            calcium=form["calcium"],
+            iron=form["iron"],
+            potassium=form["potassium"],
+            sodium=form["sodium"]
+        )    
+        databases.insert_supplement(DB, name=form["summary"], nutritional_info=nutrition_info)
+        
+        return fh.Div(
+            fh.P(
+                "Supplement saved successfully!",
+                cls="text-green-500 font-semibold text-center mb-4"
+            ),
+            fh.Script("""
+                // Show success message briefly
+                setTimeout(() => {
+                    // Close the modal
+                    closeSupplementModal();
+                    
+                    // Reload the page to show updated data
+                    window.location.reload();
+                }, 1000);
+            """)
+        )
+    except Exception as e:
+        return fh.P(
+            f"Error saving supplement: {str(e)}",
             cls="text-red-500 font-semibold text-center"
         )
 

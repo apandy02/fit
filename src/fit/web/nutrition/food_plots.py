@@ -38,14 +38,14 @@ def create_amcharts_donut(data_points: tuple[list, ...]):
             "category": "Consumed",
             "value": percentage,
             "actualValue": consumed,
-            "color": "rgb(37, 99, 235)",
+            "color": "rgb(34, 197, 94)",
             "legendValue": f"{consumed:.1f}"
         },
         {
             "category": "Remaining",
             "value": 100 - percentage,
             "actualValue": remaining,
-            "color": "rgb(96, 165, 250)",
+            "color": "rgb(239, 68, 68)",
             "legendValue": f"{remaining:.1f}"
         }
     ]
@@ -69,12 +69,21 @@ def create_amcharts_donut(data_points: tuple[list, ...]):
         endAngle: 630
     }}));
     
+    // Set colors explicitly
     series.slices.template.setAll({{
         fillField: "color",
         stroke: am5.color(0x000000),
         strokeWidth: 2,
         tooltipText: "{{category}}: {{actualValue}}",
     }});
+
+    // Override theme colors with our custom colors
+    series.set("colors", am5.ColorSet.new(root, {{
+        colors: [
+            am5.color("rgb(34, 197, 94)"),
+            am5.color("rgb(239, 68, 68)")
+        ]
+    }}));
     
     series.labels.template.set("visible", false);  // Hide default labels
     
