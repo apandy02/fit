@@ -200,6 +200,18 @@ async def save_meal(request: fh.Request):
             fh.Script("""
                 // Show success message briefly
                 setTimeout(() => {
+                    // Reset text form
+                    const textForm = document.querySelector('#text-result');
+                    if (textForm) textForm.innerHTML = '';
+                    const textArea = document.querySelector('textarea[name="meal_description"]');
+                    if (textArea) textArea.value = '';
+                    
+                    // Reset image form
+                    const imageForm = document.querySelector('#image-result');
+                    if (imageForm) imageForm.innerHTML = '';
+                    const fileInput = document.querySelector('input[type="file"]');
+                    if (fileInput) fileInput.value = '';
+                    
                     // Close the modal
                     closeModal();
                     

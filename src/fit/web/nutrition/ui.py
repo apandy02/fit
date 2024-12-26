@@ -673,7 +673,11 @@ def supplement_modal():
                                 cls="flex flex-col items-center justify-center h-full"
                             ),
                             cls="p-6 bg-base-200 bg-opacity-70 outline outline-1 outline-primary-content rounded-lg hover:bg-base-200 hover:bg-opacity-90 transition-colors w-full focus:outline-none mb-4 h-32",
-                            onclick="alert('Coming soon!')"  # Placeholder
+                            onclick="""
+                                document.getElementById('supplement-options').classList.add('hidden');
+                                document.getElementById('log-supplement-form').classList.remove('hidden');
+                                document.getElementById('supplement-back-button').classList.remove('hidden');
+                            """
                         ),
                         # Add new supplement option
                         fh.Button(
@@ -693,7 +697,82 @@ def supplement_modal():
                     id="supplement-options",
                     cls="p-6"
                 ),
-                # Form view
+                # Form for logging existing supplement
+                fh.Div(
+                    fh.Div(
+                        fh.Button(
+                            "←",
+                            cls="text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                            onclick="""
+                                document.getElementById('supplement-options').classList.remove('hidden');
+                                document.getElementById('log-supplement-form').classList.add('hidden');
+                                this.classList.add('hidden');
+                            """,
+                            style="outline: none; box-shadow: none;",
+                            id="supplement-back-button"
+                        ),
+                        fh.H3("Log Supplement", cls="text-xl font-bold text-primary-content"),
+                        fh.Button(
+                            "×",
+                            cls="text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                            onclick="closeSupplementModal()",
+                            style="outline: none; box-shadow: none;"
+                        ),
+                        cls="flex justify-between items-center px-6 py-4 border-b border-primary-content bg-base-200 sticky top-0"
+                    ),
+                    fh.Div(
+                        fh.Form(
+                            hx_post="/log_supplement_consumption",
+                            hx_target="#log-supplement-result",
+                            cls="w-[90%] mx-auto space-y-6"
+                        )(
+                            fh.Div(
+                                fh.Label("Select Supplement", cls="label text-primary-content"),
+                                fh.Select(
+                                    name="supplement_name",
+                                    cls="select select-bordered w-full bg-base-200 text-primary-content",
+                                    hx_get="/get_supplements",
+                                    hx_trigger="load"
+                                ),
+                                cls="form-control"
+                            ),
+                            fh.Div(
+                                fh.Label("Time Consumed", cls="label text-primary-content"),
+                                fh.Input(
+                                    type="time",
+                                    name="time_consumed",
+                                    value=datetime.now().strftime("%H:%M"),
+                                    required=True,
+                                    cls="input input-bordered w-full bg-base-200 text-primary-content"
+                                ),
+                                cls="form-control"
+                            ),
+                            fh.Div(
+                                fh.Label("Servings", cls="label text-primary-content"),
+                                fh.Input(
+                                    type="number",
+                                    name="servings",
+                                    value="1",
+                                    step="0.5",
+                                    min="0",
+                                    required=True,
+                                    cls="input input-bordered w-full bg-base-200 text-primary-content"
+                                ),
+                                cls="form-control"
+                            ),
+                            fh.Button(
+                                "Log Supplement",
+                                type="submit",
+                                cls="btn btn-primary w-full mt-6"
+                            ),
+                            fh.Div(id="log-supplement-result", cls="mt-4")
+                        ),
+                        cls="p-6 overflow-y-auto max-h-[70vh]"
+                    ),
+                    id="log-supplement-form",
+                    cls="hidden h-[80vh]"
+                ),
+                # Form for adding new supplement (existing code)
                 fh.Div(
                     fh.Div(
                         fh.Button(
@@ -745,6 +824,7 @@ def supplement_modal():
                 document.getElementById('supplement-modal').showModal();
                 document.getElementById('supplement-options').classList.remove('hidden');
                 document.getElementById('supplement-form').classList.add('hidden');
+                document.getElementById('log-supplement-form').classList.add('hidden');
                 document.getElementById('supplement-back-button').classList.add('hidden');
             }
             
