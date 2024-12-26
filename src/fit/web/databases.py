@@ -35,6 +35,7 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
                 iron=float,
                 potassium=float,
                 sodium=float,
+                is_supplement=bool,
             ),
             pk='uuid'
         )
@@ -61,19 +62,6 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
                 creatine=float,
             ),
             pk='name'
-        )
-
-    supplement_entries_table = db.t.supplement_entries
-    if supplement_entries_table not in db.t:
-        supplement_entries_table.create(
-            dict(
-                uuid=str,
-                user_id=str,
-                supplement_name=str,  # Foreign key to supplements table
-                datetime_consumed=str,
-                servings=float,
-            ),
-            pk='uuid'
         )
 
     measurements_table = db.t.measurements  
@@ -224,7 +212,8 @@ def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdow
         iron=meal.iron,
         potassium=meal.potassium,
         sodium=meal.sodium,
-        fiber=meal.fiber
+        fiber=meal.fiber,
+        is_supplement=False
     )
 
 
@@ -273,7 +262,7 @@ def get_dietary_restrictions(database: fh.Database, user_id: str):
     result = database.execute(query, (user_id,)).fetchone()
     return result[0]
 
-def insert_supplement(database: fh.Database, name: str, nutritional_info: NutritionalInformation):
+def insert_supplement(database: fh.Database, name: str, consumption_time: str, nutritional_info: NutritionalInformation):
     """
     Insert or update a supplement definition in the database.
     """
@@ -292,6 +281,24 @@ def insert_supplement(database: fh.Database, name: str, nutritional_info: Nutrit
         iron=nutritional_info.iron,
         potassium=nutritional_info.potassium,
         sodium=nutritional_info.sodium,
+    )
+    meals_table = database.t.meals
+    meals_table.insert(
+        llm_summary=name,# change column name 
+        calories=nutritional_info.calories,
+        protein=nutritional_info.protein,
+        carbs=nutritional_info.carbs,
+        fat=nutritional_info.fat,
+        fiber=nutritional_info.fiber,
+        vitamin_a=nutritional_info.vitamin_a,
+        vitamin_c=nutritional_info.vitamin_c,
+        vitamin_d=nutritional_info.vitamin_d,
+        calcium=nutritional_info.calcium,
+        iron=nutritional_info.iron,
+        potassium=nutritional_info.potassium,
+        sodium=nutritional_info.sodium,
+        meal_time=consumption_time,
+        is_supplement=True,
     )
 
 def log_supplement_consumption(database: fh.Database, user_id: str, supplement_name: str, servings: float, time_consumed: str):
@@ -335,6 +342,16 @@ def get_supplement(database: fh.Database, name: str) -> NutritionalInformation |
         potassium=result[10],
         sodium=result[11]
     )
+
+def get_supplement_names(database: fh.Database) -> list[str]:
+    """
+    Get all supplement names from the database.
+    """
+    query = """
+        SELECT name FROM supplements
+    """
+    result = database.execute(query).fetchall()
+    return [row[0] for row in result]
 
 def get_all_supplements(database: fh.Database) -> list[tuple[str, str, NutritionalInformation]]:
     """

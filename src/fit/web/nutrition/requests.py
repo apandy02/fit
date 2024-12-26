@@ -200,6 +200,18 @@ async def save_meal(request: fh.Request):
             fh.Script("""
                 // Show success message briefly
                 setTimeout(() => {
+                    // Reset text form
+                    const textForm = document.querySelector('#text-result');
+                    if (textForm) textForm.innerHTML = '';
+                    const textArea = document.querySelector('textarea[name="meal_description"]');
+                    if (textArea) textArea.value = '';
+                    
+                    // Reset image form
+                    const imageForm = document.querySelector('#image-result');
+                    if (imageForm) imageForm.innerHTML = '';
+                    const fileInput = document.querySelector('input[type="file"]');
+                    if (fileInput) fileInput.value = '';
+                    
                     // Close the modal
                     closeModal();
                     
@@ -234,7 +246,7 @@ async def save_supplement(request: fh.Request):
             potassium=form["potassium"],
             sodium=form["sodium"]
         )    
-        databases.insert_supplement(DB, name=form["summary"], nutritional_info=nutrition_info)
+        databases.insert_supplement(DB, name=form["summary"], consumption_time=form["time_consumed"], nutritional_info=nutrition_info)
         
         return fh.Div(
             fh.P(
@@ -247,14 +259,66 @@ async def save_supplement(request: fh.Request):
                     // Close the modal
                     closeSupplementModal();
                     
-                    // Reload the page to show updated data
-                    window.location.reload();
+                    // Force a new GET request to the current page
+                    window.location.href = window.location.pathname;
                 }, 1000);
             """)
         )
     except Exception as e:
         return fh.P(
             f"Error saving supplement: {str(e)}",
+            cls="text-red-500 font-semibold text-center"
+        )
+
+async def get_supplements():
+    """Get all supplements for the dropdown"""
+    supplements = databases.get_supplement_names(DB)
+    return fh.Select(
+        *[
+            fh.Option(
+                name,
+                value=name,
+            ) for name in supplements
+        ],
+        name="supplement_name",
+        cls="select select-bordered w-full bg-base-200 text-primary-content",
+        required=True
+    )
+
+async def log_supplement_consumption(request: fh.Request):
+    """Log a supplement consumption entry"""
+    try:
+        form = await request.form()
+        supplement_name = form["supplement_name"]
+        time_consumed = form["time_consumed"]
+        
+        supplement_info = databases.get_supplement(DB, supplement_name)
+        databases.insert_supplement(
+            DB, 
+            name=supplement_name,
+            consumption_time=time_consumed,
+            nutritional_info=supplement_info
+        )
+        
+        return fh.Div(
+            fh.P(
+                "Supplement logged successfully!",
+                cls="text-green-500 font-semibold text-center mb-4"
+            ),
+            fh.Script("""
+                // Show success message briefly
+                setTimeout(() => {
+                    // Close the modal
+                    closeSupplementModal();
+                    
+                    // Force a new GET request to the current page
+                    window.location.href = window.location.pathname;
+                }, 1000);
+            """)
+        )
+    except Exception as e:
+        return fh.P(
+            f"Error logging supplement: {str(e)}",
             cls="text-red-500 font-semibold text-center"
         )
 
