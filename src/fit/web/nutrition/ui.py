@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import fasthtml.common as fh
-import fit.web.common as common
 import fit.web.nutrition.food_plots as food_plots
 from fit.nutrition.data import MealBreakdown
 from fit.web.common import nutritionist
@@ -662,7 +661,7 @@ def supplement_modal():
                             onclick="closeSupplementModal()",
                             style="outline: none; box-shadow: none;"
                         ),
-                        cls="relative h-8"  # Add height to create space
+                        cls="relative"  # Removed h-8 to fix top spacing
                     ),
                     fh.H3("Suppementation", cls="text-xl font-bold text-center mb-8 text-primary-content"),
                     fh.Div(
@@ -689,7 +688,7 @@ def supplement_modal():
                             onclick="""
                                 document.getElementById('supplement-options').classList.add('hidden');
                                 document.getElementById('supplement-form').classList.remove('hidden');
-                                document.getElementById('supplement-back-button').classList.remove('hidden');
+                                document.getElementById('add-supplement-back-button').classList.remove('hidden');
                             """
                         ),
                         cls="flex flex-col space-y-4"
@@ -732,8 +731,10 @@ def supplement_modal():
                                     name="supplement_name",
                                     cls="select select-bordered w-full bg-base-200 text-primary-content",
                                     hx_get="/get_supplements",
-                                    hx_trigger="load"
+                                    hx_trigger="load",
+                                    hx_target="#supplement-select",
                                 ),
+                                id="supplement-select",
                                 cls="form-control"
                             ),
                             fh.Div(
@@ -767,12 +768,12 @@ def supplement_modal():
                             ),
                             fh.Div(id="log-supplement-result", cls="mt-4")
                         ),
-                        cls="p-6 overflow-y-auto max-h-[70vh]"
+                        cls="p-6"
                     ),
                     id="log-supplement-form",
-                    cls="hidden h-[80vh]"
+                    cls="hidden"
                 ),
-                # Form for adding new supplement (existing code)
+                # Form for adding new supplement
                 fh.Div(
                     fh.Div(
                         fh.Button(
@@ -784,8 +785,9 @@ def supplement_modal():
                                 this.classList.add('hidden');
                             """,
                             style="outline: none; box-shadow: none;",
-                            id="supplement-back-button"
+                            id="add-supplement-back-button"
                         ),
+                        fh.H3("Add New Supplement", cls="text-xl font-bold text-primary-content"),
                         fh.Button(
                             "×",
                             cls="text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
@@ -796,25 +798,24 @@ def supplement_modal():
                     ),
                     fh.Div(
                         fh.Form(
-                            
                             hx_post="/save_supplement",
                             hx_target="#save-supplement-result",
                             cls="w-[90%] mx-auto"
                         )(
-                            create_nutrition_card(None, title_field="Supplement Name", card_title="Supplement Information"), # todo: make this code more dynamic
+                            create_nutrition_card(None, title_field="Supplement Name", card_title="Supplement Information"),
                             fh.Button(
                                 "Save Supplement",
-                                cls="btn btn-primary w-full mt-6",
-                                
+                                type="submit",
+                                cls="btn btn-primary w-full mt-6"
                             ),
                         ),
-                        cls="p-6 overflow-y-auto max-h-[70vh]"
+                        cls="p-6 overflow-y-auto max-h-[70vh]"  # Added overflow and max height
                     ),
                     id="supplement-form",
-                    cls="hidden h-[80vh]"
+                    cls="hidden"
                 ),
                 fh.Div(id="save-supplement-result", cls="mt-4"),
-                cls="bg-base-200 rounded-lg relative w-full max-w-lg"
+                cls="bg-base-200 rounded-lg relative w-full max-w-lg"  # Reverted to max-w-lg
             ),
             id="supplement-modal",
             cls="modal"
@@ -826,6 +827,7 @@ def supplement_modal():
                 document.getElementById('supplement-form').classList.add('hidden');
                 document.getElementById('log-supplement-form').classList.add('hidden');
                 document.getElementById('supplement-back-button').classList.add('hidden');
+                document.getElementById('add-supplement-back-button').classList.add('hidden');
             }
             
             function closeSupplementModal() {

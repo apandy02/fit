@@ -35,7 +35,7 @@ app.post("/show_metric/{plot_id}")(nutrition.show_metric)
 app.get("/toggle_dropdown/{dropdown_id}")(nutrition.toggle_dropdown)
 app.post("/nutrition_redirect")(nutrition.nutrition_redirect)
 app.post("/save_supplement")(nutrition.save_supplement)
-
+app.get("/get_supplements")(nutrition.get_supplements)
 # Progress routes
 app.get("/progress")(progress.get)
 app.post("/update_weight")(progress.update_weight)
