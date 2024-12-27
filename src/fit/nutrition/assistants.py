@@ -144,10 +144,10 @@ class Nutritionist:
             
             for i, meal in enumerate(meals, 1):
                 meals_str += f"Meal {meal.summary} - {meal.calories} calories, "
-                meals_str += f"{meal.protein}g protein, {meal.carbs}g carbs, {meal.fat}g fat\n"
-                meals_str += f"Micros: {meal.vitamin_a}IU vit A, {meal.vitamin_c}mg vit C, "
-                meals_str += f"{meal.iron}mg iron, {meal.calcium}mg calcium, "
-                meals_str += f"{meal.sodium}mg sodium, {meal.potassium}mg potassium\n"
+                meals_str += f"{meal.macronutrients.protein}g protein, {meal.macronutrients.carbohydrates}g carbs, {meal.macronutrients.fat}g fat\n"
+                meals_str += f"Micros: {meal.micronutrients.vitamin_a}IU vit A, {meal.micronutrients.vitamin_c}mg vit C, "
+                meals_str += f"{meal.micronutrients.iron}mg iron, {meal.micronutrients.calcium}mg calcium, "
+                meals_str += f"{meal.micronutrients.sodium}mg sodium, {meal.micronutrients.potassium}mg potassium\n"
             
             targets_str = f"""
                 The user's daily targets are: Calories: {target["calories"]}, Protein: {target["protein"]}g,

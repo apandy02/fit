@@ -3,7 +3,7 @@ from datetime import datetime
 
 import fasthtml.common as fh
 
-from fit.nutrition.data import MealBreakdown, NutritionalInformation
+from fit.nutrition.data import MealBreakdown, NutritionalInformation, Macronutrients, Micronutrients, ConditionalNutrients
 
 # TODO: consider creating a class for the database
 
@@ -117,7 +117,7 @@ def get_daily_meals(database: fh.Database, date: datetime):
     """
     query = """
         select llm_summary, ingredients, meal_time, calories, protein, carbs, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
-        calcium, iron, potassium, sodium 
+        calcium, iron, potassium, sodium, creatine
         from meals 
         where date_entered = ?
         order by meal_time
@@ -127,19 +127,25 @@ def get_daily_meals(database: fh.Database, date: datetime):
         MealBreakdown(
             summary=row[0],
             ingredients=row[1],
-            meal_time=row[2],
             calories=row[3],
-            protein=row[4],
-            carbs=row[5],
-            fat=row[6],
-            fiber=row[7],
-            vitamin_a=row[8],
-            vitamin_c=row[9],
-            vitamin_d=row[10],
-            calcium=row[11],
-            iron=row[12],
-            potassium=row[13],
-            sodium=row[14]
+            macronutrients=Macronutrients(
+                protein=row[4],
+                carbohydrates=row[5],
+                fat=row[6],
+                fiber=row[7]
+            ),
+            micronutrients=Micronutrients(
+                vitamin_a=row[8],
+                vitamin_c=row[9],
+                vitamin_d=row[10],
+                calcium=row[11],
+                iron=row[12],
+                potassium=row[13],
+                sodium=row[14]
+            ),
+            conditional_nutrients=ConditionalNutrients(
+                creatine=row[15]
+            )
         ) for row in result
     ]
 
