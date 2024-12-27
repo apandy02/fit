@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from PIL import Image
 import ell
 
 from fit.nutrition.data import Goals, MealBreakdown
@@ -46,19 +46,25 @@ class NutritionLogger:
         message = _improve_breakdown(breakdown, user_feedback)
         return message.content[0].parsed
     
-    def image_macros(self, image: str) -> MealBreakdown:
+    def image_macros(self, image: Image.Image, additional_context: str) -> MealBreakdown:
         """Returns the macro nutrients in grams and kilocalories for food described in an image.
         Args:
             image: The image to get the macro nutrients for.
         """
         @ell.complex(model=self.model, response_format=MealBreakdown)
-        def _image_macros(image: str) -> MealBreakdown:
-            """given an image of what the user ate, return the macro nutrients in grams.
-            If the image is not food, return 0 for all macros.
+        def _image_macros(image: Image.Image, additional_context: str) -> MealBreakdown:
+            system_message = """
+            given an image of what the user ate, return the macro nutrients in grams.
+            If the image is not food, return 0 for all macros. The user may or may not
+            provide additional context about the food. If they do, use it to improve your
+            prediction.
             """
-            return image
+            return [
+                ell.system(system_message),
+                ell.user([additional_context, image]),
+            ]
         
-        message = _image_macros(image)
+        message = _image_macros(image, additional_context)
         return message.content[0].parsed
 
 

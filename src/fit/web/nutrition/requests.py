@@ -10,6 +10,9 @@ from fit.nutrition.targets import calculate_macro_targets
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import (DB, active_tracker, micronutrient_goals,
                             nutrition_logger, nutritionist)
+from PIL import Image
+import io
+    
 
 
 def get_daily_overview():
@@ -158,15 +161,32 @@ async def analyze_text(meal_description: str, meal_time: str):
         id="text-input"  # Important: keep the same ID for proper replacement
     )
 
-async def analyze_image(food_image: fh.UploadFile, meal_time: str):
+async def analyze_image(food_image: fh.UploadFile, additional_context: str, meal_time: str):
     """Handle image upload and analysis"""
-    nutrition_info = nutrition_logger.image_macros(food_image)
+    
+    contents = await food_image.read()
+    image = Image.open(io.BytesIO(contents))
+    nutrition_info = nutrition_logger.image_macros(image, additional_context)
+    
     # Create ISO format datetime for meal time
     today = datetime.today().date()
     meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
     meal_datetime = datetime.combine(today, meal_time_obj).isoformat()
     
-    return ui.create_nutrition_card(nutrition_info, meal_time=meal_datetime)
+    return fh.Card(
+        fh.Div(
+            fh.Div(
+                ui.create_text_input_form(is_feedback=True, original_description=additional_context)
+            ),
+            fh.Div(
+                ui.create_meal_breakdown(nutrition_info, meal_time=meal_datetime),
+                id="nutrition-card"
+            ),
+            cls="p-6"
+        ),
+        cls="bg-base-200 rounded-lg",
+        id="image-input"  # Keep same ID as target in form for proper replacement
+    )
 
 async def save_meal(request: fh.Request):
     """Save the meal with user-adjusted nutrition values"""

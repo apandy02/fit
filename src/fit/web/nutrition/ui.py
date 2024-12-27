@@ -191,17 +191,27 @@ def create_image_upload_form():
             ),
             fh.Form(
                 hx_post="/analyze_image",
-                hx_target="#image-result",
+                hx_target="#image-input",
+                hx_swap="outerHTML",
                 hx_encoding="multipart/form-data",
                 cls="space-y-4"
             )(
                 fh.Div(
-                    fh.Label("Food Image", cls="label"),
+                    fh.Label("Food Image", cls="label text-primary-content"),
                     fh.Input(
                         type="file",
                         name="food_image",
                         accept="image/*",
                         cls="file-input file-input-bordered w-full text-sm"
+                    ),
+                    cls="form-control"
+                ),
+                fh.Div(
+                    fh.Label("Additional Context", cls="label text-primary-content"),
+                    fh.Textarea(
+                        name="additional_context",
+                        placeholder="Example: The sandwich in the image contains a fried chicken patty, not a grilled one",
+                        cls="textarea textarea-bordered w-full bg-base-200 text-primary-content"
                     ),
                     cls="form-control"
                 ),
