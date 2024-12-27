@@ -5,7 +5,7 @@ import fasthtml.common as fh
 import fit.web.common as common
 import fit.web.databases as databases
 import fit.web.nutrition.ui as ui
-from fit.nutrition.data import Goals, MealBreakdown, NutritionalInformation
+from fit.nutrition.data import Goals, MealBreakdown, NutritionalInformation, Macronutrients, Micronutrients, ConditionalNutrients
 from fit.nutrition.targets import calculate_macro_targets
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import (DB, active_tracker, micronutrient_goals,
@@ -195,14 +195,17 @@ async def save_meal(request: fh.Request):
         # The meal_time is already in ISO format from the hidden input
         meal_datetime = form["meal_time"]
         
-        nutrition_info = MealBreakdown(
-            summary=form["summary"],
-            ingredients=form["ingredients"],
+        macronutrients = Macronutrients(
             calories=form["calories"],
             protein=form["protein"],
-            carbs=form["carbs"],
+            carbohydrates=form["carbohydrates"],
             fat=form["fat"],
-            fiber=form["fiber"],
+            fiber=form["fiber"]
+        )
+        conditional_nutrients = ConditionalNutrients(
+            creatine=form["creatine"]
+        )
+        micronutrients = Micronutrients(
             vitamin_a=form["vitamin_a"],
             vitamin_c=form["vitamin_c"],
             vitamin_d=form["vitamin_d"],
@@ -210,6 +213,14 @@ async def save_meal(request: fh.Request):
             iron=form["iron"],
             potassium=form["potassium"],
             sodium=form["sodium"]
+        )
+        nutrition_info = MealBreakdown(
+            summary=form["summary"],
+            ingredients=form["ingredients"],
+            calories=form["calories"],
+            macronutrients=macronutrients,
+            micronutrients=micronutrients,
+            conditional_nutrients=conditional_nutrients
         )    
         databases.insert_meal(DB, form["summary"], nutrition_info, meal_datetime)
         
