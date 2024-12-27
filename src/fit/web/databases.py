@@ -3,7 +3,9 @@ from datetime import datetime
 
 import fasthtml.common as fh
 
-from fit.nutrition.data import MealBreakdown, NutritionalInformation, Macronutrients, Micronutrients, ConditionalNutrients
+from fit.nutrition.data import (ConditionalNutrients, Macronutrients,
+                                MealBreakdown, Micronutrients,
+                                NutritionalInformation)
 
 # TODO: consider creating a class for the database
 

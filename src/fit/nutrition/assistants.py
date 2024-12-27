@@ -1,6 +1,7 @@
 from datetime import datetime
-from PIL import Image
+
 import ell
+from PIL import Image
 
 from fit.nutrition.data import Goals, MealBreakdown
 
