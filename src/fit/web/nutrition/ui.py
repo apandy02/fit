@@ -4,7 +4,8 @@ import fasthtml.common as fh
 
 import fit.web.nutrition.food_plots as food_plots
 from fit.nutrition.data import MealBreakdown
-from fit.web.common import nutritionist, create_time_filter, create_overview_card
+from fit.web.common import (create_overview_card, create_time_filter,
+                            nutritionist)
 
 
 def metric_card(

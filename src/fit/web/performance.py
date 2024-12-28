@@ -2,8 +2,11 @@ import datetime
 
 import fasthtml.common as fh
 
-from fit.web.common import create_fab_menu, page_outline, active_tracker, create_time_filter, create_overview_card
 from fit.utils.conversions import kj_to_kcal
+from fit.web.common import (active_tracker, create_fab_menu,
+                            create_overview_card, create_time_filter,
+                            page_outline)
+
 
 def get():
     """Return the performance tracking page content"""
