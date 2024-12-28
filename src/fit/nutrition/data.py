@@ -10,19 +10,16 @@ class Goals(Enum):
     MAINTAIN = "maintain current weight and composition"
 
 
-
-class MealBreakdown(BaseModel):
-    """
-    A dataclass that contains the nutritional information for a food.
-    This is the output of the LLM that predicts the nutritional information for a food.
-    """
-    summary: str = Field(description="a summary of the food description (no longer than 8 words)")
-    ingredients: str = Field(description="predicted ingredients in the food and their amounts")
-    calories: float = Field(description="the amount of calories in the food")
+class Macronutrients(BaseModel):
+    """A dataclass that contains the macronutrients for a food."""
     protein: float = Field(description="the amount of protein in grams")    
-    carbs: float = Field(description="the amount of carbs in grams")
+    carbohydrates: float = Field(description="the amount of carbohydrates in grams")
     fat: float = Field(description="the amount of fat in grams")
     fiber: float = Field(description="the amount of fiber in grams")
+
+    
+class Micronutrients(BaseModel):
+    """A dataclass that contains the micronutrients for a food."""
     vitamin_a: float = Field(description="the amount of vitamin A in IU")
     vitamin_c: float = Field(description="the amount of vitamin C in mg")
     vitamin_d: float = Field(description="the amount of vitamin D in IU")
@@ -32,6 +29,20 @@ class MealBreakdown(BaseModel):
     sodium: float = Field(description="the amount of sodium in mg")
 
 
+class ConditionalNutrients(BaseModel):
+    """A dataclass that contains the conditional nutrients for a food."""
+    creatine: float = Field(description="the amount of creatine in the food")
+
+class MealBreakdown(BaseModel):
+    """A dataclass that contains the nutritional information for a food."""
+    summary: str = Field(description="a summary of the food description (no longer than 8 words)")
+    ingredients: str = Field(description="predicted ingredients in the food and their amounts")
+    calories: float = Field(description="the amount of calories in the food")
+    macronutrients: Macronutrients = Field(description="the macronutrients in the food")
+    micronutrients: Micronutrients = Field(description="the micronutrients in the food")
+    conditional_nutrients: ConditionalNutrients = Field(description="the conditional nutrients in the food")
+
+## TODO: Deprecate / Replace
 class NutritionalInformation(BaseModel):
     """
     A dataclass that contains the nutritional information for a food.

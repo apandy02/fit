@@ -37,7 +37,9 @@ def get():
     """Return the profile page content"""
     # Get user data
     user_data = get_user_data(DB)
-    
+    restrictions = user_data.get("dietary_restrictions", "")
+    if restrictions == "" or restrictions is None:
+        restrictions = []
     content = fh.Article(
         fh.Div(
             # User Profile Section
@@ -122,8 +124,7 @@ def get():
                                             ),
                                             cls="bg-neutral flex items-center justify-between px-4 py-2 rounded-lg mr-2 mb-2"
                                         )
-                                        for r in user_data.get("dietary_restrictions", "").split(",")
-                                        if r
+                                        for r in restrictions
                                     ],
                                     # Hidden inputs to maintain state
                                     *[
@@ -132,8 +133,7 @@ def get():
                                             name="existing_restrictions[]",
                                             value=r
                                         )
-                                        for r in user_data.get("dietary_restrictions", "").split(",")
-                                        if r
+                                        for r in restrictions
                                     ],
                                     id="restrictions-list",
                                     cls="flex flex-wrap"

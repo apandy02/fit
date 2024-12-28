@@ -4,7 +4,8 @@ import fasthtml.common as fh
 
 import fit.web.nutrition.food_plots as food_plots
 from fit.nutrition.data import MealBreakdown
-from fit.web.common import nutritionist
+from fit.web.common import (create_overview_card, create_time_filter,
+                            nutritionist)
 
 
 def metric_card(
@@ -387,20 +388,6 @@ def create_page_header(current_view: str):
         cls="mb-8"
     )
 
-def create_time_filter(current_view: str):
-    """Create the time filter toggle"""
-    return fh.Div(
-        fh.Select(
-            fh.Option("Today", value="daily", selected=current_view == "daily"),
-            fh.Option("This Week", value="weekly", selected=current_view == "weekly"),
-            name="time_filter",
-            cls="select select-bordered w-full max-w-xs",
-            hx_post="/nutrition_redirect",
-            hx_trigger="change",
-        ),
-        cls="mb-6 flex justify-end"
-    )
-
 def create_metric_overview_section(title, metrics_data, filtered_metrics, all_metrics=None, view_type: str = "daily"):
     """Create a metrics overview section with configurable metrics"""    
     # Create dropdown of hidden metrics if all_metrics is provided
@@ -521,28 +508,6 @@ def create_metrics_grid(data, visible_metrics, water_metrics, view_type: str):
         cls="w-full"
     )
 
-def create_overview_card(view_type: str):
-    """Create the overview card with analysis button"""
-    return fh.Card(
-        fh.Div(
-            fh.Div(
-                fh.Button(
-                    "Generate Daily Analysis" if view_type == "daily" else "Generate Weekly Analysis",
-                    cls="btn btn-primary outline outline-1 outline-primary-content",
-                    hx_post="/generate_daily_overview" if view_type == "daily" else "/generate_weekly_overview",
-                    hx_target="#analysis-content"
-                ),
-                cls="flex justify-center mb-4"
-            ),
-            fh.Div(
-                id="analysis-content",
-                cls="prose max-w-none prose-invert"
-            ),
-            cls="p-6"
-        ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mb-8 text-primary-content"
-    )
-
 
 def create_nutrition_section(title: str, items: list, cls: str = "mb-4"):
     """Create a section in the nutrition card"""
@@ -642,17 +607,18 @@ def create_nutrition_card(nutrition_info: MealBreakdown | None, card_title: str 
             create_form_section(card_title, [# separate the title from the actual nutriotioanl form so it can be used for multiple purposes
                     create_form_input(title_field, "summary", nutrition_info.summary if nutrition_info else None, input_type="text"),
                     create_form_input("Calories (kcal)", "calories", nutrition_info.calories if nutrition_info else None),
-                    create_form_input("Protein (g)", "protein", nutrition_info.protein if nutrition_info else None),
-                    create_form_input("Carbs (g)", "carbs", nutrition_info.carbs if nutrition_info else None),
-                    create_form_input("Fat (g)", "fat", nutrition_info.fat if nutrition_info else None),
-                    create_form_input("Fiber (g)", "fiber", nutrition_info.fiber if nutrition_info else None),
-                    create_form_input("Vitamin A (IU)", "vitamin_a", nutrition_info.vitamin_a if nutrition_info else None),
-                    create_form_input("Vitamin C (mg)", "vitamin_c", nutrition_info.vitamin_c if nutrition_info else None),
-                    create_form_input("Vitamin D (IU)", "vitamin_d", nutrition_info.vitamin_d if nutrition_info else None),
-                    create_form_input("Calcium (mg)", "calcium", nutrition_info.calcium if nutrition_info else None),
-                    create_form_input("Iron (mg)", "iron", nutrition_info.iron if nutrition_info else None),
-                    create_form_input("Potassium (mg)", "potassium", nutrition_info.potassium if nutrition_info else None),
-                    create_form_input("Sodium (mg)", "sodium", nutrition_info.sodium if nutrition_info else None),
+                    create_form_input("Protein (g)", "protein", nutrition_info.macronutrients.protein if nutrition_info else None),
+                    create_form_input("Carbohydrates (g)", "carbohydrates", nutrition_info.macronutrients.carbohydrates if nutrition_info else None),
+                    create_form_input("Fat (g)", "fat", nutrition_info.macronutrients.fat if nutrition_info else None),
+                    create_form_input("Fiber (g)", "fiber", nutrition_info.macronutrients.fiber if nutrition_info else None),
+                    create_form_input("Vitamin A (IU)", "vitamin_a", nutrition_info.micronutrients.vitamin_a if nutrition_info else None),
+                    create_form_input("Vitamin C (mg)", "vitamin_c", nutrition_info.micronutrients.vitamin_c if nutrition_info else None),
+                    create_form_input("Vitamin D (IU)", "vitamin_d", nutrition_info.micronutrients.vitamin_d if nutrition_info else None),
+                    create_form_input("Calcium (mg)", "calcium", nutrition_info.micronutrients.calcium if nutrition_info else None),
+                    create_form_input("Iron (mg)", "iron", nutrition_info.micronutrients.iron if nutrition_info else None),
+                    create_form_input("Potassium (mg)", "potassium", nutrition_info.micronutrients.potassium if nutrition_info else None),
+                    create_form_input("Sodium (mg)", "sodium", nutrition_info.micronutrients.sodium if nutrition_info else None),
+                    create_form_input("Creatine (g)", "creatine", nutrition_info.conditional_nutrients.creatine if nutrition_info else None),
                 ]
             )
     ) #TODO: make this more dynamic

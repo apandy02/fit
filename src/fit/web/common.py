@@ -186,3 +186,42 @@ def Markdown(s, exts=md_exts, **kw):
     Enable markdown component rendering with left inner padding.
     """
     return fh.Div(fhb.NotStr(markdown(s, extensions=exts)), **kw)
+
+# TODO: make it so that more parameters can be passed in to the function so it can be used to generate 
+# more than just nutrition overviews
+def create_overview_card(view_type: str):
+    """Create the overview card with analysis button"""
+    return fh.Card(
+        fh.Div(
+            fh.Div(
+                fh.Button(
+                    "Generate Daily Analysis" if view_type == "daily" else "Generate Weekly Analysis",
+                    cls="btn btn-primary outline outline-1 outline-primary-content",
+                    hx_post="/generate_daily_overview" if view_type == "daily" else "/generate_weekly_overview", # TODO create functions to analyze workout data
+                    hx_target="#analysis-content"
+                ),
+                cls="flex justify-center mb-4"
+            ),
+            fh.Div(
+                id="analysis-content",
+                cls="prose max-w-none prose-invert"
+            ),
+            cls="p-6"
+        ),
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mb-8 mt-4 text-primary-content"
+    )
+
+
+def create_time_filter(current_view: str):
+    """Create the time filter toggle"""
+    return fh.Div(
+        fh.Select(
+            fh.Option("Today", value="daily", selected=current_view == "daily"),
+            fh.Option("This Week", value="weekly", selected=current_view == "weekly"),
+            name="time_filter",
+            cls="select select-bordered w-full max-w-xs",
+            hx_post="/nutrition_redirect",
+            hx_trigger="change",
+        ),
+        cls="mt-6 mb-8 flex justify-center"
+    )
