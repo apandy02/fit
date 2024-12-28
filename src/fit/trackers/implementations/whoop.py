@@ -114,6 +114,18 @@ class Whoop(FitnessTracker):
         start_dt = datetime.datetime.combine(day, datetime.time.min)
         end_dt = datetime.datetime.combine(day, datetime.time.max)
         return self._get_cycle_collection(start_date=start_dt, end_date=end_dt)
+    
+    def get_cycle_for_day(self, day: datetime.date) -> dict[str, Any]:
+        """
+        Get the cycle for a given day.
+        
+        Args:
+            day (datetime.date): The date to get the cycle for.
+        
+        Returns:
+            dict[str, Any]: A dictionary of cycle data.
+        """
+        return self._max_overlap_cycle(day=day, cycles=self._get_cycles_for_day(day))
 
     def _authenticate(self) -> None:
         """Authenticate OAuth2Session by fetching token.
