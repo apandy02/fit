@@ -42,6 +42,14 @@ class MealBreakdown(BaseModel):
     micronutrients: Micronutrients = Field(description="the micronutrients in the food")
     conditional_nutrients: ConditionalNutrients = Field(description="the conditional nutrients in the food")
 
+
+class NutritionFeedback(BaseModel):
+    """A dataclass that contains the feedback for the user's nutrition."""
+    summary: str = Field(description="a summary of the feedback for the user's nutrition based on the provided information")
+    macronutrients: str = Field(description="Specific feedback on the user's diet relative to their macronutrient intake")
+    micronutrients: str = Field(description="Specific feedback on the user's diet relative to their micronutrient intake")
+    suggestions: str = Field(description="the suggestions for the user's nutrition")
+
 ## TODO: Deprecate / Replace
 class NutritionalInformation(BaseModel):
     """

@@ -399,6 +399,7 @@ async def show_metric(plot_id: str, view_type: str):
     return ui.create_metrics_grid(get_daily_nutrition_data(date), visible_metrics, view_type)
 
 
+# TODO: the next two functions are doing a lot of the same work, find a way to refactor
 async def generate_weekly_overview():
     """
     Generate the weekly overview analysis by getting the user's meals for the week,
@@ -414,17 +415,20 @@ async def generate_weekly_overview():
     [target.update(micronutrient_goals) for target in targets]
 
     analysis = nutritionist.weekly_io_analysis(meals, targets, dietary_restrictions)
+
+    if isinstance(analysis, str):
+        return fh.P(analysis, cls="text-primary-content mt-2")
     
     return fh.Card(
         fh.Div(
-            *[
-                fh.Div(
-                    fh.P(fh.NotStr(line.strip()), cls="text-primary-content mb-1"),
-                    cls="mb-2"
-                )
-                for line in analysis.split('\n')
-                if line.strip() 
-            ],
+            fh.P("Summary", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.summary, cls="text-primary-content mb-1"),
+            fh.P("Macronutrients", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.macronutrients, cls="text-primary-content mb-1"),
+            fh.P("Micronutrients", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.micronutrients, cls="text-primary-content mb-1"),
+            fh.P("Suggestions", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.suggestions, cls="text-primary-content mb-1"),
             cls="p-4 space-y-2 mt-2"
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-4"
@@ -445,17 +449,20 @@ async def generate_daily_overview():
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
     analysis = nutritionist.daily_io_analysis(meals, targets, dietary_restrictions)
-    
+
+    if isinstance(analysis, str):
+        return fh.P(analysis, cls="text-primary-content mt-2")
+        
     return fh.Card(
         fh.Div(
-            *[
-                fh.Div(
-                    fh.P(fh.NotStr(line.strip()), cls="text-primary-content mb-1"),
-                    cls="mb-2"
-                )
-                for line in analysis.split('\n')
-                if line.strip() 
-            ],
+            fh.P("Summary", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.summary, cls="text-primary-content mb-1"),
+            fh.P("Macronutrients", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.macronutrients, cls="text-primary-content mb-1"),
+            fh.P("Micronutrients", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.micronutrients, cls="text-primary-content mb-1"),
+            fh.P("Suggestions", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.suggestions, cls="text-primary-content mb-1"),
             cls="p-4 space-y-2 mt-2"
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-4"
