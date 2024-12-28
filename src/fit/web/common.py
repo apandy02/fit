@@ -208,7 +208,7 @@ def create_overview_card(view_type: str):
             ),
             cls="p-6"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mb-8 mt-4 text-primary-content"
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mb-12 text-primary-content"
     )
 
 

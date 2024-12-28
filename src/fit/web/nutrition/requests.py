@@ -431,7 +431,7 @@ async def generate_weekly_overview():
             fh.P(analysis.suggestions, cls="text-primary-content mb-1"),
             cls="p-4 space-y-2 mt-2"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-4"
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
     )
 
 async def generate_daily_overview():
@@ -465,7 +465,7 @@ async def generate_daily_overview():
             fh.P(analysis.suggestions, cls="text-primary-content mb-1"),
             cls="p-4 space-y-2 mt-2"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-4"
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
     )
 
 async def nutrition_redirect(request: fh.Request):

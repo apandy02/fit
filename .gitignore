@@ -4,3 +4,4 @@ secrets.json
 *.sesskey
 *.DS_Store
 /uv.lock
+*.db
