@@ -38,24 +38,34 @@ def metric_card(
     else:
         analysis_text = None
 
-    hide_button = None
+    buttons = []
     if allow_hide and title.lower() not in ["calories", "water", "creatine"]:
-        hide_button = fh.Button(
+        buttons.append(fh.Button(
             "×",
             cls="absolute right-2 top-2 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
             style="outline: none; box-shadow: none;",
             hx_post=f"/hide_metric/{plot_id}",
             hx_target=f"#{plot_id}-container",
             hx_swap="outerHTML"
-        )
+        ))
     
     # Extract unit from y_axis_title if present
     unit = y_axis_title.split('(')[-1].strip(')') if '(' in y_axis_title else None
     display_title = f"{title} ({unit})" if unit else title
     
+    # Create suggestions button separately to place at bottom
+    suggestions_button = None
+    if title.lower() != "water":
+        suggestions_button = fh.Button(
+            "Get Suggestions",
+            cls="btn btn-sm btn-primary mt-4",
+            hx_post=f"/get_nutrient_suggestions/{title.lower()}",
+            hx_target=f"#{plot_id}-suggestions"
+        )
+    
     return fh.Card(
         fh.Div(
-            hide_button if hide_button else None,
+            *buttons,
             fh.Div(
                 fh.H3(display_title, cls="text-xl font-bold text-primary-content text-center mb-4"),
                 fh.Div(id=plot_id, cls="w-full h-[300px]"),
@@ -73,6 +83,11 @@ def metric_card(
                 cls="w-"
             ),
             fh.P(analysis_text, cls="text-md text-primary-content mt-4 text-center") if analysis_text else None,
+            fh.Div(
+                suggestions_button,
+                cls="flex justify-center"
+            ) if suggestions_button else None,
+            fh.Div(id=f"{plot_id}-suggestions", cls="mt-4"),
             cls="p-4 relative"
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg h-full text-primary-content",

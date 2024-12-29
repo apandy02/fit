@@ -1,5 +1,7 @@
 import unittest
+
 from fit.utils.conversions import kj_to_kcal
+
 
 class TestConversions(unittest.TestCase):
     def test_kj_to_kcal(self):

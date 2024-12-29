@@ -481,3 +481,43 @@ async def nutrition_redirect(request: fh.Request):
         return fh.Response(headers={"HX-Redirect": "/nutrition"}, status_code=200)
     elif current_view == "weekly":
         return fh.Response(headers={"HX-Redirect": "/nutrition/weekly"}, status_code=200)
+
+async def get_nutrient_suggestions(nutrient: str):
+    """Generate meal suggestions based on a specific nutrient"""
+    today = datetime.today().date()
+    daily_nutrition = databases.get_daily_cumulative_nutrition(DB, today)
+    
+    # Get daily targets
+    calories_burned = active_tracker.get_daily_calories_burned(today)
+    targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
+    targets.update(micronutrient_goals)
+    restrictions = databases.get_dietary_restrictions(DB, "default")
+    # Get recommendations from nutritionist
+    recommendations = nutritionist.make_recommendations(
+        consumption=daily_nutrition,
+        targets=targets,
+        target_nutrient=nutrient,
+        restrictions=restrictions
+    )
+    
+    # For now, just display the recommendations in a simple format
+    return fh.Div(
+        fh.H4("Suggestions", cls="text-lg font-bold mb-1 text-primary-content text-center"),
+        fh.Div(
+            fh.Ul(
+                *[
+                    fh.Li(
+                        fh.Div(
+                            fh.P(meal.title, cls="font-medium text-primary-content text-sm text-center font-bold mb-1"),
+                            fh.P(meal.ingredients, cls="text-primary-content text-xs text-center"),
+                            cls="mb-3"
+                        ),
+                        cls="list-none"
+                    ) for meal in recommendations.meals
+                ],
+                cls="list-none p-0"
+            ),
+            cls="outline outline-1 outline-primary-content rounded-lg p-4 max-h-[200px] overflow-y-auto mt-3"
+        ),
+        cls="bg-base-200 p-4 rounded-lg"
+    )

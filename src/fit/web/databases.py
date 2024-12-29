@@ -124,7 +124,7 @@ def get_daily_meals(database: fh.Database, date: datetime):
         where date_entered = ?
         order by meal_time
     """
-    result = database.execute(query, (date,)).fetchall()
+    result = database.execute(query, (str(date),)).fetchall()
     return [
         MealBreakdown(
             title=row[0],
@@ -177,7 +177,7 @@ def get_daily_cumulative_nutrition(database: fh.Database, date: datetime):
         FROM meals 
         WHERE date_entered = ?
     """
-    result = database.execute(query, (date,)).fetchone()
+    result = database.execute(query, (str(date),)).fetchone()
 
     if result is None or result[0] is None:
         return NutritionalInformation()

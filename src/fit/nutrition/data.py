@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import List
 
 from pydantic import BaseModel, Field
 
@@ -12,35 +13,35 @@ class Goals(Enum):
 
 class Carbohydrates(BaseModel):
     """A dataclass that contains the carbohydrates for a food."""
-    total: float = Field(description="the total amount of carbohydrates in grams")
-    fiber: float = Field(description="the amount of fiber in grams")
-    total_sugar: float = Field(description="the amount of total sugar in grams")
-    added_sugar: float = Field(description="the amount of added sugar in grams")
+    total: float = Field(description="carbohydrates in grams")
+    fiber: float = Field(description="fiber in grams")
+    total_sugar: float = Field(description="total sugar in grams")
+    added_sugar: float = Field(description="added sugar in grams")
 
 
 class Fats(BaseModel):
     """A dataclass that contains the fats for a food."""
-    total: float = Field(description="the total amount of fats in grams")
-    saturated: float = Field(description="the amount of saturated fats in grams")
-    trans: float = Field(description="the amount of trans fats in grams")
+    total: float = Field(description="fats in grams")
+    saturated: float = Field(description="saturated fats in grams")
+    trans: float = Field(description="trans fats in grams")
 
 
 class Macronutrients(BaseModel):
     """A dataclass that contains the macronutrients for a food."""
-    protein: float = Field(description="the amount of protein in grams")    
-    carbohydrates: Carbohydrates = Field(description="the amount of carbohydrates in grams")
-    fat: Fats = Field(description="the amount of fat in grams")
+    protein: float = Field(description="protein in grams")    
+    carbohydrates: Carbohydrates = Field(description="carbohydrates in grams")
+    fat: Fats = Field(description="fats in grams")
 
 
 class Micronutrients(BaseModel):
     """A dataclass that contains the micronutrients for a food."""
     vitamin_a: float = Field(description="the amount of vitamin A in IU")
-    vitamin_c: float = Field(description="the amount of vitamin C in mg")
-    vitamin_d: float = Field(description="the amount of vitamin D in IU")
-    calcium: float = Field(description="the amount of calcium in mg")
-    iron: float = Field(description="the amount of iron in mg")
-    potassium: float = Field(description="the amount of potassium in mg")
-    sodium: float = Field(description="the amount of sodium in mg")
+    vitamin_c: float = Field(description="vitamin C in mg")
+    vitamin_d: float = Field(description="vitamin D in IU")
+    calcium: float = Field(description="calcium in mg")
+    iron: float = Field(description="iron in mg")
+    potassium: float = Field(description="potassium in mg")
+    sodium: float = Field(description="sodium in mg")
 
 
 class ConditionalNutrients(BaseModel):
@@ -52,10 +53,10 @@ class MealBreakdown(BaseModel):
     """A dataclass that contains the nutritional information for a food."""
     title: str = Field(description="a title for the food description")
     ingredients: str = Field(description="predicted ingredients in the food and their amounts")
-    calories: float = Field(description="the amount of calories in the food")
-    macronutrients: Macronutrients = Field(description="the macronutrients in the food")
-    micronutrients: Micronutrients = Field(description="the micronutrients in the food")
-    conditional_nutrients: ConditionalNutrients = Field(description="the conditional nutrients in the food")
+    calories: float = Field(description="calories")
+    macronutrients: Macronutrients = Field(description="macronutrients")
+    micronutrients: Micronutrients = Field(description="micronutrients")
+    conditional_nutrients: ConditionalNutrients = Field(description="conditional nutrients")
 
 
 class NutritionFeedback(BaseModel):
@@ -84,3 +85,14 @@ class NutritionalInformation(BaseModel):
     micronutrients: Micronutrients = Field(description="the micronutrients in the food", default=MICRO_DEFAULT)
     conditional_nutrients: ConditionalNutrients = Field(description="the conditional nutrients in the food", default=COND_DEFAULT)
     
+class MealRecommendation(BaseModel):
+    """A dataclass that contains the meal recommendation for a food."""
+    #TODO: Maybe I want an explanation of why this meal is being recommended?
+    title: str = Field(description="a title for the food description")
+    ingredients: str = Field(
+        description="predicted ingredients and amounts. formatted comma separated, not bullet points"
+    )
+
+class Recommendations(BaseModel):
+    """A dataclass that contains the meal recommendations for a food."""
+    meals: List[MealRecommendation] = Field(description="A list of 5 meals to be recommended to the user")
