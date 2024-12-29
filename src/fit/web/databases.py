@@ -204,7 +204,6 @@ def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdow
     Insert a meal into the database.
     """
     meals_table = database.t.meals
-    print(meal)
     meals_table.insert(
         date_entered=datetime.date(datetime.today()),
         meal_time=meal_time,

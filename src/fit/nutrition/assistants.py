@@ -117,7 +117,7 @@ class Nutritionist:
 
         @ell.complex(model=self.model, response_format=NutritionFeedback)
         def _daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float], restrictions: list[str]) -> NutritionFeedback:
-            """
+            sys_message = """
             Analyze the user's daily nutritional intake versus their targets and provide a detailed 
             assessment in plain text format. Start with an overview comparing total intake to goals. 
             Then evaluate each meal's contribution to any excess - flag meals that significantly exceed 
@@ -132,6 +132,7 @@ class Nutritionist:
             Format as plain text paragraphs without bullets, markdown, or special formatting, you are 
             speaking to the user directly as their nutritionist.
             """ # TODO: the workout bit needs to go, it does not fit in here like this (too much logic hardcoding)
+            #TODO: the system message can be parsed in as an arg
             current_time = datetime.now().time()
             meals_str = f"As of {current_time} are the meals the user has logged today:\n"
             
@@ -153,7 +154,10 @@ class Nutritionist:
             """
             restrictions_str = f"The user's dietary restrictions are: {restrictions}"
 
-            return f"{meals_str}\n{targets_str}\n{restrictions_str}"
+            return [
+                ell.system(sys_message),
+                ell.user([meals_str, targets_str, restrictions_str])
+            ]
         
 
         return _daily_io_analysis(meals, target, restrictions).content[0].parsed
@@ -180,7 +184,7 @@ class Nutritionist:
                 target: dict[str, float],
                 restrictions: list[str]
         ) -> NutritionFeedback:
-            """ 
+            sys_message = """ 
             Given the user's meals for the week, provide a detailed assessment of their nutritional 
             intake versus their targets.
 
@@ -198,7 +202,7 @@ class Nutritionist:
 
             Format as plain text paragraphs without bullets, markdown, or special formatting, you are 
             speaking to the user directly as their nutritionist. 
-            """
+            """ #TODO: this can be parsed in as an arg
             current_time = datetime.now().time()
             meals_str = f"As of {current_time} are the meals the user has logged today:\n"
             
@@ -221,10 +225,12 @@ class Nutritionist:
                 """
             restrictions_str = f"The user's dietary restrictions are: {restrictions}"
 
-            return f"{meals_str}\n{targets_str}\n{restrictions_str}"
+            return [
+                ell.system(sys_message),
+                ell.user([meals_str, targets_str, restrictions_str])
+            ]
         
         analysis = _weekly_io_analysis(meals, target, restrictions)
-        print(analysis)
         return analysis.content[0].parsed
     
     def nutrient_analysis(

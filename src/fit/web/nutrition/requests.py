@@ -228,7 +228,6 @@ async def save_meal(request: fh.Request):
             micronutrients=micronutrients,
             conditional_nutrients=conditional_nutrients
         )    
-        print(nutrition_info)
         databases.insert_meal(DB, form["title"], nutrition_info, meal_datetime)
         
         return fh.Div(
@@ -419,8 +418,7 @@ async def generate_weekly_overview():
     calories_burned = [active_tracker.get_daily_calories_burned(day) for day in week]
     targets = [calculate_macro_targets(calories_burned, Goals.MAINTAIN) for calories_burned in calories_burned]
     [target.update(micronutrient_goals) for target in targets]
-
-    print(meals)
+ 
     analysis = nutritionist.weekly_io_analysis(meals, targets, dietary_restrictions)
 
     if isinstance(analysis, str):

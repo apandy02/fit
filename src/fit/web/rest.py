@@ -47,10 +47,8 @@ def rest_card(title: str, value: str):
 def get_rest_metrics_section():
     """Return the rest tracking metrics section"""
     recovery, sleep = get_rest_info()
-    print(f"recovery: {recovery}")
     
     return fh.Div(
-        # Recovery Metrics Grid
         fh.Div(
             fh.H3("Today's Recovery", cls="text-xl font-bold text-primary-content mb-8 text-center"),
             fh.Div(
@@ -61,7 +59,6 @@ def get_rest_metrics_section():
             ),
             cls="mb-16"
         ),
-        # Sleep Section
         fh.Div(
             fh.H3("Today's Sleep", cls="text-xl font-bold text-primary-content mb-8 text-center"),
             create_sleep_cards(sleep) if sleep else fh.P("No sleep recorded today", cls="text-primary-content text-center italic"),
