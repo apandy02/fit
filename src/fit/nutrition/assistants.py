@@ -3,7 +3,7 @@ from datetime import datetime
 import ell
 from PIL import Image
 
-from fit.nutrition.data import Goals, MealBreakdown, NutritionFeedback
+from fit.nutrition.data import MealBreakdown, NutritionFeedback, NutritionalInformation, Recommendations
 
 STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
 
@@ -81,30 +81,46 @@ class Nutritionist:
         self.max_tokens = max_tokens
     
     def make_recommendations(
-            self, caloric_burn: float, goal: Goals, prior_intake: MealBreakdown
-        ) -> str:
+            self, consumption: NutritionalInformation,
+            targets: NutritionalInformation,
+            target_nutrient: str,
+            restrictions: list[str]
+        ) -> Recommendations:
         """Makes recommendations for foods based on the user's caloric burn and macro goals.
         Args:
             caloric_burn: The user's caloric burn for the day.
             goal: The user's weight goals.
             prior_intake: The user's prior intake for the day.
         """
-        @ell.simple(model=self.model, max_tokens=self.max_tokens)
+        @ell.complex(model=self.model, response_format=Recommendations)
         def _make_recommendations(
-                caloric_burn: float, goal: Goals, prior_intake: MealBreakdown
-            ) -> str:
-            """given the user's caloric burn and weight goals, provide the user with 3 meal options.
-            Ensure that your response is concise and easy to understand.
+                consumption: NutritionalInformation,
+                targets: NutritionalInformation,
+                target_nutrient: str,
+                restrictions: list[str]
+            ) -> Recommendations:
+            """You will be given the user's consumed nutritional information, their nutritional targets,
+            their dietary restrictions, and a specific nutrient they are asking you for food recommendations to 
+            improve.
+            
+            Considering all the other nutrient info, try and provide the user with suggestions that 
+            minimize risk of over/under consumption of other.
+
+            For example, if the user is asking for food recommendations to improve their vitamin_c intake,
+            but they already have a high carbohydrate intake, suggest a vitamin_c rich food that is low in 
+            carbohydrates.
             """
             user_input = f"""
-            The user's caloric burn for the day is {caloric_burn} calories. 
-            The user's goal is to {goal.value}. 
-            The user's prior intake for the day is {prior_intake.protein}g protein, 
-            {prior_intake.carbs}g carbs, and {prior_intake.fat}g fat.
+            Consumption: {str(consumption)}
+            Targets: {str(targets)}
+            Dietary Restrictions: {restrictions}
+            They want trying to improve their {target_nutrient} intake.
             """
             return user_input
         
-        return _make_recommendations(caloric_burn, goal, prior_intake)
+        return _make_recommendations(
+            consumption, targets, target_nutrient, restrictions
+        ).content[0].parsed
     
     def daily_io_analysis(self, meals: list[MealBreakdown], target: dict[str, float], restrictions: list[str]) -> NutritionFeedback:
         """
@@ -175,6 +191,7 @@ class Nutritionist:
             ]
 
         if self.model in STRUCTURED_MODELS:
+            print(self.model, STRUCTURED_MODELS)
             return _daily_io_analysis_pydantic(sys_message, meals_str, targets_str, restrictions_str).content[0].parsed
         else:
             return NutritionFeedback.model_validate_json(
