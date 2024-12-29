@@ -1,14 +1,10 @@
 import unittest
 
 from fit.nutrition.data import Goals
-from fit.nutrition.targets import (
-    calculate_caloric_target,
-    calculate_protein_target,
-    calculate_fat_target,
-    calculate_carb_target,
-    calculate_macro_targets,
-    MICRO_GOALS
-)
+from fit.nutrition.targets import (MICRO_GOALS, calculate_caloric_target,
+                                   calculate_carb_target, calculate_fat_target,
+                                   calculate_macro_targets,
+                                   calculate_protein_target)
 
 
 class TestTargets(unittest.TestCase):

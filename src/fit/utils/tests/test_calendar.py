@@ -1,7 +1,9 @@
 import unittest
-from datetime import datetime, date
+from datetime import date, datetime
 from unittest.mock import patch
+
 from fit.utils.calendar import get_current_week_dates
+
 
 class TestCalendar(unittest.TestCase):
     @patch('fit.utils.calendar.datetime')

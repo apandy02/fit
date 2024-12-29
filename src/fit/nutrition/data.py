@@ -4,7 +4,6 @@ from typing import List
 from pydantic import BaseModel, Field
 
 
-
 class Goals(Enum):
     """An enum that contains the user's nutrition and fitness goals."""
     LOSE_WEIGHT = "lose weight"
