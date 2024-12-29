@@ -5,6 +5,7 @@ from PIL import Image
 
 from fit.nutrition.data import Goals, MealBreakdown, NutritionFeedback
 
+STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
 
 class NutritionLogger:
     """A class that uses LLMs to help with nutrition tracking."""
@@ -71,12 +72,13 @@ class NutritionLogger:
 
 class Nutritionist:
     """A class that uses LLMs recommend foods. Based on the user's caloric burn and macro goals."""
-    def __init__(self, model: str = "gpt-4o-2024-08-06"):
+    def __init__(self, model: str = "gpt-4o-2024-08-06", max_tokens: int = 2048):
         """
         Args:
             model: The LLM to use.
         """
         self.model = model
+        self.max_tokens = max_tokens
     
     def make_recommendations(
             self, caloric_burn: float, goal: Goals, prior_intake: MealBreakdown
@@ -87,7 +89,7 @@ class Nutritionist:
             goal: The user's weight goals.
             prior_intake: The user's prior intake for the day.
         """
-        @ell.simple(model=self.model)
+        @ell.simple(model=self.model, max_tokens=self.max_tokens)
         def _make_recommendations(
                 caloric_burn: float, goal: Goals, prior_intake: MealBreakdown
             ) -> str:
@@ -114,58 +116,70 @@ class Nutritionist:
         """
         if len(meals) == 0:
             return "No meals logged for today, please log your meals and try again." # TODO: Error message is different type than expected output
+        sys_message = """
+        Analyze the user's daily nutritional intake versus their targets and provide a detailed assessment. 
 
-        @ell.complex(model=self.model, response_format=NutritionFeedback)
-        def _daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float], restrictions: list[str]) -> NutritionFeedback:
-            sys_message = """
-            Analyze the user's daily nutritional intake versus their targets and provide a detailed assessment. 
+        In the summary, talk about the caloric balance, and provide a high level overview of the
+        user's nutrition (if they are highly lacking (or over) in some of them, point out that they are, and
+        if they're doing well in some of them (around their target), point that out as well).
 
-            In the summary, talk about the caloric balance, and provide a high level overview of the
-            user's nutrition (if they are highly lacking (or over) in some of them, point out that they are, and
-            if they're doing well in some of them (around their target), point that out as well).
+        For each of the nutrient sections, start with an overview comparing total intake to goals.
+        Then evaluate each meal. Discuss any meals that contribute to to any excess or are not nutrititious
+        enough if a target is underperformed on. flag meals that significantly exceed targets (e.g., >100% of
+        a macro target in one meal) as problematic and suggest alternatives. if it is not too late in the day
+        (roughly speaking before 8PM) and they have consumed more calories than their calorie target, suggest a
+        workout that get them closer to a target range.
+        
+        For meals contributing to excess but not extreme, recommend portion adjustments.
+        For under-target scenarios, suggest realistic additions based on their evident food preferences,
+        eating patterns, and strictly following their dietary restrictions.
 
-            For each of the nutrient sections, start with an overview comparing total intake to goals.
-            Then evaluate each meal. Discuss any meals that contribute to to any excess or are not nutrititious
-            enough if a target is underperformed on. flag meals that significantly exceed targets (e.g., >100% of
-            a macro target in one meal) as problematic and suggest alternatives. if it is not too late in the day
-            (roughly speaking before 8PM) and they have consumed more calories than their calorie target, suggest a
-            workout that get them closer to a target range.
-            
-            For meals contributing to excess but not extreme, recommend portion adjustments.
-            For under-target scenarios, suggest realistic additions based on their evident food preferences,
-            eating patterns, and strictly following their dietary restrictions.
-
-            Format all fields as plain text paragraphs without bullets, markdown, or special formatting,
-            you are speaking to the user directly as their nutritionist.
-            """ # TODO: the workout bit needs to go, it does not fit in here like this (too much logic hardcoding)
-            #TODO: the system message can be parsed in as an arg
-            current_time = datetime.now().time()
-            meals_str = f"As of {current_time} are the meals the user has logged today:\n"
-            
-            for _, meal in enumerate(meals, 1):
-                meals_str += f"""Meal {meal.title} - {meal.calories} calories, 
-                {meal.macronutrients.protein}g protein, {meal.macronutrients.carbohydrates}g carbs, 
-                {meal.macronutrients.fat}g fat\n
-                Micros: {meal.micronutrients.vitamin_a}IU vit A, {meal.micronutrients.vitamin_c}mg vit C, 
-                {meal.micronutrients.iron}mg iron, {meal.micronutrients.calcium}mg calcium, 
-                {meal.micronutrients.sodium}mg sodium, {meal.micronutrients.potassium}mg potassium\n
-            """
-            
-            targets_str = f"""
-                The user's daily targets are: Calories: {target["calories"]}, Protein: {target["protein"]}g,
-                Carbohydrates: {target["carbs"]}g, Fat: {target["fat"]}g
-                Micronutrient targets: Vitamin A: {target["vitamin_a"]}IU, Vitamin C: {target["vitamin_c"]}mg,
-                Iron: {target["iron"]}mg, Calcium: {target["calcium"]}mg,
-                Sodium: {target["sodium"]}mg, Potassium: {target["potassium"]}mg
-            """
-            restrictions_str = f"The user's dietary restrictions are: {restrictions}"
-
+        Format all fields as plain text paragraphs. You must not use markdown, bullet points, or 
+        special formatting, you are speaking to the user directly as their nutritionist.
+        """ # TODO: the workout bit needs to go, it does not fit in here like this (too much logic hardcoding)
+        #TODO: the system message can be parsed in as an arg
+        current_time = datetime.now().time()
+        meals_str = f"As of {current_time} are the meals the user has logged today:\n"
+        
+        for _, meal in enumerate(meals, 1):
+            meals_str += f"""Meal {meal.title} - {meal.calories} calories, 
+            {meal.macronutrients.protein}g protein, {meal.macronutrients.carbohydrates}g carbs, 
+            {meal.macronutrients.fat}g fat\n
+            Micros: {meal.micronutrients.vitamin_a}IU vit A, {meal.micronutrients.vitamin_c}mg vit C, 
+            {meal.micronutrients.iron}mg iron, {meal.micronutrients.calcium}mg calcium, 
+            {meal.micronutrients.sodium}mg sodium, {meal.micronutrients.potassium}mg potassium\n
+        """
+        
+        targets_str = f"""
+            The user's daily targets are: Calories: {target["calories"]}, Protein: {target["protein"]}g,
+            Carbohydrates: {target["carbs"]}g, Fat: {target["fat"]}g
+            Micronutrient targets: Vitamin A: {target["vitamin_a"]}IU, Vitamin C: {target["vitamin_c"]}mg,
+            Iron: {target["iron"]}mg, Calcium: {target["calcium"]}mg,
+            Sodium: {target["sodium"]}mg, Potassium: {target["potassium"]}mg
+        """
+        restrictions_str = f"The user's dietary restrictions are: {restrictions}"
+        
+        @ell.complex(model=self.model, response_format=NutritionFeedback, max_tokens=self.max_tokens)
+        def _daily_io_analysis_pydantic(sys_message: str, meals_str: str, targets_str: str, restrictions_str: str) -> NutritionFeedback:
+            return [
+                ell.system(sys_message),
+                ell.user([meals_str, targets_str, restrictions_str])
+            ]
+        
+        @ell.simple(model=self.model, max_tokens=self.max_tokens)
+        def _daily_io_analysis_simple(sys_message: str, meals_str: str, targets_str: str, restrictions_str: str) -> str:
+            sys_message += f"You must absolutely respond in this format as a json string with no exceptions: {NutritionFeedback.model_json_schema()}"
             return [
                 ell.system(sys_message),
                 ell.user([meals_str, targets_str, restrictions_str])
             ]
 
-        return _daily_io_analysis(meals, target, restrictions).content[0].parsed
+        if self.model in STRUCTURED_MODELS:
+            return _daily_io_analysis_pydantic(sys_message, meals_str, targets_str, restrictions_str).content[0].parsed
+        else:
+            return NutritionFeedback.model_validate_json(
+                _daily_io_analysis_simple(sys_message, meals_str, targets_str, restrictions_str)
+            )
 
     def weekly_io_analysis(
             self, 
@@ -182,38 +196,58 @@ class Nutritionist:
         """
         if len(meals) == 0:
             return "No meals logged for today, please log your meals and try again."
-
+        
         @ell.complex(model=self.model, response_format=NutritionFeedback)
-        def _weekly_io_analysis(
-                meals: dict[datetime, list[MealBreakdown]],
-                target: dict[str, float],
-                restrictions: list[str]
+        def _weekly_io_analysis_pydantic(
+                sys_message: str,
+                meals_str: str,
+                targets_str: str,
+                restrictions_str: str
         ) -> NutritionFeedback:
-            sys_message = """ 
-            You are a nutritionist providing feedback on a week's nutrition logs. Analyze the 
-            user's nutritional intake versus their targets, including macro and micronutrient balance,
-            meal timing, and portion sizes.
-            
-            Identify both positive patterns and areas for improvement. 
-            When discussing concerns, focus on repeated patterns that significantly impact their 
-            nutritional goals. For example, if frequent fried food consumption is causing them to 
-            exceed fat targets, point this out specifically.
+            return [
+                ell.system(sys_message),
+                ell.user([meals_str, targets_str, restrictions_str])
+            ]
+        
+        @ell.simple(model=self.model, max_tokens=self.max_tokens)
+        def _weekly_io_analysis_simple(
+                sys_message: str,
+                meals_str: str,
+                targets_str: str,
+                restrictions_str: str
+        ) -> str:
+            sys_message += f"You must absolutely respond in this format with no exceptions. {NutritionFeedback.model_json_schema()}"
+            return [
+                ell.system(sys_message),
+                ell.user([meals_str, targets_str, restrictions_str])
+            ]
 
-            Prioritize the 2-3 most important changes that would help them reach their goals. When 
-            suggesting modifications, recommend realistic substitutions that maintain similar taste and 
-            texture profiles. For instance, if they enjoy crunchy snacks but are exceeding sodium targets,
-            suggest specific lower-sodium alternatives they might enjoy.
+        sys_message = """ 
+        You are a nutritionist providing feedback on a week's nutrition logs. Analyze the 
+        user's nutritional intake versus their targets, including macro and micronutrient balance,
+        meal timing, and portion sizes.
+        
+        Identify both positive patterns and areas for improvement. 
+        When discussing concerns, focus on repeated patterns that significantly impact their 
+        nutritional goals. For example, if frequent fried food consumption is causing them to 
+        exceed fat targets, point this out specifically.
 
-            Provide practical, actionable suggestions that respect their provided dietary restrictions. 
-            Consider their current food preferences when making recommendations - the goal is to refine 
-            their existing habits rather than completely overhaul their diet.
+        Prioritize the 2-3 most important changes that would help them reach their goals. When 
+        suggesting modifications, recommend realistic substitutions that maintain similar taste and 
+        texture profiles. For instance, if they enjoy crunchy snacks but are exceeding sodium targets,
+        suggest specific lower-sodium alternatives they might enjoy.
 
-            Write your response in plain text paragraphs without bullets or special formatting, address 
-            the user directly as their nutritionist.""" #TODO: this can be parsed in as an arg
-            current_time = datetime.now().time()
-            meals_str = f"As of {current_time} are the meals the user has logged today:\n"
-            
-            for i, (day, meals) in enumerate(meals.items()):
+        Provide practical, actionable suggestions that respect their provided dietary restrictions. 
+        Consider their current food preferences when making recommendations - the goal is to refine 
+        their existing habits rather than completely overhaul their diet.
+
+        Write your response in plain text paragraphs without bullets or special formatting, address 
+        the user directly as their nutritionist.
+        """ #TODO: this can be parsed in as an arg
+        
+        current_time = datetime.now().time()
+        meals_str = f"As of {current_time} are the meals the user has logged today:\n"
+        for i, (day, meals) in enumerate(meals.items()):
                 meals_str += f"On {day} the user has logged the following meals:\n"
                 for meal in meals:
                     meals_str += f"""Meal {meal.title} - {meal.calories} calories, 
@@ -230,15 +264,18 @@ class Nutritionist:
                     Iron: {target[i]["iron"]}mg, Calcium: {target[i]["calcium"]}mg,
                     Sodium: {target[i]["sodium"]}mg, Potassium: {target[i]["potassium"]}mg
                 """
-            restrictions_str = f"The user's dietary restrictions are: {restrictions}"
-
-            return [
-                ell.system(sys_message),
-                ell.user([meals_str, targets_str, restrictions_str])
-            ]
+       
+        restrictions_str = f"The user's dietary restrictions are: {restrictions}"
         
-        analysis = _weekly_io_analysis(meals, target, restrictions)
-        return analysis.content[0].parsed
+        if self.model in STRUCTURED_MODELS:
+            analysis = _weekly_io_analysis_pydantic(
+                sys_message, meals_str, targets_str, restrictions_str
+            ).content[0].parsed
+        else:
+            analysis = _weekly_io_analysis_simple(sys_message, meals_str, targets_str, restrictions_str)
+            analysis = NutritionFeedback.model_validate_json(analysis)
+        
+        return analysis
     
     def nutrient_analysis(
             self,
