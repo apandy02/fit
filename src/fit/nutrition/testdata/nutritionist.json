@@ -1,0 +1,349 @@
+{
+    "daily_io": [
+        {
+            "meals": [
+              {
+                "calories": 48,
+                "conditional_nutrients": {
+                  "creatine": 0
+                },
+                "ingredients": "Apricots",
+                "macronutrients": {
+                  "carbohydrates": {
+                    "added_sugar": 0,
+                    "fiber": 2,
+                    "total": 11,
+                    "total_sugar": 0
+                  },
+                  "fat": {
+                    "saturated": 0,
+                    "total": 0.4,
+                    "trans": 0
+                  },
+                  "protein": 0.5
+                },
+                "micronutrients": {
+                  "calcium": 13,
+                  "iron": 0.4,
+                  "potassium": 259,
+                  "sodium": 1,
+                  "vitamin_a": 1926,
+                  "vitamin_c": 10,
+                  "vitamin_d": 0
+                },
+                "title": "Apricots"
+              }
+            ],
+            "restrictions": null,
+            "target": {
+              "calcium": 1000,
+              "calories": 1952,
+              "carbs": 195,
+              "fat": 65,
+              "iron": 18,
+              "potassium": 3400,
+              "protein": 146,
+              "sodium": 1500,
+              "vitamin_a": 900,
+              "vitamin_c": 90,
+              "vitamin_d": 15
+            }
+        }
+    ],
+    "weekly_io": [
+      {
+        "meals": {
+          "2024-12-22": [],
+          "2024-12-23": [],
+          "2024-12-24": [],
+          "2024-12-25": [],
+          "2024-12-26": [
+            {
+              "calories": 130,
+              "conditional_nutrients": {
+                "creatine": 0
+              },
+              "ingredients": "Duck egg (1 medium, boiled)",
+              "macronutrients": {
+                "carbohydrates": {
+                  "added_sugar": 0,
+                  "fiber": 0,
+                  "total": 1,
+                  "total_sugar": 0
+                },
+                "fat": {
+                  "saturated": 0,
+                  "total": 10,
+                  "trans": 0
+                },
+                "protein": 13
+              },
+              "micronutrients": {
+                "calcium": 63,
+                "iron": 3.6,
+                "potassium": 92,
+                "sodium": 148,
+                "vitamin_a": 600,
+                "vitamin_c": 0,
+                "vitamin_d": 60
+              },
+              "title": "Cooked duck egg"
+            }
+          ],
+          "2024-12-27": [
+            {
+              "calories": 450,
+              "conditional_nutrients": {
+                "creatine": 0
+              },
+              "ingredients": "2/3 cup Chobani Greek yogurt, 2/3 cup peanut butter granola",
+              "macronutrients": {
+                "carbohydrates": {
+                  "added_sugar": 0,
+                  "fiber": 6,
+                  "total": 60,
+                  "total_sugar": 0
+                },
+                "fat": {
+                  "saturated": 0,
+                  "total": 16,
+                  "trans": 0
+                },
+                "protein": 21
+              },
+              "micronutrients": {
+                "calcium": 250,
+                "iron": 2,
+                "potassium": 460,
+                "sodium": 150,
+                "vitamin_a": 300,
+                "vitamin_c": 0,
+                "vitamin_d": 80
+              },
+              "title": "Greek yogurt with granola"
+            },
+            {
+              "calories": 690,
+              "conditional_nutrients": {
+                "creatine": 0
+              },
+              "ingredients": "Methi Thepla, eggs, mozzarella cheese",
+              "macronutrients": {
+                "carbohydrates": {
+                  "added_sugar": 0,
+                  "fiber": 9,
+                  "total": 55,
+                  "total_sugar": 0
+                },
+                "fat": {
+                  "saturated": 0,
+                  "total": 36,
+                  "trans": 0
+                },
+                "protein": 42
+              },
+              "micronutrients": {
+                "calcium": 520,
+                "iron": 8,
+                "potassium": 450,
+                "sodium": 950,
+                "vitamin_a": 800,
+                "vitamin_c": 6,
+                "vitamin_d": 220
+              },
+              "title": "Methi Thepla with egg omelette"
+            },
+            {
+              "calories": 810,
+              "conditional_nutrients": {
+                "creatine": 0
+              },
+              "ingredients": "Maruchan ramen noodles (2 servings), eggs (2)",
+              "macronutrients": {
+                "carbohydrates": {
+                  "added_sugar": 0,
+                  "fiber": 4,
+                  "total": 102,
+                  "total_sugar": 0
+                },
+                "fat": {
+                  "saturated": 0,
+                  "total": 30,
+                  "trans": 0
+                },
+                "protein": 21
+              },
+              "micronutrients": {
+                "calcium": 70,
+                "iron": 9,
+                "potassium": 480,
+                "sodium": 2020,
+                "vitamin_a": 500,
+                "vitamin_c": 2,
+                "vitamin_d": 82
+              },
+              "title": "Ramen with eggs"
+            },
+            {
+              "calories": 295,
+              "conditional_nutrients": {
+                "creatine": 0
+              },
+              "ingredients": "Apples, sugar, flour, butter, cinnamon",
+              "macronutrients": {
+                "carbohydrates": {
+                  "added_sugar": 0,
+                  "fiber": 2,
+                  "total": 40.3,
+                  "total_sugar": 0
+                },
+                "fat": {
+                  "saturated": 0,
+                  "total": 14.7,
+                  "trans": 0
+                },
+                "protein": 2.1
+              },
+              "micronutrients": {
+                "calcium": 14,
+                "iron": 1.2,
+                "potassium": 120,
+                "sodium": 170,
+                "vitamin_a": 80,
+                "vitamin_c": 1,
+                "vitamin_d": 0
+              },
+              "title": "Apple pie slice"
+            }
+          ],
+          "2024-12-28": [
+            {
+              "calories": 48,
+              "conditional_nutrients": {
+                "creatine": 0
+              },
+              "ingredients": "Apricots",
+              "macronutrients": {
+                "carbohydrates": {
+                  "added_sugar": 0,
+                  "fiber": 2,
+                  "total": 11,
+                  "total_sugar": 0
+                },
+                "fat": {
+                  "saturated": 0,
+                  "total": 0.4,
+                  "trans": 0
+                },
+                "protein": 0.5
+              },
+              "micronutrients": {
+                "calcium": 13,
+                "iron": 0.4,
+                "potassium": 259,
+                "sodium": 1,
+                "vitamin_a": 1926,
+                "vitamin_c": 10,
+                "vitamin_d": 0
+              },
+              "title": "Apricots"
+            }
+          ]
+        },
+        "restrictions": null,
+        "target": [
+          {
+            "calcium": 1000,
+            "calories": 1838,
+            "carbs": 184,
+            "fat": 61,
+            "iron": 18,
+            "potassium": 3400,
+            "protein": 138,
+            "sodium": 1500,
+            "vitamin_a": 900,
+            "vitamin_c": 90,
+            "vitamin_d": 15
+          },
+          {
+            "calcium": 1000,
+            "calories": 2610,
+            "carbs": 261,
+            "fat": 87,
+            "iron": 18,
+            "potassium": 3400,
+            "protein": 196,
+            "sodium": 1500,
+            "vitamin_a": 900,
+            "vitamin_c": 90,
+            "vitamin_d": 15
+          },
+          {
+            "calcium": 1000,
+            "calories": 2377,
+            "carbs": 238,
+            "fat": 79,
+            "iron": 18,
+            "potassium": 3400,
+            "protein": 178,
+            "sodium": 1500,
+            "vitamin_a": 900,
+            "vitamin_c": 90,
+            "vitamin_d": 15
+          },
+          {
+            "calcium": 1000,
+            "calories": 2124,
+            "carbs": 212,
+            "fat": 71,
+            "iron": 18,
+            "potassium": 3400,
+            "protein": 159,
+            "sodium": 1500,
+            "vitamin_a": 900,
+            "vitamin_c": 90,
+            "vitamin_d": 15
+          },
+          {
+            "calcium": 1000,
+            "calories": 2271,
+            "carbs": 227,
+            "fat": 76,
+            "iron": 18,
+            "potassium": 3400,
+            "protein": 170,
+            "sodium": 1500,
+            "vitamin_a": 900,
+            "vitamin_c": 90,
+            "vitamin_d": 15
+          },
+          {
+            "calcium": 1000,
+            "calories": 938,
+            "carbs": 94,
+            "fat": 31,
+            "iron": 18,
+            "potassium": 3400,
+            "protein": 70,
+            "sodium": 1500,
+            "vitamin_a": 900,
+            "vitamin_c": 90,
+            "vitamin_d": 15
+          },
+          {
+            "calcium": 1000,
+            "calories": 1977,
+            "carbs": 198,
+            "fat": 66,
+            "iron": 18,
+            "potassium": 3400,
+            "protein": 148,
+            "sodium": 1500,
+            "vitamin_a": 900,
+            "vitamin_c": 90,
+            "vitamin_d": 15
+          }
+        ]
+      }
+    ]
+}

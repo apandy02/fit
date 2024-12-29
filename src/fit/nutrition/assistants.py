@@ -118,25 +118,31 @@ class Nutritionist:
         @ell.complex(model=self.model, response_format=NutritionFeedback)
         def _daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float], restrictions: list[str]) -> NutritionFeedback:
             sys_message = """
-            Analyze the user's daily nutritional intake versus their targets and provide a detailed 
-            assessment in plain text format. Start with an overview comparing total intake to goals. 
-            Then evaluate each meal's contribution to any excess - flag meals that significantly exceed 
-            targets (e.g., >100% of a macro target in one meal) as problematic and suggest alternatives. 
-            if the current time of day is before 8PM and they HAVE consumed more calories than their 
-            caloric target, suggest a workout that get them closer to a target range.
+            Analyze the user's daily nutritional intake versus their targets and provide a detailed assessment. 
+
+            In the summary, talk about the caloric balance, and provide a high level overview of the
+            user's nutrition (if they are highly lacking (or over) in some of them, point out that they are, and
+            if they're doing well in some of them (around their target), point that out as well).
+
+            For each of the nutrient sections, start with an overview comparing total intake to goals.
+            Then evaluate each meal. Discuss any meals that contribute to to any excess or are not nutrititious
+            enough if a target is underperformed on. flag meals that significantly exceed targets (e.g., >100% of
+            a macro target in one meal) as problematic and suggest alternatives. if it is not too late in the day
+            (roughly speaking before 8PM) and they have consumed more calories than their calorie target, suggest a
+            workout that get them closer to a target range.
             
-            For meals contributing to excess but not extreme, recommend portion adjustments. 
+            For meals contributing to excess but not extreme, recommend portion adjustments.
             For under-target scenarios, suggest realistic additions based on their evident food preferences,
             eating patterns, and strictly following their dietary restrictions.
 
-            Format as plain text paragraphs without bullets, markdown, or special formatting, you are 
-            speaking to the user directly as their nutritionist.
+            Format all fields as plain text paragraphs without bullets, markdown, or special formatting,
+            you are speaking to the user directly as their nutritionist.
             """ # TODO: the workout bit needs to go, it does not fit in here like this (too much logic hardcoding)
             #TODO: the system message can be parsed in as an arg
             current_time = datetime.now().time()
             meals_str = f"As of {current_time} are the meals the user has logged today:\n"
             
-            for i, meal in enumerate(meals, 1):
+            for _, meal in enumerate(meals, 1):
                 meals_str += f"""Meal {meal.title} - {meal.calories} calories, 
                 {meal.macronutrients.protein}g protein, {meal.macronutrients.carbohydrates}g carbs, 
                 {meal.macronutrients.fat}g fat\n
@@ -158,7 +164,6 @@ class Nutritionist:
                 ell.system(sys_message),
                 ell.user([meals_str, targets_str, restrictions_str])
             ]
-        
 
         return _daily_io_analysis(meals, target, restrictions).content[0].parsed
 
@@ -185,24 +190,26 @@ class Nutritionist:
                 restrictions: list[str]
         ) -> NutritionFeedback:
             sys_message = """ 
-            Given the user's meals for the week, provide a detailed assessment of their nutritional 
-            intake versus their targets.
+            You are a nutritionist providing feedback on a week's nutrition logs. Analyze the 
+            user's nutritional intake versus their targets, including macro and micronutrient balance,
+            meal timing, and portion sizes.
+            
+            Identify both positive patterns and areas for improvement. 
+            When discussing concerns, focus on repeated patterns that significantly impact their 
+            nutritional goals. For example, if frequent fried food consumption is causing them to 
+            exceed fat targets, point this out specifically.
 
-            Highlight for them patterns. For example, if they are repeatedly eating fries and the fries is 
-            causing them to exceed their fat target, point out that they ate fries too much. 
-            (do this with respect to any type of nutrient if you notice a pattern).
+            Prioritize the 2-3 most important changes that would help them reach their goals. When 
+            suggesting modifications, recommend realistic substitutions that maintain similar taste and 
+            texture profiles. For instance, if they enjoy crunchy snacks but are exceeding sodium targets,
+            suggest specific lower-sodium alternatives they might enjoy.
 
-            It is better to find close substitutes for poor foods than to radically change their diet.
-            For example, if they're snacking on lays chips and this is causing them to exceed their 
-            sodium target, suggest a low sodium alternative like lays baked (this is just an example).
+            Provide practical, actionable suggestions that respect their provided dietary restrictions. 
+            Consider their current food preferences when making recommendations - the goal is to refine 
+            their existing habits rather than completely overhaul their diet.
 
-            Make for them suggestions on how to improve their progress towards their goals. 
-            You will be provided with the user's dietary restrictions, follow them strictly
-            when proposing meal recommendations/adjustments.
-
-            Format as plain text paragraphs without bullets, markdown, or special formatting, you are 
-            speaking to the user directly as their nutritionist. 
-            """ #TODO: this can be parsed in as an arg
+            Write your response in plain text paragraphs without bullets or special formatting, address 
+            the user directly as their nutritionist.""" #TODO: this can be parsed in as an arg
             current_time = datetime.now().time()
             meals_str = f"As of {current_time} are the meals the user has logged today:\n"
             
