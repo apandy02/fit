@@ -136,7 +136,7 @@ class Nutritionist:
             meals_str = f"As of {current_time} are the meals the user has logged today:\n"
             
             for i, meal in enumerate(meals, 1):
-                meals_str += f"""Meal {meal.summary} - {meal.calories} calories, 
+                meals_str += f"""Meal {meal.title} - {meal.calories} calories, 
                 {meal.macronutrients.protein}g protein, {meal.macronutrients.carbohydrates}g carbs, 
                 {meal.macronutrients.fat}g fat\n
                 Micros: {meal.micronutrients.vitamin_a}IU vit A, {meal.micronutrients.vitamin_c}mg vit C, 
@@ -205,9 +205,9 @@ class Nutritionist:
             for i, (day, meals) in enumerate(meals.items()):
                 meals_str += f"On {day} the user has logged the following meals:\n"
                 for meal in meals:
-                    meals_str += f"""Meal {meal.summary} - {meal.calories} calories, 
-                    {meal.macronutrients.protein}g protein, {meal.macronutrients.carbohydrates}g carbs, 
-                    {meal.macronutrients.fat}g fat\n
+                    meals_str += f"""Meal {meal.title} - {meal.calories} calories, 
+                    {meal.macronutrients.protein}g protein, {meal.macronutrients.carbohydrates.total}g carbs, 
+                    {meal.macronutrients.fat.total}g fat\n
                     Micros: {meal.micronutrients.vitamin_a}IU vit A, {meal.micronutrients.vitamin_c}mg vit C, 
                     {meal.micronutrients.iron}mg iron, {meal.micronutrients.calcium}mg calcium, 
                     {meal.micronutrients.sodium}mg sodium, {meal.micronutrients.potassium}mg potassium\n"""
@@ -223,7 +223,9 @@ class Nutritionist:
 
             return f"{meals_str}\n{targets_str}\n{restrictions_str}"
         
-        return _weekly_io_analysis(meals, target, restrictions).content[0].parsed
+        analysis = _weekly_io_analysis(meals, target, restrictions)
+        print(analysis)
+        return analysis.content[0].parsed
     
     def nutrient_analysis(
             self,

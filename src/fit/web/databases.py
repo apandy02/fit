@@ -154,7 +154,7 @@ def get_weekly_meals(database: fh.Database, week: list[datetime]):
     """
     Get the meals for a given week.
     """
-    return {day: get_daily_meals(database, day) for day in week}
+    return {str(day): get_daily_meals(database, day) for day in week} #TODO: change to Sunday to Monday for key
 
 def get_daily_cumulative_nutrition(database: fh.Database, date: datetime):
     """

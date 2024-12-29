@@ -420,6 +420,7 @@ async def generate_weekly_overview():
     targets = [calculate_macro_targets(calories_burned, Goals.MAINTAIN) for calories_burned in calories_burned]
     [target.update(micronutrient_goals) for target in targets]
 
+    print(meals)
     analysis = nutritionist.weekly_io_analysis(meals, targets, dietary_restrictions)
 
     if isinstance(analysis, str):

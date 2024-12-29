@@ -66,23 +66,21 @@ class NutritionFeedback(BaseModel):
     suggestions: str = Field(description="the suggestions for the user's nutrition")
 
 
-## TODO: Deprecate / Replace
+CARB_DEFAULT = Carbohydrates(total=0, fiber=0, total_sugar=0, added_sugar=0)
+FAT_DEFAULT = Fats(total=0, saturated=0, trans=0)
+MACRO_DEFAULT = Macronutrients(protein=0, carbohydrates=CARB_DEFAULT, fat=FAT_DEFAULT)
+MICRO_DEFAULT = Micronutrients(vitamin_a=0, vitamin_c=0, vitamin_d=0, calcium=0, iron=0, potassium=0, sodium=0)
+COND_DEFAULT = ConditionalNutrients(creatine=0)
+
 class NutritionalInformation(BaseModel):
     """
     A dataclass that contains the nutritional information for a food.
     This is a separate class so that we don't have the same restrictions to pass nutrition info
     aroung in non-llm use cases.
     """
+
     calories: float = Field(description="the amount of calories in the food", default=0)
-    protein: float = Field(description="the amount of protein in grams", default=0)    
-    carbs: float = Field(description="the amount of carbs in grams", default=0)
-    fat: float = Field(description="the amount of fat in grams", default=0)
-    fiber: float = Field(description="the amount of fiber in grams", default=0)
-    vitamin_a: float = Field(description="the amount of vitamin A in IU", default=0 )
-    vitamin_c: float = Field(description="the amount of vitamin C in mg", default=0)
-    vitamin_d: float = Field(description="the amount of vitamin D in IU", default=0)
-    calcium: float = Field(description="the amount of calcium in mg", default=0)
-    iron: float = Field(description="the amount of iron in mg", default=0)
-    potassium: float = Field(description="the amount of potassium in mg", default=0)
-    sodium: float = Field(description="the amount of sodium in mg", default=0)
+    macronutrients: Macronutrients = Field(description="the macronutrients in the food", default=MACRO_DEFAULT)
+    micronutrients: Micronutrients = Field(description="the micronutrients in the food", default=MICRO_DEFAULT)
+    conditional_nutrients: ConditionalNutrients = Field(description="the conditional nutrients in the food", default=COND_DEFAULT)
     
