@@ -99,16 +99,13 @@ def create_modal(content, modal_id="modal"):
             id=f"{modal_id}-backdrop",
             onclick=f"closeModal('{modal_id}')"
         ),
-        # Modal content
         fh.Div(
             fh.Div(
-                # Close button
                 fh.Button(
                     "×",
                     cls="absolute right-4 top-4 text-3xl font-light hover:text-gray-800 z-10",
                     onclick=f"closeModal('{modal_id}')"
                 ),
-                # Scrollable content
                 fh.Div(
                     content,
                     cls="space-y-6 overflow-y-auto max-h-[80vh] p-6"
@@ -118,7 +115,6 @@ def create_modal(content, modal_id="modal"):
             cls="fixed inset-0 flex items-center justify-center p-4 hidden",
             id=modal_id
         ),
-        # Modal JavaScript
         fh.Script("""
             function openModal(id) {
                 document.getElementById(id).classList.remove('hidden');

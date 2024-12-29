@@ -9,7 +9,7 @@ import fit.web.databases as databases
 import fit.web.nutrition.ui as ui
 from fit.nutrition.data import (ConditionalNutrients, Goals, Macronutrients,
                                 MealBreakdown, Micronutrients,
-                                NutritionalInformation)
+                                NutritionalInformation, Carbohydrates, Fats)
 from fit.nutrition.targets import calculate_macro_targets
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import (DB, active_tracker, micronutrient_goals,
@@ -93,13 +93,13 @@ def get_daily_nutrition_data(date: datetime):
     daily_consumption = databases.get_daily_cumulative_nutrition(DB, date)
     return {
         "calories": {"consumed": [daily_consumption.calories], "goal": [goals["calories"]], "burned": [calories_burned]},
-        "protein": {"consumed": [daily_consumption.protein], "goal": [goals["protein"]]},
-        "carbs": {"consumed": [daily_consumption.carbs], "goal": [goals["carbs"]]},
-        "fat": {"consumed": [daily_consumption.fat], "goal": [goals["fat"]]},
-        "vitamin_a": {"consumed": [daily_consumption.vitamin_a], "goal": [micronutrient_goals["vitamin_a"]]},
-        "vitamin_c": {"consumed": [daily_consumption.vitamin_c], "goal": [micronutrient_goals["vitamin_c"]]},
-        "iron": {"consumed": [daily_consumption.iron], "goal": [micronutrient_goals["iron"]]},
-        "calcium": {"consumed": [daily_consumption.calcium], "goal": [micronutrient_goals["calcium"]]},
+        "protein": {"consumed": [daily_consumption.macronutrients.protein], "goal": [goals["protein"]]},
+        "carbs": {"consumed": [daily_consumption.macronutrients.carbohydrates.total], "goal": [goals["carbs"]]},
+        "fat": {"consumed": [daily_consumption.macronutrients.fat.total], "goal": [goals["fat"]]},
+        "vitamin_a": {"consumed": [daily_consumption.micronutrients.vitamin_a], "goal": [micronutrient_goals["vitamin_a"]]},
+        "vitamin_c": {"consumed": [daily_consumption.micronutrients.vitamin_c], "goal": [micronutrient_goals["vitamin_c"]]},
+        "iron": {"consumed": [daily_consumption.micronutrients.iron], "goal": [micronutrient_goals["iron"]]},
+        "calcium": {"consumed": [daily_consumption.micronutrients.calcium], "goal": [micronutrient_goals["calcium"]]},
         "water": {"consumed": [40], "goal": [64]},
         "creatine": {"consumed": [2.0], "goal": [5.0]}
     }
@@ -193,15 +193,20 @@ async def save_meal(request: fh.Request):
     """Save the meal with user-adjusted nutrition values"""
     try:
         form = await request.form()
-        # The meal_time is already in ISO format from the hidden input
         meal_datetime = form["meal_time"]
-        
         macronutrients = Macronutrients(
-            calories=form["calories"],
             protein=form["protein"],
-            carbohydrates=form["carbohydrates"],
-            fat=form["fat"],
-            fiber=form["fiber"]
+            carbohydrates=Carbohydrates(
+                total=form["carbohydrates"], 
+                fiber=form["fiber"], 
+                total_sugar=0, # TODO: incorporate submacros
+                added_sugar=0
+            ),
+            fat=Fats(
+                total=form["fat"],
+                saturated=0, # TODO: incorporate submacros
+                trans=0 # TODO: incorporate submacros
+            )
         )
         conditional_nutrients = ConditionalNutrients(
             creatine=form["creatine"]
@@ -216,14 +221,15 @@ async def save_meal(request: fh.Request):
             sodium=form["sodium"]
         )
         nutrition_info = MealBreakdown(
-            summary=form["summary"],
+            title=form["title"],
             ingredients=form["ingredients"],
             calories=form["calories"],
             macronutrients=macronutrients,
             micronutrients=micronutrients,
             conditional_nutrients=conditional_nutrients
         )    
-        databases.insert_meal(DB, form["summary"], nutrition_info, meal_datetime)
+        print(nutrition_info)
+        databases.insert_meal(DB, form["title"], nutrition_info, meal_datetime)
         
         return fh.Div(
             fh.P(

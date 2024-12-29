@@ -573,8 +573,8 @@ def create_meal_breakdown(nutrition_info, meal_time: str = None):
             )(
                 fh.Input(
                     type="hidden",
-                    name="summary",
-                    value=nutrition_info.summary
+                    name="title",
+                    value=nutrition_info.title
                 ),
                 fh.Input(
                     type="hidden",
@@ -605,12 +605,12 @@ def create_nutrition_card(nutrition_info: MealBreakdown | None, card_title: str 
     """Create a card containing ingredients text and editable nutrition form"""
     return (
             create_form_section(card_title, [# separate the title from the actual nutriotioanl form so it can be used for multiple purposes
-                    create_form_input(title_field, "summary", nutrition_info.summary if nutrition_info else None, input_type="text"),
+                    create_form_input(title_field, "title", nutrition_info.title if nutrition_info else None, input_type="text"),
                     create_form_input("Calories (kcal)", "calories", nutrition_info.calories if nutrition_info else None),
                     create_form_input("Protein (g)", "protein", nutrition_info.macronutrients.protein if nutrition_info else None),
-                    create_form_input("Carbohydrates (g)", "carbohydrates", nutrition_info.macronutrients.carbohydrates if nutrition_info else None),
-                    create_form_input("Fat (g)", "fat", nutrition_info.macronutrients.fat if nutrition_info else None),
-                    create_form_input("Fiber (g)", "fiber", nutrition_info.macronutrients.fiber if nutrition_info else None),
+                    create_form_input("Carbohydrates (g)", "carbohydrates", nutrition_info.macronutrients.carbohydrates.total if nutrition_info else None),
+                    create_form_input("Fat (g)", "fat", nutrition_info.macronutrients.fat.total if nutrition_info else None),
+                    create_form_input("Fiber (g)", "fiber", nutrition_info.macronutrients.carbohydrates.fiber if nutrition_info else None),
                     create_form_input("Vitamin A (IU)", "vitamin_a", nutrition_info.micronutrients.vitamin_a if nutrition_info else None),
                     create_form_input("Vitamin C (mg)", "vitamin_c", nutrition_info.micronutrients.vitamin_c if nutrition_info else None),
                     create_form_input("Vitamin D (IU)", "vitamin_d", nutrition_info.micronutrients.vitamin_d if nutrition_info else None),

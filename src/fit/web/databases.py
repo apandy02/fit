@@ -3,8 +3,8 @@ from datetime import datetime
 
 import fasthtml.common as fh
 
-from fit.nutrition.data import (ConditionalNutrients, Macronutrients,
-                                MealBreakdown, Micronutrients,
+from fit.nutrition.data import (ConditionalNutrients, Carbohydrates, Fats,
+                                Macronutrients, MealBreakdown, Micronutrients,
                                 NutritionalInformation)
 
 # TODO: consider creating a class for the database
@@ -127,14 +127,13 @@ def get_daily_meals(database: fh.Database, date: datetime):
     result = database.execute(query, (date,)).fetchall()
     return [
         MealBreakdown(
-            summary=row[0],
+            title=row[0],
             ingredients=row[1],
             calories=row[3],
             macronutrients=Macronutrients(
                 protein=row[4],
-                carbohydrates=row[5],
-                fat=row[6],
-                fiber=row[7]
+                carbohydrates=Carbohydrates(total=row[5], fiber=row[7], total_sugar=0, added_sugar=0),
+                fat=Fats(total=row[6], saturated=0, trans=0),
             ),
             micronutrients=Micronutrients(
                 vitamin_a=row[8],
@@ -179,7 +178,7 @@ def get_daily_cumulative_nutrition(database: fh.Database, date: datetime):
         WHERE date_entered = ?
     """
     result = database.execute(query, (date,)).fetchone()
-    # calories should never be None
+
     if result is None or result[0] is None:
         return NutritionalInformation()
     
@@ -205,16 +204,17 @@ def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdow
     Insert a meal into the database.
     """
     meals_table = database.t.meals
+    print(meal)
     meals_table.insert(
         date_entered=datetime.date(datetime.today()),
         meal_time=meal_time,
         user_description=meal_description,
-        llm_summary=meal.summary,
+        llm_summary=meal.title,
         ingredients=meal.ingredients,
         calories=meal.calories,
         protein=meal.macronutrients.protein,
-        carbs=meal.macronutrients.carbohydrates,
-        fat=meal.macronutrients.fat,
+        carbs=meal.macronutrients.carbohydrates.total,
+        fat=meal.macronutrients.fat.total,  
         vitamin_a=meal.micronutrients.vitamin_a,
         vitamin_c=meal.micronutrients.vitamin_c,
         vitamin_d=meal.micronutrients.vitamin_d,
@@ -222,7 +222,7 @@ def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdow
         iron=meal.micronutrients.iron,
         potassium=meal.micronutrients.potassium,
         sodium=meal.micronutrients.sodium,
-        fiber=meal.macronutrients.fiber,
+        fiber=meal.macronutrients.carbohydrates.fiber,
         creatine=meal.conditional_nutrients.creatine,
         is_supplement=False
     )
@@ -281,33 +281,33 @@ def insert_supplement(database: fh.Database, name: str, consumption_time: str, n
     supplements_table.insert(
         name=name,
         calories=nutritional_info.calories,
-        protein=nutritional_info.protein,
-        carbs=nutritional_info.carbs,
-        fat=nutritional_info.fat,
-        fiber=nutritional_info.fiber,
-        vitamin_a=nutritional_info.vitamin_a,
-        vitamin_c=nutritional_info.vitamin_c,
-        vitamin_d=nutritional_info.vitamin_d,
-        calcium=nutritional_info.calcium,
-        iron=nutritional_info.iron,
-        potassium=nutritional_info.potassium,
-        sodium=nutritional_info.sodium,
+        protein=nutritional_info.macronutrients.protein,
+        carbs=nutritional_info.macronutrients.carbohydrates.total,
+        fat=nutritional_info.macronutrients.fat.total,
+        fiber=nutritional_info.macronutrients.carbohydrates.fiber,
+        vitamin_a=nutritional_info.micronutrients.vitamin_a,
+        vitamin_c=nutritional_info.micronutrients.vitamin_c,
+        vitamin_d=nutritional_info.micronutrients.vitamin_d,
+        calcium=nutritional_info.micronutrients.calcium,
+        iron=nutritional_info.micronutrients.iron,
+        potassium=nutritional_info.micronutrients.potassium,
+        sodium=nutritional_info.micronutrients.sodium,
     )
     meals_table = database.t.meals
     meals_table.insert(
         llm_summary=name,# change column name 
         calories=nutritional_info.calories,
-        protein=nutritional_info.protein,
-        carbs=nutritional_info.carbs,
-        fat=nutritional_info.fat,
-        fiber=nutritional_info.fiber,
-        vitamin_a=nutritional_info.vitamin_a,
-        vitamin_c=nutritional_info.vitamin_c,
-        vitamin_d=nutritional_info.vitamin_d,
-        calcium=nutritional_info.calcium,
-        iron=nutritional_info.iron,
-        potassium=nutritional_info.potassium,
-        sodium=nutritional_info.sodium,
+        protein=nutritional_info.macronutrients.protein,
+        carbs=nutritional_info.macronutrients.carbohydrates.total,
+        fat=nutritional_info.macronutrients.fat.total,
+        fiber=nutritional_info.macronutrients.carbohydrates.fiber,
+        vitamin_a=nutritional_info.micronutrients.vitamin_a,
+        vitamin_c=nutritional_info.micronutrients.vitamin_c,
+        vitamin_d=nutritional_info.micronutrients.vitamin_d,
+        calcium=nutritional_info.micronutrients.calcium,
+        iron=nutritional_info.micronutrients.iron,
+        potassium=nutritional_info.micronutrients.potassium,
+        sodium=nutritional_info.micronutrients.sodium,
         meal_time=consumption_time,
         is_supplement=True,
     )
@@ -341,17 +341,20 @@ def get_supplement(database: fh.Database, name: str) -> NutritionalInformation |
     
     return NutritionalInformation(
         calories=result[0],
-        protein=result[1],
-        carbs=result[2],
-        fat=result[3],
-        fiber=result[4],
-        vitamin_a=result[5],
-        vitamin_c=result[6],
-        vitamin_d=result[7],
-        calcium=result[8],
-        iron=result[9],
-        potassium=result[10],
-        sodium=result[11]
+        macronutrients=Macronutrients(
+            protein=result[1],
+            carbohydrates=Carbohydrates(total=result[2], fiber=result[4], total_sugar=0, added_sugar=0), # TODO: incorporate sub macronutrients 
+            fat=Fats(total=result[3], saturated=0, trans=0),
+        ),
+        micronutrients=Micronutrients(
+            vitamin_a=result[5],
+            vitamin_c=result[6],
+            vitamin_d=result[7],
+            calcium=result[8],
+            iron=result[9],
+            potassium=result[10],
+            sodium=result[11]
+        )
     )
 
 def get_supplement_names(database: fh.Database) -> list[str]:
@@ -377,14 +380,16 @@ def get_all_supplements(database: fh.Database) -> list[tuple[str, str, Nutrition
     results = database.execute(query).fetchall()
     return [
         (
-            row[0],  # name
-            row[1],  # description
-            NutritionalInformation(
-                calories=row[2],
+        row[0], 
+        row[1], 
+        NutritionalInformation(
+            calories=row[2],
+            macronutrients=Macronutrients(
                 protein=row[3],
-                carbs=row[4],
-                fat=row[5],
-                fiber=row[6],
+                carbohydrates=Carbohydrates(total=row[4], fiber=row[6], total_sugar=0, added_sugar=0), # TODO: incorporate sub macronutrients 
+                fat=Fats(total=row[5], saturated=0, trans=0),
+            ),
+            micronutrients=Micronutrients(
                 vitamin_a=row[7],
                 vitamin_c=row[8],
                 vitamin_d=row[9],
@@ -393,6 +398,7 @@ def get_all_supplements(database: fh.Database) -> list[tuple[str, str, Nutrition
                 potassium=row[12],
                 sodium=row[13]
             )
+        )
         )
         for row in results
     ]
