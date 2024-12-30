@@ -173,28 +173,36 @@ def get_daily_cumulative_nutrition(database: fh.Database, date: datetime):
             SUM(calcium) as calcium,
             SUM(iron) as iron,
             SUM(potassium) as potassium,
-            SUM(sodium) as sodium
+            SUM(sodium) as sodium,
+            SUM(creatine) as creatine
         FROM meals 
         WHERE date_entered = ?
     """
+    print(f"date {date}")
     result = database.execute(query, (str(date),)).fetchone()
-
+    print(f"result {result}")
     if result is None or result[0] is None:
         return NutritionalInformation()
     
     result_info = NutritionalInformation(
         calories=result[0],
-        protein=result[1],
-        carbs=result[2],
-        fat=result[3],
-        fiber=result[4],
-        vitamin_a=result[5],
-        vitamin_c=result[6],
-        vitamin_d=result[7],
-        calcium=result[8],
-        iron=result[9],
-        potassium=result[10],
-        sodium=result[11]
+        macronutrients=Macronutrients(
+            protein=result[1],
+            carbohydrates=Carbohydrates(total=result[2], fiber=result[4], total_sugar=0, added_sugar=0),
+            fat=Fats(total=result[3], saturated=0, trans=0),
+        ),
+        micronutrients=Micronutrients(
+            vitamin_a=result[5],
+            vitamin_c=result[6],
+            vitamin_d=result[7],
+            calcium=result[8],
+            iron=result[9],
+            potassium=result[10],
+            sodium=result[11]
+        ),
+        conditional_nutrients=ConditionalNutrients(
+            creatine=result[12]
+        )
     )
 
     return result_info
