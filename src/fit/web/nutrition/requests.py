@@ -91,6 +91,7 @@ def get_daily_nutrition_data(date: datetime):
     calories_burned = active_tracker.get_daily_calories_burned(date)
     goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     daily_consumption = databases.get_daily_cumulative_nutrition(DB, date)
+    print(f"daily consumption {daily_consumption}")
     return {
         "calories": {"consumed": [daily_consumption.calories], "goal": [goals["calories"]], "burned": [calories_burned]},
         "protein": {"consumed": [daily_consumption.macronutrients.protein], "goal": [goals["protein"]]},
@@ -140,6 +141,17 @@ async def toggle_dropdown(dropdown_id: str):
         id=dropdown_id
     )
 
+def feedback_form(meal_description: str, meal_datetime: datetime, nutrition_info: MealBreakdown):
+    """Create a consistent feedback form layout used by both analyze and regenerate functions"""
+    return fh.Div(
+        fh.Div(
+            ui.create_text_input_form(is_feedback=True, original_description=meal_description),
+            ui.create_meal_breakdown(nutrition_info, meal_time=meal_datetime),
+            cls="space-y-4 w-[90%] mx-auto"
+        ),
+        id="text-input"
+    )
+
 async def analyze_text(meal_description: str, meal_time: str):
     """Handle meal description analysis"""
     nutrition_info = nutrition_logger.natural_language_macros(meal_description)
@@ -147,20 +159,7 @@ async def analyze_text(meal_description: str, meal_time: str):
     meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
     meal_datetime = datetime.combine(today, meal_time_obj).isoformat()
     
-    return fh.Card(
-        fh.Div(
-            fh.Div(
-                ui.create_text_input_form(is_feedback=True, original_description=meal_description)
-            ),
-            fh.Div(
-                ui.create_meal_breakdown(nutrition_info, meal_time=meal_datetime),
-                id="nutrition-card"
-            ),
-            cls="p-6"
-        ),
-        cls="bg-base-200 rounded-lg",
-        id="text-input"  # Important: keep the same ID for proper replacement
-    )
+    return feedback_form(meal_description, meal_datetime, nutrition_info)
 
 async def analyze_image(food_image: fh.UploadFile, additional_context: str, meal_time: str):
     """Handle image upload and analysis"""
@@ -174,20 +173,7 @@ async def analyze_image(food_image: fh.UploadFile, additional_context: str, meal
     meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
     meal_datetime = datetime.combine(today, meal_time_obj).isoformat()
     
-    return fh.Card(
-        fh.Div(
-            fh.Div(
-                ui.create_text_input_form(is_feedback=True, original_description=additional_context)
-            ),
-            fh.Div(
-                ui.create_meal_breakdown(nutrition_info, meal_time=meal_datetime),
-                id="nutrition-card"
-            ),
-            cls="p-6"
-        ),
-        cls="bg-base-200 rounded-lg",
-        id="image-input"  # Keep same ID as target in form for proper replacement
-    )
+    return feedback_form(additional_context, meal_datetime, nutrition_info)
 
 async def save_meal(request: fh.Request):
     """Save the meal with user-adjusted nutrition values"""
@@ -368,20 +354,13 @@ async def regenerate_analysis(feedback: str, original_description: str):
     """Regenerate analysis based on feedback"""
     original_info = nutrition_logger.natural_language_macros(original_description)
     improved_info = nutrition_logger.improve_breakdown(original_info, feedback)
-    return fh.Card(
-        fh.Div(
-            fh.Div(
-                ui.create_text_input_form(is_feedback=True)
-            ),
-            fh.Div(
-                ui.create_nutrition_card(improved_info),
-                id="nutrition-card"
-            ),
-            cls="p-6"
-        ),
-        cls="bg-base-200 rounded-lg",
-        id="text-input"  # Important: keep the same ID for proper replacement
-    )
+    
+    # Create ISO format datetime for meal time
+    today = datetime.today().date()
+    meal_time_obj = datetime.now().time()
+    meal_datetime = datetime.combine(today, meal_time_obj).isoformat()
+    
+    return feedback_form(original_description, meal_datetime, improved_info)
 
 async def hide_metric(plot_id: str):
     """Hide a metric by removing it from visible_metrics"""

@@ -151,12 +151,11 @@ def create_meal_prompt_form(
                 fh.Button(
                     submit_text,
                     type="submit",
-                    cls="btn bg-primary"
+                    cls="btn btn-primary w-full"
                 )
-            ),
-            cls="p-6"
+            ),            cls="p-6"
         ),
-        cls="bg-base-200 rounded-lg"
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-12 shadow-none "
     )
 
 def create_text_input_form(is_feedback: bool = False, original_description: str = None):
@@ -309,7 +308,7 @@ def create_modal_content():
             ),
             fh.Div(
                 create_text_input_form(),
-                cls="hidden",
+                cls="hidden w-[90%] mx-auto",
                 id="text-input"
             ),
             cls="space-y-6 overflow-y-auto max-h-[80vh] bg-base-200 bg-opacity-70 rounded-lg relative w-full max-w-lg"
@@ -430,7 +429,10 @@ def create_metric_overview_section(title, metrics_data, filtered_metrics, all_me
                 id=dropdown_id
             ),
             cls="relative inline-block text-left ml-2"
+
+
         )
+
     
     return fh.Section(
         fh.Div(
@@ -477,6 +479,7 @@ def create_macro_section(data, visible_metrics, view_type: str):
         metric for metric in macro_metrics 
         if metric["column_name"].lower() in visible_metrics
     ]
+    print(f"data {data}")
     return create_metric_overview_section("Macronutrients", data, filtered_metrics, macro_metrics, view_type)
 
 def create_micro_section(data, visible_metrics, view_type: str):
@@ -610,9 +613,9 @@ def create_meal_breakdown(nutrition_info, meal_time: str = None):
                 ),
                 fh.Div(id="save-result", cls="mt-4")
             ),
-            cls="space-y-4"
+            cls="p-6"
         ),
-        cls="bg-base-200 outline  rounded-lg p-6"
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg shadow-none mt-4 w-full"
     )
 
 
