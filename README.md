@@ -1,4 +1,4 @@
-# AI Fitness Copilot
+# AI Fitness Copilot <readme deprecated>
 
 AI Fitness Copilot is a comprehensive application designed to assist users in achieving their fitness goals by integrating data from various fitness trackers, allowing goal specification, and enabling calorie tracking through food images or natural language descriptions.
 
