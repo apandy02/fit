@@ -17,7 +17,7 @@ def natural_language_macros(food: str) -> MealBreakdown:
     return food
 
 @ell.complex(model=DEFAULT_MODEL, response_format=MealBreakdown)
-def _improve_breakdown(breakdown: MealBreakdown, user_feedback: str) -> MealBreakdown:
+def improve_breakdown(breakdown: MealBreakdown, user_feedback: str) -> MealBreakdown:
     """
     Given the user's feedback on your prediction of the breakdown of their meal,
     improve the breakdown.
@@ -29,7 +29,7 @@ def _improve_breakdown(breakdown: MealBreakdown, user_feedback: str) -> MealBrea
     return prompt
 
 @ell.complex(model=DEFAULT_MODEL, response_format=MealBreakdown)
-def _image_macros(image: Image.Image, additional_context: str) -> MealBreakdown:
+def image_macros(image: Image.Image, additional_context: str) -> MealBreakdown:
     system_message = """
     given an image of what the user ate, return the macro nutrients in grams.
     If the image is not food, return 0 for all macros. The user may or may not
@@ -42,7 +42,7 @@ def _image_macros(image: Image.Image, additional_context: str) -> MealBreakdown:
     ]
         
 @ell.complex(model=DEFAULT_MODEL, max_tokens=200)
-def _summarize_user_preferences(meals: list[MealBreakdown]) -> str:
+def summarize_user_preferences(meals: list[MealBreakdown]) -> str:
     """Given a list of meals the user has eaten, analyze their dietary preferences and patterns.
     For example: "The user frequently eats Indian food, and seems to consume chicken as their 
     primary protein. They also seem to like yogurt."
@@ -51,7 +51,6 @@ def _summarize_user_preferences(meals: list[MealBreakdown]) -> str:
     - Cuisine preferences
     - Common protein (and other major nutrients) sources (if any)
     - Common ingredients or food combinations
-    - Any apparent dietary restrictions
     """
     prompt = f"""
     Here are the meals the user has eaten: {meals}
@@ -60,7 +59,7 @@ def _summarize_user_preferences(meals: list[MealBreakdown]) -> str:
     return prompt
 
 @ell.complex(model=DEFAULT_MODEL, response_format=Recommendations)
-def _make_recommendations(
+def make_recommendations(
         consumption: NutritionalInformation,
         targets: NutritionalInformation,
         target_nutrient: str,
@@ -94,7 +93,7 @@ def _make_recommendations(
     """
     return user_input
 
-# TODO: cleanup the following using a factory 
+# TODO: cleanup the following two functions using a factory 
 @ell.complex(model=DEFAULT_MODEL, response_format=NutritionFeedback)
 def daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float], restrictions: list[str]) -> NutritionFeedback:
     """
@@ -105,7 +104,7 @@ def daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float], rest
         target: The user's target for the day.
     """
     if len(meals) == 0:
-        return "No meals logged for today, please log your meals and try again." # TODO: Error message is different type than expected output
+        return "No meals logged for today, please log your meals and try again." # TODO: Error message format is different type than expected output (raise instead)
     sys_message = """
     Analyze the user's daily nutritional intake versus their targets and provide a detailed assessment. 
 
@@ -256,7 +255,7 @@ def weekly_io_analysis(
     
     restrictions_str = f"The user's dietary restrictions are: {restrictions}"
     
-    if self.model in STRUCTURED_MODELS:
+    if DEFAULT_MODEL in STRUCTURED_MODELS:
         analysis = _weekly_io_analysis_pydantic(
             sys_message, meals_str, targets_str, restrictions_str
         ).content[0].parsed
@@ -267,7 +266,6 @@ def weekly_io_analysis(
     return analysis
     
 def nutrient_analysis(
-        self,
         nutrient: str,
         unit: str,
         intake: float,
