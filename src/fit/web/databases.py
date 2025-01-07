@@ -2,7 +2,6 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
-
 from fit.nutrition.data import (Carbohydrates, ConditionalNutrients, Fats,
                                 Macronutrients, MealBreakdown, Micronutrients,
                                 NutritionalInformation)
