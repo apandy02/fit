@@ -133,8 +133,8 @@ class Nutritionist:
             improve.
 
             You will also be given a summary of the user's dietary preferences and patterns. The list of meals
-            you return should contain 3 "exploitative" meals that take this information into account. 
-            The others should be "exploratory" in that they attempt to get the user to try new things.
+            you return should contain 3 meals that take this information into account. 
+            The others should be exploratory in that they attempt to get the user to try new things.
 
             Considering all the other nutrient info, try and provide the user with suggestions that 
             minimize risk of over/under consumption of other.
@@ -142,6 +142,9 @@ class Nutritionist:
             For example, if the user is asking for food recommendations to improve their vitamin_c intake,
             but they already have a high carbohydrate intake, suggest a vitamin_c rich food that is low in 
             carbohydrates.
+
+            Make sure that the suggestions are serving aware. if the user is 30g of protein under their target,
+            it does not make sense to suggest a meal with 100g of chicken, this would be excessive.
             """
             user_input = f"""
             User Preferences: {user_preferences}

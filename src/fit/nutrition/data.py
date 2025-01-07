@@ -88,7 +88,7 @@ class NutritionalInformation(BaseModel):
 class MealRecommendation(BaseModel):
     """A dataclass that contains the meal recommendation for a food."""
     #TODO: Maybe I want an explanation of why this meal is being recommended?
-    title: str = Field(description="a title for the food description")
+    title: str = Field(description="a title for the food. this would be the dish's name if it were on a menu")
     ingredients: str = Field(
         description="predicted ingredients and amounts. formatted comma separated, not bullet points"
     )
