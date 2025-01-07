@@ -149,6 +149,16 @@ def get_daily_meals(database: fh.Database, date: datetime):
         ) for row in result
     ]
 
+def get_all_meal_summaries(database: fh.Database):
+    """
+    Get the meals for a given user.
+    """
+    query = """
+        select llm_summary, ingredients from meals 
+    """
+    result = database.execute(query).fetchall()
+    return [row[0] for row in result]
+
 def get_weekly_meals(database: fh.Database, week: list[datetime]):
     """
     Get the meals for a given week.
@@ -177,9 +187,7 @@ def get_daily_cumulative_nutrition(database: fh.Database, date: datetime):
         FROM meals 
         WHERE date_entered = ?
     """
-    print(f"date {date}")
     result = database.execute(query, (str(date),)).fetchone()
-    print(f"result {result}")
     if result is None or result[0] is None:
         return NutritionalInformation()
     

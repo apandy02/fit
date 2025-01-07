@@ -81,10 +81,34 @@ class Nutritionist:
         self.model = model
         self.max_tokens = max_tokens
     
+    def summarize_user_preferences(self, meals: list[MealBreakdown]) -> str:
+        """Analyzes a list of meals to summarize the user's dietary preferences and patterns."""
+        @ell.complex(model=self.model, max_tokens=200)
+        def _summarize_user_preferences(meals: list[MealBreakdown]) -> str:
+            """Given a list of meals the user has eaten, analyze their dietary preferences and patterns.
+            For example: "The user frequently eats Indian food, and seems to consume chicken as their 
+            primary protein. They also seem to like yogurt."
+
+            Focus on identifying:
+            - Cuisine preferences
+            - Common protein (and other major nutrients) sources (if any)
+            - Common ingredients or food combinations
+            - Any apparent dietary restrictions
+            """
+            prompt = f"""
+            Here are the meals the user has eaten: {meals}
+            Please analyze their dietary preferences and patterns.
+            """
+            return prompt
+
+        message = _summarize_user_preferences(meals)
+        return message.content[0].text
+
     def make_recommendations(
             self, consumption: NutritionalInformation,
             targets: NutritionalInformation,
             target_nutrient: str,
+            user_preferences: str,
             restrictions: list[str]
         ) -> Recommendations:
         """Makes recommendations for foods based on the user's caloric burn and macro goals.
@@ -92,18 +116,26 @@ class Nutritionist:
             caloric_burn: The user's caloric burn for the day.
             goal: The user's weight goals.
             prior_intake: The user's prior intake for the day.
+            target_nutrient: The nutrient the user is trying to improve.
+            user_preferences: The user's dietary preferences and patterns.
+            restrictions: The user's dietary restrictions.
         """
         @ell.complex(model=self.model, response_format=Recommendations)
         def _make_recommendations(
                 consumption: NutritionalInformation,
                 targets: NutritionalInformation,
                 target_nutrient: str,
+                user_preferences: str,
                 restrictions: list[str]
             ) -> Recommendations:
             """You will be given the user's consumed nutritional information, their nutritional targets,
             their dietary restrictions, and a specific nutrient they are asking you for food recommendations to 
             improve.
-            
+
+            You will also be given a summary of the user's dietary preferences and patterns. The list of meals
+            you return should contain 3 "exploitative" meals that take this information into account. 
+            The others should be "exploratory" in that they attempt to get the user to try new things.
+
             Considering all the other nutrient info, try and provide the user with suggestions that 
             minimize risk of over/under consumption of other.
 
@@ -112,6 +144,7 @@ class Nutritionist:
             carbohydrates.
             """
             user_input = f"""
+            User Preferences: {user_preferences}
             Consumption: {str(consumption)}
             Targets: {str(targets)}
             Dietary Restrictions: {restrictions}
@@ -120,7 +153,7 @@ class Nutritionist:
             return user_input
         
         return _make_recommendations(
-            consumption, targets, target_nutrient, restrictions
+            consumption, targets, target_nutrient, user_preferences, restrictions
         ).content[0].parsed
     
     def daily_io_analysis(self, meals: list[MealBreakdown], target: dict[str, float], restrictions: list[str]) -> NutritionFeedback:

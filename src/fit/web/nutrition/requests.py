@@ -469,14 +469,17 @@ async def get_nutrient_suggestions(nutrient: str):
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
     restrictions = databases.get_dietary_restrictions(DB, "default")
-    # Get recommendations from nutritionist
+    user_preferences = nutritionist.summarize_user_preferences(databases.get_all_meal_summaries(DB)) # TODO: cache the output of this so that we aren't calling it every time
+    print(f"user preferences: {user_preferences}")
+
     recommendations = nutritionist.make_recommendations(
         consumption=daily_nutrition,
         targets=targets,
         target_nutrient=nutrient,
-        restrictions=restrictions
+        restrictions=restrictions,
+        user_preferences=user_preferences
     )
-    
+    print(f"recommendations: {recommendations}")
     # For now, just display the recommendations in a simple format
     return fh.Div(
         fh.H4("Suggestions", cls="text-lg font-bold mb-1 text-primary-content text-center"),
