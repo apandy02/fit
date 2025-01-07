@@ -124,34 +124,34 @@ def daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float], rest
     special formatting, you are speaking to the user directly as their nutritionist.
     """ # TODO: the workout bit needs to be changed & system message can be passed in as an arg
     current_time = datetime.now().time()
+
     meals_str_prefix = f"As of {current_time} are the meals the user has logged today:\n"
     targets_str_prefix = "The user's daily targets are:\n"
     
     meals_str, targets_str = summarize_daily_meals_and_targets(meals, target)
-    meals_str = meals_str_prefix + meals_str
-    targets_str = targets_str_prefix + targets_str
     restrictions_str = f"The user's dietary restrictions are: {restrictions}"
+    user_data = meals_str_prefix + meals_str + targets_str_prefix + targets_str + restrictions_str
     
     if DEFAULT_MODEL in STRUCTURED_MODELS:
-        return _daily_io_analysis_pydantic(sys_message, meals_str, targets_str, restrictions_str)
+        return _daily_io_analysis_pydantic(sys_message, user_data)
     else:
         return NutritionFeedback.model_validate_json(
-            _daily_io_analysis_simple(sys_message, meals_str, targets_str, restrictions_str)
+            _daily_io_analysis_simple(sys_message, user_data)
         )
 
 @ell.complex(model=DEFAULT_MODEL, response_format=NutritionFeedback, max_tokens=2048)
-def _daily_io_analysis_pydantic(sys_message: str, meals_str: str, targets_str: str, restrictions_str: str) -> NutritionFeedback:
+def _daily_io_analysis_pydantic(sys_message: str, user_data: str) -> NutritionFeedback:
     return [
         ell.system(sys_message),
-        ell.user([meals_str, targets_str, restrictions_str])
+        ell.user(user_data)
     ]
 
 @ell.simple(model=DEFAULT_MODEL, max_tokens=2048)
-def _daily_io_analysis_simple(sys_message: str, meals_str: str, targets_str: str, restrictions_str: str) -> str:
+def _daily_io_analysis_simple(sys_message: str, user_data: str) -> str:
     sys_message += f"You must absolutely respond in this format as a json string with no exceptions: {NutritionFeedback.model_json_schema()}"
     return [
         ell.system(sys_message),
-        ell.user([meals_str, targets_str, restrictions_str])
+        ell.user(user_data)
     ]
 
 def weekly_io_analysis(
@@ -190,27 +190,22 @@ def weekly_io_analysis(
 
     Write your response in plain text paragraphs without bullets or special formatting, address 
     the user directly as their nutritionist.
-    """ #TODO: this can be parsed in as an arg
-    meals_str, targets_str = "", ""
+    """ #TODO: this can be passed in as an arg
+    user_data = ""
     for i, (day, meals) in enumerate(meals.items()):
-            day_meals_prefix = f"On {day} the user has logged the following meals:\n"
-            day_targets_prefix = f"The user's daily targets for {day} are:\n"
-            
-            day_meals_str, day_targets_str = summarize_daily_meals_and_targets(meals, target[i])
-            day_meals_str = day_meals_prefix + day_meals_str
-            day_targets_str = day_targets_prefix + day_targets_str
-            meals_str += day_meals_str
-            targets_str += day_targets_str # TODO: instead of passing individual strings
-                                           # to the system message, pass one unified string 
+        day_meals_prefix = f"On {day} the user has logged the following meals:\n"
+        day_targets_prefix = f"The user's daily targets for {day} are:\n"
+        day_meals_str, day_targets_str = summarize_daily_meals_and_targets(meals, target[i])
+        user_data += day_meals_prefix + day_meals_str + day_targets_prefix + day_targets_str
     
-    restrictions_str = f"The user's dietary restrictions are: {restrictions}"
+    user_data += f"The user's dietary restrictions are: {restrictions}"
 
     if DEFAULT_MODEL in STRUCTURED_MODELS:
         analysis = _weekly_io_analysis_pydantic(
-            sys_message, meals_str, targets_str, restrictions_str
-        ).content[0].parsed
+            sys_message, user_data
+        )
     else:
-        analysis = _weekly_io_analysis_simple(sys_message, meals_str, targets_str, restrictions_str)
+        analysis = _weekly_io_analysis_simple(sys_message, user_data)
         analysis = NutritionFeedback.model_validate_json(analysis)
     
     return analysis
@@ -218,26 +213,22 @@ def weekly_io_analysis(
 @ell.complex(model=DEFAULT_MODEL, response_format=NutritionFeedback)
 def _weekly_io_analysis_pydantic(
         sys_message: str,
-        meals_str: str,
-        targets_str: str,
-        restrictions_str: str
+        user_data: str
 ) -> NutritionFeedback:
     return [
         ell.system(sys_message),
-        ell.user([meals_str, targets_str, restrictions_str])
+        ell.user(user_data)
     ]
     
 @ell.simple(model=DEFAULT_MODEL, max_tokens=2048)
 def _weekly_io_analysis_simple(
         sys_message: str,
-        meals_str: str,
-        targets_str: str,
-        restrictions_str: str
+        user_data: str
 ) -> str:
     sys_message += f"You must absolutely respond in this format with no exceptions. {NutritionFeedback.model_json_schema()}"
     return [
         ell.system(sys_message),
-        ell.user([meals_str, targets_str, restrictions_str])
+        ell.user(user_data)
     ]
 
 def summarize_daily_meals_and_targets(meals: list[MealBreakdown], target: dict[str, float]) -> tuple[str, str]:
