@@ -91,7 +91,6 @@ def make_recommendations(
     return user_input
 
 # TODO: cleanup the following two functions using a factory 
-@ell.complex(model=DEFAULT_MODEL, response_format=NutritionFeedback)
 def daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float], restrictions: list[str]) -> NutritionFeedback:
     """
     Analyzes the user's daily intake and target and produces an overview with feedback.
@@ -134,7 +133,7 @@ def daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float], rest
     restrictions_str = f"The user's dietary restrictions are: {restrictions}"
     
     if DEFAULT_MODEL in STRUCTURED_MODELS:
-        return _daily_io_analysis_pydantic(sys_message, meals_str, targets_str, restrictions_str).content[0].parsed
+        return _daily_io_analysis_pydantic(sys_message, meals_str, targets_str, restrictions_str)
     else:
         return NutritionFeedback.model_validate_json(
             _daily_io_analysis_simple(sys_message, meals_str, targets_str, restrictions_str)
@@ -157,7 +156,7 @@ def _daily_io_analysis_simple(sys_message: str, meals_str: str, targets_str: str
 
 def weekly_io_analysis(
         meals: dict[datetime, list[MealBreakdown]],
-        target: dict[str, float],
+        target: list[dict[str, float]],
         restrictions: list[str]
 ) -> NutritionFeedback:
     """
@@ -201,13 +200,10 @@ def weekly_io_analysis(
             day_meals_str = day_meals_prefix + day_meals_str
             day_targets_str = day_targets_prefix + day_targets_str
             meals_str += day_meals_str
-            targets_str += day_targets_str
+            targets_str += day_targets_str # TODO: instead of passing individual strings
+                                           # to the system message, pass one unified string 
     
     restrictions_str = f"The user's dietary restrictions are: {restrictions}"
-
-    print(meals_str)
-    print(targets_str)
-    print(restrictions_str)
 
     if DEFAULT_MODEL in STRUCTURED_MODELS:
         analysis = _weekly_io_analysis_pydantic(
