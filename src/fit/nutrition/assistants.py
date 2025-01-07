@@ -52,10 +52,7 @@ def summarize_user_preferences(meals: list[MealBreakdown]) -> str:
     - Common protein (and other major nutrients) sources (if any)
     - Common ingredients or food combinations
     """
-    prompt = f"""
-    Here are the meals the user has eaten: {meals}
-    Please analyze their dietary preferences and patterns.
-    """
+    prompt = f"Here are the meals I have eaten: {meals}"
     return prompt
 
 @ell.complex(model=DEFAULT_MODEL, response_format=Recommendations)
@@ -98,13 +95,14 @@ def make_recommendations(
 def daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float], restrictions: list[str]) -> NutritionFeedback:
     """
     Analyzes the user's daily intake and target and produces an overview with feedback.
-
+    
     Args:
         meals: The user's meals for the day.
         target: The user's target for the day.
     """
     if len(meals) == 0:
         return "No meals logged for today, please log your meals and try again." # TODO: Error message format is different type than expected output (raise instead)
+    
     sys_message = """
     Analyze the user's daily nutritional intake versus their targets and provide a detailed assessment. 
 
@@ -125,50 +123,37 @@ def daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float], rest
 
     Format all fields as plain text paragraphs. You must not use markdown, bullet points, or 
     special formatting, you are speaking to the user directly as their nutritionist.
-    """ # TODO: the workout bit needs to go, it does not fit in here like this (too much logic hardcoding)
-    #TODO: the system message can be parsed in as an arg
+    """ # TODO: the workout bit needs to be changed & system message can be passed in as an arg
     current_time = datetime.now().time()
-    meals_str = f"As of {current_time} are the meals the user has logged today:\n"
+    meals_str_prefix = f"As of {current_time} are the meals the user has logged today:\n"
+    targets_str_prefix = "The user's daily targets are:\n"
     
-    for _, meal in enumerate(meals, 1):
-        meals_str += f"""Meal {meal.title} - {meal.calories} calories, 
-        {meal.macronutrients.protein}g protein, {meal.macronutrients.carbohydrates}g carbs, 
-        {meal.macronutrients.fat}g fat\n
-        Micros: {meal.micronutrients.vitamin_a}IU vit A, {meal.micronutrients.vitamin_c}mg vit C, 
-        {meal.micronutrients.iron}mg iron, {meal.micronutrients.calcium}mg calcium, 
-        {meal.micronutrients.sodium}mg sodium, {meal.micronutrients.potassium}mg potassium\n
-    """
-    
-    targets_str = f"""
-        The user's daily targets are: Calories: {target["calories"]}, Protein: {target["protein"]}g,
-        Carbohydrates: {target["carbs"]}g, Fat: {target["fat"]}g
-        Micronutrient targets: Vitamin A: {target["vitamin_a"]}IU, Vitamin C: {target["vitamin_c"]}mg,
-        Iron: {target["iron"]}mg, Calcium: {target["calcium"]}mg,
-        Sodium: {target["sodium"]}mg, Potassium: {target["potassium"]}mg
-    """
+    meals_str, targets_str = summarize_daily_meals_and_targets(meals, target)
+    meals_str = meals_str_prefix + meals_str
+    targets_str = targets_str_prefix + targets_str
     restrictions_str = f"The user's dietary restrictions are: {restrictions}"
     
-    @ell.complex(model=DEFAULT_MODEL, response_format=NutritionFeedback, max_tokens=2048)
-    def _daily_io_analysis_pydantic(sys_message: str, meals_str: str, targets_str: str, restrictions_str: str) -> NutritionFeedback:
-        return [
-            ell.system(sys_message),
-            ell.user([meals_str, targets_str, restrictions_str])
-        ]
-    
-    @ell.simple(model=DEFAULT_MODEL, max_tokens=2048)
-    def _daily_io_analysis_simple(sys_message: str, meals_str: str, targets_str: str, restrictions_str: str) -> str:
-        sys_message += f"You must absolutely respond in this format as a json string with no exceptions: {NutritionFeedback.model_json_schema()}"
-        return [
-            ell.system(sys_message),
-            ell.user([meals_str, targets_str, restrictions_str])
-        ]
-
     if DEFAULT_MODEL in STRUCTURED_MODELS:
         return _daily_io_analysis_pydantic(sys_message, meals_str, targets_str, restrictions_str).content[0].parsed
     else:
         return NutritionFeedback.model_validate_json(
             _daily_io_analysis_simple(sys_message, meals_str, targets_str, restrictions_str)
         )
+
+@ell.complex(model=DEFAULT_MODEL, response_format=NutritionFeedback, max_tokens=2048)
+def _daily_io_analysis_pydantic(sys_message: str, meals_str: str, targets_str: str, restrictions_str: str) -> NutritionFeedback:
+    return [
+        ell.system(sys_message),
+        ell.user([meals_str, targets_str, restrictions_str])
+    ]
+
+@ell.simple(model=DEFAULT_MODEL, max_tokens=2048)
+def _daily_io_analysis_simple(sys_message: str, meals_str: str, targets_str: str, restrictions_str: str) -> str:
+    sys_message += f"You must absolutely respond in this format as a json string with no exceptions: {NutritionFeedback.model_json_schema()}"
+    return [
+        ell.system(sys_message),
+        ell.user([meals_str, targets_str, restrictions_str])
+    ]
 
 def weekly_io_analysis(
         meals: dict[datetime, list[MealBreakdown]],
@@ -184,31 +169,6 @@ def weekly_io_analysis(
     """
     if len(meals) == 0:
         return "No meals logged for today, please log your meals and try again."
-    
-    @ell.complex(model=DEFAULT_MODEL, response_format=NutritionFeedback)
-    def _weekly_io_analysis_pydantic(
-            sys_message: str,
-            meals_str: str,
-            targets_str: str,
-            restrictions_str: str
-    ) -> NutritionFeedback:
-        return [
-            ell.system(sys_message),
-            ell.user([meals_str, targets_str, restrictions_str])
-        ]
-    
-    @ell.simple(model=DEFAULT_MODEL, max_tokens=2048)
-    def _weekly_io_analysis_simple(
-            sys_message: str,
-            meals_str: str,
-            targets_str: str,
-            restrictions_str: str
-    ) -> str:
-        sys_message += f"You must absolutely respond in this format with no exceptions. {NutritionFeedback.model_json_schema()}"
-        return [
-            ell.system(sys_message),
-            ell.user([meals_str, targets_str, restrictions_str])
-        ]
 
     sys_message = """ 
     You are a nutritionist providing feedback on a week's nutrition logs. Analyze the 
@@ -232,29 +192,23 @@ def weekly_io_analysis(
     Write your response in plain text paragraphs without bullets or special formatting, address 
     the user directly as their nutritionist.
     """ #TODO: this can be parsed in as an arg
-    
-    current_time = datetime.now().time()
-    meals_str = f"As of {current_time} are the meals the user has logged today:\n"
+    meals_str, targets_str = "", ""
     for i, (day, meals) in enumerate(meals.items()):
-            meals_str += f"On {day} the user has logged the following meals:\n"
-            for meal in meals:
-                meals_str += f"""Meal {meal.title} - {meal.calories} calories, 
-                {meal.macronutrients.protein}g protein, {meal.macronutrients.carbohydrates.total}g carbs, 
-                {meal.macronutrients.fat.total}g fat\n
-                Micros: {meal.micronutrients.vitamin_a}IU vit A, {meal.micronutrients.vitamin_c}mg vit C, 
-                {meal.micronutrients.iron}mg iron, {meal.micronutrients.calcium}mg calcium, 
-                {meal.micronutrients.sodium}mg sodium, {meal.micronutrients.potassium}mg potassium\n"""
-        
-            targets_str = f"""
-                The user's daily targets for {day} are: Calories: {target[i]["calories"]},
-                Protein: {target[i]["protein"]}g, Carbohydrates: {target[i]["carbs"]}g, Fat: {target[i]["fat"]}g
-                Micronutrient targets: Vitamin A: {target[i]["vitamin_a"]}IU, Vitamin C: {target[i]["vitamin_c"]}mg,
-                Iron: {target[i]["iron"]}mg, Calcium: {target[i]["calcium"]}mg,
-                Sodium: {target[i]["sodium"]}mg, Potassium: {target[i]["potassium"]}mg
-            """
+            day_meals_prefix = f"On {day} the user has logged the following meals:\n"
+            day_targets_prefix = f"The user's daily targets for {day} are:\n"
+            
+            day_meals_str, day_targets_str = summarize_daily_meals_and_targets(meals, target[i])
+            day_meals_str = day_meals_prefix + day_meals_str
+            day_targets_str = day_targets_prefix + day_targets_str
+            meals_str += day_meals_str
+            targets_str += day_targets_str
     
     restrictions_str = f"The user's dietary restrictions are: {restrictions}"
-    
+
+    print(meals_str)
+    print(targets_str)
+    print(restrictions_str)
+
     if DEFAULT_MODEL in STRUCTURED_MODELS:
         analysis = _weekly_io_analysis_pydantic(
             sys_message, meals_str, targets_str, restrictions_str
@@ -264,6 +218,50 @@ def weekly_io_analysis(
         analysis = NutritionFeedback.model_validate_json(analysis)
     
     return analysis
+
+@ell.complex(model=DEFAULT_MODEL, response_format=NutritionFeedback)
+def _weekly_io_analysis_pydantic(
+        sys_message: str,
+        meals_str: str,
+        targets_str: str,
+        restrictions_str: str
+) -> NutritionFeedback:
+    return [
+        ell.system(sys_message),
+        ell.user([meals_str, targets_str, restrictions_str])
+    ]
+    
+@ell.simple(model=DEFAULT_MODEL, max_tokens=2048)
+def _weekly_io_analysis_simple(
+        sys_message: str,
+        meals_str: str,
+        targets_str: str,
+        restrictions_str: str
+) -> str:
+    sys_message += f"You must absolutely respond in this format with no exceptions. {NutritionFeedback.model_json_schema()}"
+    return [
+        ell.system(sys_message),
+        ell.user([meals_str, targets_str, restrictions_str])
+    ]
+
+def summarize_daily_meals_and_targets(meals: list[MealBreakdown], target: dict[str, float]) -> tuple[str, str]:
+    meals_str = ""
+    for _, meal in enumerate(meals, 1):
+        meals_str += f"""Meal {meal.title} - {meal.calories} calories, 
+            {meal.macronutrients.protein}g protein, {meal.macronutrients.carbohydrates}g carbs, 
+            {meal.macronutrients.fat}g fat\n
+            Micros: {meal.micronutrients.vitamin_a}IU vit A, {meal.micronutrients.vitamin_c}mg vit C, 
+            {meal.micronutrients.iron}mg iron, {meal.micronutrients.calcium}mg calcium, 
+            {meal.micronutrients.sodium}mg sodium, {meal.micronutrients.potassium}mg potassium\n
+        """
+    targets_str = f"""
+        Calories: {target["calories"]}, Protein: {target["protein"]}g,
+        Carbohydrates: {target["carbs"]}g, Fat: {target["fat"]}g
+        Micronutrient targets: Vitamin A: {target["vitamin_a"]}IU, Vitamin C: {target["vitamin_c"]}mg,
+        Iron: {target["iron"]}mg, Calcium: {target["calcium"]}mg,
+        Sodium: {target["sodium"]}mg, Potassium: {target["potassium"]}mg
+    """
+    return meals_str, targets_str
     
 def nutrient_analysis(
         nutrient: str,
@@ -273,34 +271,28 @@ def nutrient_analysis(
         multiple_days: bool = False
     ) -> str:
     """Analyze if user is over/under their target for a specific nutrient.
-    
+
     Args:
         nutrient: The nutrient being analyzed (e.g. 'vitamin_a', 'vitamin_c', 'iron', 'calcium', 'sodium', 'potassium')
         intake: The user's intake for this nutrient
         target: The target amount for this nutrient
-    
+        multiple_days: Whether the data is for multiple days
     Returns:
         A string indicating if user is over/under target and by how much
     """
     nutrient = nutrient.lower()
-    
     difference = intake - target
     nutrient = "caloric" if nutrient == "calories" else nutrient
     nutrient = "carbohydrate" if nutrient == "carbohydrates" else nutrient
+    prefix = "You have been" if multiple_days else "You are currently"
 
-    if multiple_days:
-        prefix = "You have been"
-    else:
-        prefix = "You are currently"
-    
     if difference > 0:
         analysis = f"{abs(difference):.1f}{unit} over your {nutrient} target"
     elif difference < 0:
         analysis = f"{abs(difference):.1f}{unit} under your {nutrient} target"
     else:
-        analysis = f"in line with your {nutrient} target"
+        analysis = f"in line with your {nutrient} target" # TODO: change this to range based 
     
-    if multiple_days:
-        analysis = f"{analysis} on average"
+    analysis = f"{analysis} on average" if multiple_days else analysis
     
     return f"{prefix} {analysis}"
