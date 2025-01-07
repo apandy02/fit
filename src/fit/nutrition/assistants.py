@@ -81,11 +81,8 @@ def make_recommendations(
     Make sure that the suggestions are serving aware. if the user is 30g of protein under their target,
     it does not make sense to suggest a meal with 100g of chicken, this would be excessive.
     """
-    user_input = f"""
-    User Preferences: {user_preferences}
-    Consumption: {str(consumption)}
-    Targets: {str(targets)}
-    Dietary Restrictions: {restrictions}
+    user_input = f"""User Preferences: {user_preferences} \n Consumption: {str(consumption)}
+    Targets: {str(targets)} \n Dietary Restrictions: {restrictions}
     They want trying to improve their {target_nutrient} intake.
     """
     return user_input
@@ -131,7 +128,7 @@ def daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float], rest
     meals_str, targets_str = summarize_daily_meals_and_targets(meals, target)
     restrictions_str = f"The user's dietary restrictions are: {restrictions}"
     user_data = meals_str_prefix + meals_str + targets_str_prefix + targets_str + restrictions_str
-    
+    print(user_data)
     if DEFAULT_MODEL in STRUCTURED_MODELS:
         return _daily_io_analysis_pydantic(sys_message, user_data)
     else:
@@ -199,7 +196,7 @@ def weekly_io_analysis(
         user_data += day_meals_prefix + day_meals_str + day_targets_prefix + day_targets_str
     
     user_data += f"The user's dietary restrictions are: {restrictions}"
-
+    print(user_data)
     if DEFAULT_MODEL in STRUCTURED_MODELS:
         analysis = _weekly_io_analysis_pydantic(
             sys_message, user_data
