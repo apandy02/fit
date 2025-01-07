@@ -91,7 +91,6 @@ def get_daily_nutrition_data(date: datetime):
     calories_burned = active_tracker.get_daily_calories_burned(date)
     goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     daily_consumption = databases.get_daily_cumulative_nutrition(DB, date)
-    print(f"daily consumption {daily_consumption}")
     return {
         "calories": {"consumed": [daily_consumption.calories], "goal": [goals["calories"]], "burned": [calories_burned]},
         "protein": {"consumed": [daily_consumption.macronutrients.protein], "goal": [goals["protein"]]},

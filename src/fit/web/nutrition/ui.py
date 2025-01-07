@@ -393,7 +393,7 @@ def food_tracking_modal():
 def create_page_header(current_view: str):
     """Create the page header with title and time filter"""
     return fh.Div(
-        fh.P("Nutritional Overview", cls="text-3xl font-bold text-center mb-6 text-primary-content"),
+        fh.P("Nutrition", cls="text-3xl font-bold text-center mb-6 text-primary-content"),
         fh.Div(
             create_time_filter(current_view),
             cls="flex justify-center mb-8"
@@ -479,7 +479,6 @@ def create_macro_section(data, visible_metrics, view_type: str):
         metric for metric in macro_metrics 
         if metric["column_name"].lower() in visible_metrics
     ]
-    print(f"data {data}")
     return create_metric_overview_section("Macronutrients", data, filtered_metrics, macro_metrics, view_type)
 
 def create_micro_section(data, visible_metrics, view_type: str):
