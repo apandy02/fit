@@ -4,6 +4,7 @@ from datetime import datetime
 import fasthtml.common as fh
 from PIL import Image
 
+import fit.nutrition.assistants as assistants
 import fit.web.common as common
 import fit.web.databases as databases
 import fit.web.nutrition.ui as ui
@@ -12,8 +13,7 @@ from fit.nutrition.data import (Carbohydrates, ConditionalNutrients, Fats,
                                 Micronutrients, NutritionalInformation)
 from fit.nutrition.targets import calculate_macro_targets
 from fit.utils.calendar import get_current_week_dates
-from fit.web.common import (DB, active_tracker, micronutrient_goals,
-                            nutrition_logger, nutritionist)
+from fit.web.common import DB, active_tracker, micronutrient_goals
 
 
 def get_daily_overview():
@@ -153,7 +153,7 @@ def feedback_form(meal_description: str, meal_datetime: datetime, nutrition_info
 
 async def analyze_text(meal_description: str, meal_time: str):
     """Handle meal description analysis"""
-    nutrition_info = nutrition_logger.natural_language_macros(meal_description)
+    nutrition_info = assistants.natural_language_macros(meal_description).content[0].parsed
     today = datetime.today().date()
     meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
     meal_datetime = datetime.combine(today, meal_time_obj).isoformat()
@@ -165,9 +165,7 @@ async def analyze_image(food_image: fh.UploadFile, additional_context: str, meal
     
     contents = await food_image.read()
     image = Image.open(io.BytesIO(contents))
-    nutrition_info = nutrition_logger.image_macros(image, additional_context)
-    
-    # Create ISO format datetime for meal time
+    nutrition_info = assistants.image_macros(image, additional_context).content[0].parsed
     today = datetime.today().date()
     meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
     meal_datetime = datetime.combine(today, meal_time_obj).isoformat()
@@ -351,8 +349,8 @@ async def reset_text_form():
 
 async def regenerate_analysis(feedback: str, original_description: str):
     """Regenerate analysis based on feedback"""
-    original_info = nutrition_logger.natural_language_macros(original_description)
-    improved_info = nutrition_logger.improve_breakdown(original_info, feedback)
+    original_info = assistants.natural_language_macros(original_description).content[0].parsed #TODO: why are we re-running this?
+    improved_info = assistants.improve_breakdown(original_info, feedback).content[0].parsed # todo: maybe the parsing should be done in the assistant
     
     # Create ISO format datetime for meal time
     today = datetime.today().date()
@@ -397,7 +395,7 @@ async def generate_weekly_overview():
     targets = [calculate_macro_targets(calories_burned, Goals.MAINTAIN) for calories_burned in calories_burned]
     [target.update(micronutrient_goals) for target in targets]
  
-    analysis = nutritionist.weekly_io_analysis(meals, targets, dietary_restrictions)
+    analysis = assistants.weekly_io_analysis(meals, targets, dietary_restrictions).content[0].parsed
 
     if isinstance(analysis, str):
         return fh.P(analysis, cls="text-primary-content mt-2")
@@ -431,7 +429,7 @@ async def generate_daily_overview():
     calories_burned = active_tracker.get_daily_calories_burned(datetime.today())
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
-    analysis = nutritionist.daily_io_analysis(meals, targets, dietary_restrictions)
+    analysis = assistants.daily_io_analysis(meals, targets, dietary_restrictions).content[0].parsed
 
     if isinstance(analysis, str):
         return fh.P(analysis, cls="text-primary-content mt-2")
@@ -469,15 +467,15 @@ async def get_nutrient_suggestions(nutrient: str):
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
     restrictions = databases.get_dietary_restrictions(DB, "default")
-    user_preferences = nutritionist.summarize_user_preferences(databases.get_all_meal_summaries(DB)) # TODO: cache the output of this so that we aren't calling it every time
+    user_preferences = assistants.summarize_user_preferences(databases.get_all_meal_summaries(DB)).content[0].parsed # TODO: cache the output of this so that we aren't calling it every time
 
-    recommendations = nutritionist.make_recommendations(
+    recommendations = assistants.make_recommendations(
         consumption=daily_nutrition,
         targets=targets,
         target_nutrient=nutrient,
         restrictions=restrictions,
         user_preferences=user_preferences
-    )
+    ).content[0].parsed
     return fh.Div(
         fh.H4("Suggestions", cls="text-lg font-bold mb-1 text-primary-content text-center"),
         fh.Div(

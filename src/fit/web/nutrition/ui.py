@@ -2,10 +2,10 @@ from datetime import datetime
 
 import fasthtml.common as fh
 
+import fit.nutrition.assistants as assistants
 import fit.web.nutrition.food_plots as food_plots
 from fit.nutrition.data import MealBreakdown
-from fit.web.common import (create_overview_card, create_time_filter,
-                            nutritionist)
+from fit.web.common import create_overview_card, create_time_filter
 
 
 def metric_card(
@@ -32,7 +32,7 @@ def metric_card(
     
     if consumed_values and goal_values:
         averages = sum(consumed_values) / len(consumed_values), sum(goal_values) / len(goal_values)
-        analysis_text = nutritionist.nutrient_analysis(
+        analysis_text = assistants.nutrient_analysis(
             title, unit, averages[0], averages[1], multiple_days=view_type == "weekly"
         )
     else:
