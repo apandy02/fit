@@ -2,6 +2,8 @@ import io
 from datetime import datetime
 
 import fasthtml.common as fh
+from PIL import Image
+
 import fit.nutrition.assistants as assistants
 import fit.web.common as common
 import fit.web.databases as databases
@@ -12,7 +14,6 @@ from fit.nutrition.data import (Carbohydrates, ConditionalNutrients, Fats,
 from fit.nutrition.targets import calculate_macro_targets
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import DB, active_tracker, micronutrient_goals
-from PIL import Image
 
 
 def get_daily_overview():
@@ -466,15 +467,15 @@ async def get_nutrient_suggestions(nutrient: str):
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
     restrictions = databases.get_dietary_restrictions(DB, "default")
-    user_preferences = nutritionist.summarize_user_preferences(databases.get_all_meal_summaries(DB)) # TODO: cache the output of this so that we aren't calling it every time
+    user_preferences = assistants.summarize_user_preferences(databases.get_all_meal_summaries(DB)).content[0].parsed # TODO: cache the output of this so that we aren't calling it every time
 
-    recommendations = nutritionist.make_recommendations(
+    recommendations = assistants.make_recommendations(
         consumption=daily_nutrition,
         targets=targets,
         target_nutrient=nutrient,
         restrictions=restrictions,
         user_preferences=user_preferences
-    )
+    ).content[0].parsed
     return fh.Div(
         fh.H4("Suggestions", cls="text-lg font-bold mb-1 text-primary-content text-center"),
         fh.Div(

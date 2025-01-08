@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import fasthtml.common as fh
+
 import fit.nutrition.assistants as assistants
 import fit.web.nutrition.food_plots as food_plots
 from fit.nutrition.data import MealBreakdown
