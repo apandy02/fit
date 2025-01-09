@@ -15,11 +15,11 @@ The application consists of several core modules:
 ### Core
 - Python 3.10+
 - FastHTML + HTMX
-- ELL (LLM Framework)
+- ell
 - Pydantic
 - SQLite
 
-### Frontend
+### Frontend Plugins
 - TailwindCSS
 - DaisyUI
 - AmCharts
