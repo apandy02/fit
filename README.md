@@ -1,62 +1,92 @@
-# AI Fitness Copilot <readme deprecated>
+# AI Health Copilot
 
-AI Fitness Copilot is a comprehensive application designed to assist users in achieving their fitness goals by integrating data from various fitness trackers, allowing goal specification, and enabling calorie tracking through food images or natural language descriptions.
+A comprehensive fitness assistant that combines LLM-powered nutrition analysis with fitness tracking. Leverage data from your fitness trackers along with LMP (language model programs) grounded in scientific literature to help you get (or stay) fit.
 
-## Features
+## Overview
 
-- **Multi-Tracker Support**: Connect and aggregate data from multiple fitness trackers such as Whoop, Fitbit, etc.
-- **Personalized Goals**: Set and monitor personal fitness goals (weight loss, muscle gain, etc.).
-- **Calorie Tracking**: Log meals using images of food or natural language descriptions to track calorie intake.
+The application consists of several core modules:
+- Web interface built with FastHTML and HTMX
+- LLM-powered nutrition tracking and analysis
+- Multi-tracker fitness data integration
+- Progress and performance monitoring
 
-## Directory Structure
+## Technology Stack
 
-```
-├── README.md
-├── pyproject.toml
-├── src
-│   ├── __init__.py
-│   ├── fit
-│   │   ├── __init__.py
-│   │   ├── fitness_trackers.py
-│   │   ├── trackers.py
-│   │   ├── whoop.py
-│   │   └── utils
-│   │       ├── __init__.py
-│   │       └── conversions.py
-│   └── nutrition
-│       ├── __init__.py
-│       ├── data.py
-│       └── assistants.py
-```
+### Core
+- Python 3.10+
+- FastHTML + HTMX
+- ELL (LLM Framework)
+- Pydantic
+- SQLite
 
-- `src/fit/trackers/`: Contains all fitness tracker related code, including base classes and specific implementations for different devices
-- `src/fit/utils/`: Contains utility functions and helper methods used across the project
-- `src/fit/nutrition/`: Contains the nutrition tracking and recommendation system powered by LLMs
+### Frontend
+- TailwindCSS
+- DaisyUI
+- AmCharts
+- Plotly
+
+### Development
+- UV (Package Management)
+- Ruff (Linting)
+- Unittest (Testing)
 
 ## Getting Started
 
 ### Prerequisites
-
 - Python 3.10 or higher
-- [uv](https://docs.astral.sh/uv/getting-started/installation/) for fast and easy package management
+- [UV](https://docs.astral.sh/uv/getting-started/installation/) for package management
 
 ### Installation
 
-1. **Clone the Repository**
+1. Clone the repository:
+```bash
+git clone git@github.com:aryamanpandya99/fit.git
+cd fit
+```
 
-   ```bash
-   git clone git@github.com:aryamanpandya99/fit.git
-   ```
+2. Create and activate virtual environment:
+```bash
+uv venv
+source .venv/bin/activate  # On Unix
+.venv\Scripts\activate     # On Windows
+```
 
-2. **Navigate to the Project Directory**
+3. Install dependencies:
+```bash
+uv pip install -e .
+```
 
-   ```bash
-   cd fit
-   ```
+### Running the Application
 
-4. **Install Dependencies**
+Start the web interface:
+```bash
+python -m fit.web.app
+```
 
-   ```bash
-   uv venv
-   uv pip install .
-   ```
+The application will be available at `http://localhost:8000`
+
+### Testing
+
+Run the test suite:
+```bash
+python -m unittest discover -v
+```
+
+## Project Structure
+
+```
+src/fit/
+├── nutrition/       # LLM-powered nutrition analysis
+├── trackers/        # Fitness tracker integrations
+├── utils/          # Shared utilities
+└── web/            # Web interface and API
+```
+
+Each module contains its own README with detailed documentation.
+
+## Contributing
+
+1. Ensure all tests pass: `python -m unittest discover -v`
+2. Run linting: `ruff check .`
+3. Follow the existing code structure and documentation patterns
+4. Submit a pull request

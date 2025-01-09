@@ -17,7 +17,6 @@ This directory contains the code for the fitness assistant web interface impleme
 - Rest and recovery management
 - User profile customization
 - Real-time data visualization
-- Responsive design
 
 ## Implementation Details
 
