@@ -1,10 +1,9 @@
 from datetime import datetime
 
 import ell
-from PIL import Image
-
 from fit.nutrition.data import (MealBreakdown, NutritionalInformation,
                                 NutritionFeedback, Recommendations)
+from PIL import Image
 
 STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
 DEFAULT_MODEL = "gpt-4o-2024-08-06"
