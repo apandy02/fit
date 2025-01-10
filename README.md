@@ -1,4 +1,4 @@
-# AI Health Copilot
+# Fit
 
 A comprehensive fitness assistant that combines LLM-powered nutrition analysis with fitness tracking. Leverage data from your fitness trackers along with LMP (language model programs) grounded in scientific literature to help you get (or stay) fit.
 
