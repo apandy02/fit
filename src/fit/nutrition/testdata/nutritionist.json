@@ -38,7 +38,7 @@
             "target": {
               "calcium": 1000,
               "calories": 1952,
-              "carbs": 195,
+              "carbohydrates": 195,
               "fat": 65,
               "iron": 18,
               "potassium": 3400,
@@ -255,7 +255,7 @@
           {
             "calcium": 1000,
             "calories": 1838,
-            "carbs": 184,
+            "carbohydrates": 184,
             "fat": 61,
             "iron": 18,
             "potassium": 3400,
@@ -268,7 +268,7 @@
           {
             "calcium": 1000,
             "calories": 2610,
-            "carbs": 261,
+            "carbohydrates": 261,
             "fat": 87,
             "iron": 18,
             "potassium": 3400,
@@ -281,7 +281,7 @@
           {
             "calcium": 1000,
             "calories": 2377,
-            "carbs": 238,
+            "carbohydrates": 238,
             "fat": 79,
             "iron": 18,
             "potassium": 3400,
@@ -294,7 +294,7 @@
           {
             "calcium": 1000,
             "calories": 2124,
-            "carbs": 212,
+            "carbohydrates": 212,
             "fat": 71,
             "iron": 18,
             "potassium": 3400,
@@ -307,7 +307,7 @@
           {
             "calcium": 1000,
             "calories": 2271,
-            "carbs": 227,
+            "carbohydrates": 227,
             "fat": 76,
             "iron": 18,
             "potassium": 3400,
@@ -320,7 +320,7 @@
           {
             "calcium": 1000,
             "calories": 938,
-            "carbs": 94,
+            "carbohydrates": 94,
             "fat": 31,
             "iron": 18,
             "potassium": 3400,
@@ -333,7 +333,7 @@
           {
             "calcium": 1000,
             "calories": 1977,
-            "carbs": 198,
+            "carbohydrates": 198,
             "fat": 66,
             "iron": 18,
             "potassium": 3400,

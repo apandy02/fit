@@ -2,9 +2,10 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
-from fit.nutrition.data import (Carbohydrates, ConditionalNutrients, Fats,
-                                Macronutrients, MealBreakdown, Micronutrients,
-                                NutritionalInformation)
+
+from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
+                                       Fats, Macronutrients, MealBreakdown,
+                                       Micronutrients, NutritionalInformation)
 
 # TODO: consider creating a class for the database
 
@@ -27,7 +28,7 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
                 llm_summary=str,
                 calories=float,
                 protein=float,
-                carbs=float,
+                carbohydrates=float,
                 fat=float,
                 fiber=float,
                 vitamin_a=float,
@@ -52,7 +53,7 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
                 description=str,
                 calories=float,
                 protein=float,
-                carbs=float,
+                carbohydrates=float,
                 fat=float,
                 fiber=float,
                 vitamin_a=float,
@@ -117,7 +118,7 @@ def get_daily_meals(database: fh.Database, date: datetime):
     Get meals entered for a given date.
     """
     query = """
-        select llm_summary, ingredients, meal_time, calories, protein, carbs, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
+        select llm_summary, ingredients, meal_time, calories, protein, carbohydrates, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
         calcium, iron, potassium, sodium, creatine
         from meals 
         where date_entered = ?
@@ -173,7 +174,7 @@ def get_daily_cumulative_nutrition(database: fh.Database, date: datetime):
         SELECT 
             SUM(calories) as calories,
             SUM(protein) as protein,
-            SUM(carbs) as carbs, 
+            SUM(carbohydrates) as carbohydrates, 
             SUM(fat) as fat,
             SUM(fiber) as fiber,
             SUM(vitamin_a) as vitamin_a,
@@ -227,7 +228,7 @@ def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdow
         ingredients=meal.ingredients,
         calories=meal.calories,
         protein=meal.macronutrients.protein,
-        carbs=meal.macronutrients.carbohydrates.total,
+        carbohydrates=meal.macronutrients.carbohydrates.total,
         fat=meal.macronutrients.fat.total,  
         vitamin_a=meal.micronutrients.vitamin_a,
         vitamin_c=meal.micronutrients.vitamin_c,
@@ -296,7 +297,7 @@ def insert_supplement(database: fh.Database, name: str, consumption_time: str, n
         name=name,
         calories=nutritional_info.calories,
         protein=nutritional_info.macronutrients.protein,
-        carbs=nutritional_info.macronutrients.carbohydrates.total,
+        carbohydrates=nutritional_info.macronutrients.carbohydrates.total,
         fat=nutritional_info.macronutrients.fat.total,
         fiber=nutritional_info.macronutrients.carbohydrates.fiber,
         vitamin_a=nutritional_info.micronutrients.vitamin_a,
@@ -312,7 +313,7 @@ def insert_supplement(database: fh.Database, name: str, consumption_time: str, n
         llm_summary=name,# change column name 
         calories=nutritional_info.calories,
         protein=nutritional_info.macronutrients.protein,
-        carbs=nutritional_info.macronutrients.carbohydrates.total,
+        carbohydrates=nutritional_info.macronutrients.carbohydrates.total,
         fat=nutritional_info.macronutrients.fat.total,
         fiber=nutritional_info.macronutrients.carbohydrates.fiber,
         vitamin_a=nutritional_info.micronutrients.vitamin_a,
@@ -344,7 +345,7 @@ def get_supplement(database: fh.Database, name: str) -> NutritionalInformation |
     Get a supplement's nutritional information by name.
     """
     query = """
-        SELECT calories, protein, carbs, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
+        SELECT calories, protein, carbohydrates, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
                calcium, iron, potassium, sodium
         FROM supplements 
         WHERE name = ?
@@ -387,7 +388,7 @@ def get_all_supplements(database: fh.Database) -> list[tuple[str, str, Nutrition
     Returns a list of tuples containing (name, description, nutritional_info)
     """
     query = """
-        SELECT name, description, calories, protein, carbs, fat, fiber, vitamin_a, 
+        SELECT name, description, calories, protein, carbohydrates, fat, fiber, vitamin_a, 
                vitamin_c, vitamin_d, calcium, iron, potassium, sodium
         FROM supplements
     """

@@ -1,9 +1,10 @@
 from datetime import datetime
 
 import ell
-from fit.nutrition.data import (MealBreakdown, NutritionalInformation,
-                                NutritionFeedback, Recommendations)
 from PIL import Image
+
+from fit.nutrition.data_models import (MealBreakdown, NutritionalInformation,
+                                       NutritionFeedback, Recommendations)
 
 STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
 DEFAULT_MODEL = "gpt-4o-2024-08-06"
@@ -57,7 +58,7 @@ def summarize_user_preferences(meals: list[MealBreakdown]) -> str:
 @ell.complex(model=DEFAULT_MODEL, response_format=Recommendations)
 def make_recommendations(
         consumption: NutritionalInformation,
-        targets: NutritionalInformation,
+        targets: dict[str, float],
         target_nutrient: str,
         user_preferences: str,
         restrictions: list[str]
@@ -229,7 +230,7 @@ def summarize_daily_meals_and_targets(meals: list[MealBreakdown], target: dict[s
     meals_str = ""
     for _, meal in enumerate(meals, 1):
         meals_str += f"""Meal {meal.title} - {meal.calories} calories, 
-            {meal.macronutrients.protein}g protein, {meal.macronutrients.carbohydrates}g carbs, 
+            {meal.macronutrients.protein}g protein, {meal.macronutrients.carbohydrates}g carbohydrates, 
             {meal.macronutrients.fat}g fat\n
             Micros: {meal.micronutrients.vitamin_a}IU vit A, {meal.micronutrients.vitamin_c}mg vit C, 
             {meal.micronutrients.iron}mg iron, {meal.micronutrients.calcium}mg calcium, 
@@ -237,7 +238,7 @@ def summarize_daily_meals_and_targets(meals: list[MealBreakdown], target: dict[s
         """
     targets_str = f"""
         Calories: {target["calories"]}, Protein: {target["protein"]}g,
-        Carbohydrates: {target["carbs"]}g, Fat: {target["fat"]}g
+        Carbohydrates: {target["carbohydrates"]}g, Fat: {target["fat"]}g
         Micronutrient targets: Vitamin A: {target["vitamin_a"]}IU, Vitamin C: {target["vitamin_c"]}mg,
         Iron: {target["iron"]}mg, Calcium: {target["calcium"]}mg,
         Sodium: {target["sodium"]}mg, Potassium: {target["potassium"]}mg

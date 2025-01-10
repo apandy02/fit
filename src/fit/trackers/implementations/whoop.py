@@ -5,6 +5,7 @@ from typing import Any
 
 from authlib.common.urls import extract_params
 from authlib.integrations.requests_client import OAuth2Session
+
 from fit.trackers.base import FitnessTracker
 from fit.utils.conversions import kj_to_kcal
 

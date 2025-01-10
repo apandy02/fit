@@ -2,17 +2,19 @@ import io
 from datetime import datetime
 
 import fasthtml.common as fh
+from PIL import Image
+
 import fit.nutrition.assistants as assistants
 import fit.web.common as common
 import fit.web.databases as databases
 import fit.web.nutrition.ui as ui
-from fit.nutrition.data import (Carbohydrates, ConditionalNutrients, Fats,
-                                Goals, Macronutrients, MealBreakdown,
-                                Micronutrients, NutritionalInformation)
+from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
+                                       Fats, Goals, Macronutrients,
+                                       MealBreakdown, Micronutrients,
+                                       NutritionalInformation)
 from fit.nutrition.targets import calculate_macro_targets
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import DB, active_tracker, micronutrient_goals
-from PIL import Image
 
 
 def get_daily_overview():
@@ -60,7 +62,7 @@ def get_weekly_nutrition_data(date: datetime):
     data = {
         "calories": {"consumed": [], "goal": [], "burned": []},
         "protein": {"consumed": [], "goal": []},
-        "carbs": {"consumed": [], "goal": []}, 
+        "carbohydrates": {"consumed": [], "goal": []}, 
         "fat": {"consumed": [], "goal": []},
         "vitamin_a": {"consumed": [], "goal": []},
         "vitamin_c": {"consumed": [], "goal": []},
@@ -93,7 +95,7 @@ def get_daily_nutrition_data(date: datetime):
     return {
         "calories": {"consumed": [daily_consumption.calories], "goal": [goals["calories"]], "burned": [calories_burned]},
         "protein": {"consumed": [daily_consumption.macronutrients.protein], "goal": [goals["protein"]]},
-        "carbs": {"consumed": [daily_consumption.macronutrients.carbohydrates.total], "goal": [goals["carbs"]]},
+        "carbohydrates": {"consumed": [daily_consumption.macronutrients.carbohydrates.total], "goal": [goals["carbohydrates"]]},
         "fat": {"consumed": [daily_consumption.macronutrients.fat.total], "goal": [goals["fat"]]},
         "vitamin_a": {"consumed": [daily_consumption.micronutrients.vitamin_a], "goal": [micronutrient_goals["vitamin_a"]]},
         "vitamin_c": {"consumed": [daily_consumption.micronutrients.vitamin_c], "goal": [micronutrient_goals["vitamin_c"]]},
@@ -255,7 +257,7 @@ async def save_supplement(request: fh.Request):
         nutrition_info = NutritionalInformation(
             calories=form["calories"],
             protein=form["protein"],
-            carbs=form["carbs"],
+            carbohydrates=form["carbohydrates"],
             fat=form["fat"],
             fiber=form["fiber"],
             vitamin_a=form["vitamin_a"],
@@ -466,7 +468,7 @@ async def get_nutrient_suggestions(nutrient: str):
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
     restrictions = databases.get_dietary_restrictions(DB, "default")
-    user_preferences = assistants.summarize_user_preferences(databases.get_all_meal_summaries(DB)).content[0].parsed # TODO: cache the output of this so that we aren't calling it every time
+    user_preferences = assistants.summarize_user_preferences(databases.get_all_meal_summaries(DB)) # TODO: cache the output of this so that we aren't calling it every time
 
     recommendations = assistants.make_recommendations(
         consumption=daily_nutrition,
