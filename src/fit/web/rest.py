@@ -92,7 +92,7 @@ def get_rest_info():
     """
     Retrieve rest and recovery information for the day
     """
-    today = datetime.date.today() - datetime.timedelta(days=1)  # TODO: for testing
+    today = datetime.date.today()
     recovery = active_tracker.get_daily_recovery(today)
     if recovery is not None and len(recovery) > 0:
         recovery_scores = recovery[0]["score"]

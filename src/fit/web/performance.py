@@ -75,7 +75,7 @@ def get_performance_info():
     """
     Retrieve performance information for the day
     """
-    today = datetime.date.today() - datetime.timedelta(days=1) # for testing 
+    today = datetime.date.today()
     cycle = active_tracker.get_cycle_for_day(today)
     daily_stats = cycle["score"]
     daily_stats["calories"] = kj_to_kcal(daily_stats["kilojoule"])
