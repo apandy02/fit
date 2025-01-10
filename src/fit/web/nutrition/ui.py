@@ -390,6 +390,74 @@ def food_tracking_modal():
         """)
     )
 
+def water_tracking_modal():
+    """Create the water tracking modal"""
+    return fh.Div(
+        fh.Dialog(
+            fh.Div(
+                fh.Div(
+                    fh.Button(
+                        "×",
+                        cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                        onclick="closeWaterModal()",
+                        style="outline: none; box-shadow: none;"
+                    ),
+                    fh.H3("Log Water", cls="text-xl font-bold text-center mt-4 mb-8 text-primary-content"),
+                    fh.Form(
+                        hx_post="/log_water",
+                        hx_target="#water-log-result",
+                        cls="w-[90%] mx-auto space-y-6"
+                    )(
+                        fh.Div(
+                            fh.Label("Amount (ml)", cls="label text-primary-content"),
+                            fh.Input(
+                                type="number",
+                                name="amount",
+                                value="250",
+                                step="50",
+                                min="0",
+                                required=True,
+                                cls="input input-bordered w-full bg-base-200 text-primary-content"
+                            ),
+                            cls="form-control"
+                        ),
+                        fh.Div(
+                            fh.Label("Time", cls="label text-primary-content"),
+                            fh.Input(
+                                type="time",
+                                name="time_consumed",
+                                value=datetime.now().strftime("%H:%M"),
+                                required=True,
+                                cls="input input-bordered w-full bg-base-200 text-primary-content"
+                            ),
+                            cls="form-control"
+                        ),
+                        fh.Button(
+                            "Log Water",
+                            type="submit",
+                            cls="btn btn-primary w-full mt-6"
+                        ),
+                        fh.Div(id="water-log-result", cls="mt-4"),
+                        cls="mx-8"
+                    ),
+                    cls="p-6"
+                ),
+                cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg relative w-full"
+            ),
+            id="water-modal",
+            cls="modal"
+        ),
+        fh.Script("""
+            function openWaterModal() {
+                document.getElementById('water-modal').showModal();
+            }
+            
+            function closeWaterModal() {
+                document.getElementById('water-modal').close();
+            }
+        """)
+    )
+
 def create_page_header(current_view: str):
     """Create the page header with title and time filter"""
     return fh.Div(
@@ -399,6 +467,7 @@ def create_page_header(current_view: str):
             cls="flex justify-center mb-8"
         ),
         supplement_modal(),
+        water_tracking_modal(),
         cls="mb-8"
     )
 

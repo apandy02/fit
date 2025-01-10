@@ -70,3 +70,39 @@ MICRO_GOALS = {
         "sodium": 1500
     }
 }
+
+def estimate_daily_water_intake(
+        weight_lbs: float,
+        gender: str,
+        daily_calories_burned: float,
+        hot_environment: bool = False
+    ) -> float:
+    """
+    Estimates daily water intake in milliliters (mL).
+    
+    Args:
+        weight_kg (float): Person's weight in kilograms.
+        gender (str): "male" or "female".
+        daily_calories_burned (float): Estimated total daily calorie burn (TDEE).
+        hot_environment (bool): If True, adds an extra ~250-500 mL for heat/humidity.
+    
+    Returns:
+        float: Estimated daily water intake in mL.
+    """
+    weight_kg = weight_lbs * 0.453592
+    base_water = weight_kg * 35
+    activity_calories = max(0, daily_calories_burned - 2000)
+    activity_water = activity_calories * 1
+    total_water = base_water + activity_water
+
+    if gender.lower() == "male":
+        if total_water < 3700:
+            total_water = 3700
+    elif gender.lower() == "female":
+        if total_water < 2700:
+            total_water = 2700
+
+    if hot_environment:
+        total_water += 300
+
+    return total_water

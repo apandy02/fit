@@ -93,6 +93,17 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
             user_id=user_id,
             metrics=metrics
         )
+    
+    water_table = db.t.water
+    if water_table not in db.t:
+        water_table.create(
+            dict(
+                date=str,
+                time=str,
+                water_consumed_ml=float,
+            ),
+            pk='uuid'
+        )
 
     user_data_table = db.t.user_data
     if user_data_table not in db.t:
@@ -431,3 +442,26 @@ def get_daily_supplement_entries(database: fh.Database, user_id: str, date: date
     """
     results = database.execute(query, (user_id, date)).fetchall()
     return [(row[0], row[1], row[2]) for row in results]
+
+
+def insert_water_consumption(database: fh.Database, water_consumed_ml: float, date_consumed: datetime, time_consumed: str):
+    """
+    Insert a water consumption entry into the database.
+    """
+    water_table = database.t.water
+    water_table.insert(
+        date=date_consumed,
+        time=time_consumed,
+        water_consumed_ml=water_consumed_ml,
+    )
+
+def get_daily_water_consumption(database: fh.Database, date: datetime) -> float:
+    """
+    Get the daily water consumption for a given date.
+    """
+    query = """
+        SELECT SUM(water_consumed_ml) as water_consumed_ml FROM water WHERE date = ?
+    """
+    result = database.execute(query, (str(date),)).fetchone()
+    print(result)
+    return result[0]

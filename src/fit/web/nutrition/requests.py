@@ -35,13 +35,13 @@ def get_weekly_overview():
 def overview_page_content(data: list[dict], current_view: str):
     menu_items = [
         ("Food", "🍽️", "openFoodModal()"),
-        ("Water", "💧", None),  # No handler yet
+        ("Water", "💧", "openWaterModal()"),  # Updated to use water modal
         ("Supplement", "💊", "openSupplementModal()")
     ]
 
     visible_metrics = databases.get_visible_metrics(DB, "default") # TODO: get user_id from session, hardcoded for now
     water_metrics = [
-        {"name": "Water", "column_name": "water", "unit": "oz", "plot_id": "water-plot"}
+        {"name": "Water", "column_name": "water", "unit": "ml", "plot_id": "water-plot"}
     ]
 
     content = fh.Article(
@@ -56,9 +56,8 @@ def overview_page_content(data: list[dict], current_view: str):
     )
     return common.page_outline(1, "Nutritional Overview", content)
 
-def get_weekly_nutrition_data(date: datetime):
+def get_weekly_nutrition_data(week: list[datetime]):
     """Get the current nutrition data for display"""
-    week = get_current_week_dates()
     data = {
         "calories": {"consumed": [], "goal": [], "burned": []},
         "protein": {"consumed": [], "goal": []},
@@ -92,6 +91,9 @@ def get_daily_nutrition_data(date: datetime):
     calories_burned = active_tracker.get_daily_calories_burned(date)
     goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     daily_consumption = databases.get_daily_cumulative_nutrition(DB, date)
+    water_consumed = databases.get_daily_water_consumption(DB, date)
+    water_goal = 2700 # TODO: estimate water goal
+    
     return {
         "calories": {"consumed": [daily_consumption.calories], "goal": [goals["calories"]], "burned": [calories_burned]},
         "protein": {"consumed": [daily_consumption.macronutrients.protein], "goal": [goals["protein"]]},
@@ -101,7 +103,7 @@ def get_daily_nutrition_data(date: datetime):
         "vitamin_c": {"consumed": [daily_consumption.micronutrients.vitamin_c], "goal": [micronutrient_goals["vitamin_c"]]},
         "iron": {"consumed": [daily_consumption.micronutrients.iron], "goal": [micronutrient_goals["iron"]]},
         "calcium": {"consumed": [daily_consumption.micronutrients.calcium], "goal": [micronutrient_goals["calcium"]]},
-        "water": {"consumed": [40], "goal": [64]},
+        "water": {"consumed": [water_consumed], "goal": [water_goal]},
         "creatine": {"consumed": [2.0], "goal": [5.0]}
     }
 
@@ -497,3 +499,37 @@ async def get_nutrient_suggestions(nutrient: str):
         ),
         cls="bg-base-200 p-4 rounded-lg"
     )
+
+async def log_water(request: fh.Request):
+    """Save water consumption entry"""
+    try:
+        form = await request.form()
+        time_consumed = form["time_consumed"]
+        
+        today = datetime.today().date()
+        time_obj = datetime.strptime(time_consumed, "%H:%M").time()
+        databases.insert_water_consumption(
+            database=DB, water_consumed_ml=form["amount"], date_consumed=today, time_consumed=time_obj
+        )
+        
+        return fh.Div(
+            fh.P(
+                "Water logged successfully!",
+                cls="text-green-500 font-semibold text-center mb-4"
+            ),
+            fh.Script("""
+                // Show success message briefly
+                setTimeout(() => {
+                    // Close the modal
+                    closeWaterModal();
+                    
+                    // Reload the page to show updated data
+                    window.location.reload();
+                }, 1000);
+            """)
+        )
+    except Exception as e:
+        return fh.P(
+            f"Error logging water: {str(e)}",
+            cls="text-red-500 font-semibold text-center"
+        )
