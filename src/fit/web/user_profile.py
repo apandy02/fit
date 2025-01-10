@@ -18,7 +18,7 @@ def create_editable_input(name: str, value: str, input_type: str = "text", place
                 placeholder=placeholder,
                 required=required,
                 readonly=bool(value), 
-                cls="input input-bordered w-full bg-base-200 text-primary-content"
+                cls="input input-bordered w-full bg-base-200 text-primary-content focus:bg-base-200 focus:text-primary-content"
             ),
             cls="w-11/12" 
         ),
@@ -70,6 +70,15 @@ def get():
                                 user_data.get("email", ""),
                                 input_type="email",
                                 placeholder="john@example.com"
+                            )),
+                            # Gender
+                            create_form_row("Gender", fh.Select(
+                                fh.Option("Select gender", value="", selected=not user_data.get("gender"), disabled=True),
+                                fh.Option("Male", value="male", selected=user_data.get("gender") == "male"),
+                                fh.Option("Female", value="female", selected=user_data.get("gender") == "female"),
+                                name="gender",
+                                required=True,
+                                cls="select select-bordered w-full bg-base-200 text-primary-content"
                             )),
                             # Date of Birth
                             create_form_row("Date of Birth", create_editable_input(

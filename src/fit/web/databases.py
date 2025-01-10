@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
+
 from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
                                        Fats, Macronutrients, MealBreakdown,
                                        Micronutrients, NutritionalInformation)
@@ -111,6 +112,7 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
                 user_id=str,
                 name=str,
                 email=str,
+                gender=str,
                 date_of_birth=str,
                 units=str,
                 dietary_restrictions=str,
@@ -276,7 +278,7 @@ def set_visible_metrics(database: fh.Database, metrics: list[str], user_id: str)
 def get_user_data(db: fh.Database, user_id="default"):
     """Get user data from the database"""
     query = """
-            SELECT name, email, date_of_birth, units, dietary_restrictions FROM user_data WHERE user_id = ?
+            SELECT name, email, date_of_birth, units, gender, dietary_restrictions FROM user_data WHERE user_id = ?
     """
     result = db.execute(query, (user_id,)).fetchone()
     if result:
@@ -285,7 +287,8 @@ def get_user_data(db: fh.Database, user_id="default"):
             "email": result[1],
             "date_of_birth": result[2],
             "units": result[3],
-            "dietary_restrictions": result[4]
+            "gender": result[4],
+            "dietary_restrictions": result[5]
         }
     return {}
 
@@ -464,3 +467,18 @@ def get_daily_water_consumption(database: fh.Database, date: datetime) -> float:
     result = database.execute(query, (str(date),)).fetchone()
     print(result)
     return result[0]
+
+def get_user_measurements(database: fh.Database) -> dict:
+    """Get user measurements from the database"""
+    query = """
+        SELECT datetime, weight, height FROM measurements
+    """
+    result = database.execute(query).fetchall()
+    return result
+
+def insert_user_measurements(database: fh.Database, height: float, weight: float, datetime: datetime):
+    """Insert user measurements into the database"""
+    query = """
+        INSERT INTO measurements (datetime, height, weight) VALUES (?, ?, ?)
+    """
+    database.execute(query, (str(datetime.isoformat()), height, weight))

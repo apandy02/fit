@@ -3,19 +3,14 @@ from datetime import datetime
 
 import fasthtml.common as fh
 from fit.nutrition.data_models import Goals
-from fit.web.common import DB, create_fab_menu, create_modal, page_outline
+from fit.web.common import page_outline, DB
+from fit.web.databases import insert_user_measurements, get_user_measurements
 
 
 def get():
     """Return the progress tracking page content"""
-    measurements = DB.execute("SELECT datetime, weight FROM measurements ORDER BY datetime").fetchall()
+    measurements = get_user_measurements(DB)
     plot_data, plot_layout = create_weight_plot(measurements)
-
-    fab_buttons = [
-        ("Weight", "⚖️", "openModal('weight-modal')"),
-        ("Height", "📏", "openModal('height-modal')"),
-        ("Goal", "🎯", "openModal('goal-modal')")
-    ]
     
     content = fh.Article(
         fh.Div(
@@ -51,25 +46,82 @@ def get():
                 ),
                 cls="bg-base-200 shadow-lg rounded-lg p-6"
             ),
-            create_fab_menu(fab_buttons),
-            create_modal(create_progress_modal_card("Update Weight", create_weight_form, "weight-modal"),),
-            create_modal(create_progress_modal_card("Update Height", create_height_form, "height-modal")),
-            create_modal(create_progress_modal_card("Change Goal", create_goal_form, "goal-modal")),
+            fh.Div(
+                fh.Button(
+                    fh.Span("+", cls="text-2xl"),
+                    cls="btn btn-circle btn-primary",
+                    onclick="openMeasurementsModal()"
+                ),
+                cls="fixed bottom-8 right-8"
+            ),
+            measurements_modal(),
             cls="max-w-4xl mx-auto p-6 bg-base-100"
         ),
         cls="bg-base-100"
     )
     return page_outline(2, "Progress Tracking", content)
 
-def create_progress_modal_card(title: str, create_fn, modal_id: str):
-    """Create a modal card"""
-    return (
-        fh.Card(
-            fh.Header(fh.H3(title, cls="text-xl font-bold mb-4 text-primary-content")),
-            create_fn(),
-            cls="bg-base-200 shadow-lg rounded-lg"
+def get_latest_measurements():
+    """Get the latest measurements from the database"""
+    latest = DB.execute("""
+        SELECT weight, height 
+        FROM measurements 
+        ORDER BY datetime DESC
+    """).fetchone()
+
+    print(latest)
+    
+    if latest:
+        weight = latest[0] if latest[0] is not None else 0
+        height = latest[1] if latest[1] is not None else 0
+        feet = height // 12 if height > 0 else 0
+        inches = height % 12 if height > 0 else 0
+    else:
+        weight = 0
+        feet = 0
+        inches = 0
+    
+    return weight, feet, inches
+
+def create_weight_form():
+    """Create the weight input form"""
+    weight, _, _ = get_latest_measurements()
+    return fh.Form(
+        hx_post="/update_weight",
+        hx_target="#weight-result",
+        cls="space-y-4"
+    )(
+        create_measurement_input_section("Weight (lbs)", "weight", min="0", step="0.1", placeholder="Enter your weight", value=str(weight)),
+        fh.Button(
+            "Update Weight",
+            type="submit",
+            cls="btn btn-primary w-full"
         ),
-        modal_id
+        fh.Div(id="weight-result")
+    )
+
+def create_height_form():
+    """Create the height input form"""
+    _, feet, inches = get_latest_measurements()
+    return fh.Form(
+        hx_post="/update_height",
+        hx_target="#height-result",
+        cls="space-y-4"
+    )(
+        fh.Div(
+            fh.Label("Height", cls="label text-primary-content"),
+            fh.Div(
+                create_measurement_input_section("Feet", "height_feet", "w-24", step="1", min="0", max="9", placeholder="ft", value=str(feet)),
+                create_measurement_input_section("Inches", "height_inches", "w-24", min="0", max="11", placeholder="in", value=str(inches)),
+                cls="flex space-x-4"
+            )
+        ),
+        fh.Button(
+            "Update Height",
+            type="submit",
+            cls="btn btn-primary w-full"
+        ),
+        fh.Div(id="height-result")
     )
 
 def create_measurement_input_section(label: str, name: str, width: str = "w-full", **input_props):
@@ -83,72 +135,6 @@ def create_measurement_input_section(label: str, name: str, width: str = "w-full
             **input_props
         ),
         cls="form-control"
-    )
-
-def create_weight_form():
-    """Create the weight input form"""
-    return fh.Form(
-        hx_post="/update_weight",
-        hx_target="#weight-result",
-        cls="space-y-4"
-    )(
-        create_measurement_input_section("Weight (lbs)","weight", min="0", step="0.1", placeholder="Enter your weight"),
-        fh.Button(
-            "Update Weight",
-            type="submit",
-            cls="btn btn-primary w-full"
-        ),
-        fh.Div(id="weight-result")
-    )
-
-def create_height_form():
-    """Create the height input form"""
-    return fh.Form(
-        hx_post="/update_height",
-        hx_target="#height-result",
-        cls="space-y-4"
-    )(
-        fh.Div(
-            fh.Label("Height", cls="label text-primary-content"),
-            fh.Div(
-                create_measurement_input_section("Feet", "height_feet", "w-24", step="1", min="0", max="9", placeholder="ft"),
-                create_measurement_input_section("Inches", "height_inches", "w-24", min="0", max="11", placeholder="in"),
-                cls="flex space-x-4"
-            )
-        ),
-        fh.Button(
-            "Update Height",
-            type="submit",
-            cls="btn btn-primary w-full"
-        ),
-        fh.Div(id="height-result")
-    )
-
-def create_goal_form():
-    """Create the fitness goal form"""
-    return fh.Form(
-        hx_post="/update_goal",
-        hx_target="#goal-result",
-        cls="space-y-4"
-    )(
-        fh.Div(
-            fh.Label("Fitness Goal", cls="label text-primary-content"),
-            fh.Select(
-                *[
-                    fh.Option(goal.value.title(), value=goal.value)
-                    for goal in Goals
-                ],
-                name="fitness_goal",
-                cls="select select-bordered w-full bg-base-200 text-primary-content"
-            ),
-            cls="form-control"
-        ),
-        fh.Button(
-            "Update Goal",
-            type="submit",
-            cls="btn btn-primary w-full"
-        ),
-        fh.Div(id="goal-result")
     )
 
 def create_weight_plot(measurements: list[tuple[str, float]]):
@@ -212,38 +198,163 @@ def create_stats_card(title: str, value: str):
             cls="text-lg font-bold text-secondary-content"
         ),
         cls="p-4 text-center bg-base-300"
-    )
-
-async def update_height(height_feet: int, height_inches: int):
-    """Handle height update"""
-    total_height = (height_feet * 12) + height_inches
-    DB.execute(
-        "UPDATE user_info SET height = ? WHERE id = 1",
-        (total_height,)
-    )
-    return fh.P(
-        "Height updated successfully!",
-        cls="text-green-600 font-semibold text-center mt-4"
-    )
-
-async def update_goal(fitness_goal: str):
-    """Handle goal update"""
-    DB.execute(
-        "UPDATE user_info SET goal = ? WHERE id = 1",
-        (fitness_goal,)
-    )
-    return fh.P(
-        "Goal updated successfully!",
-        cls="text-green-600 font-semibold text-center mt-4"
     ) 
 
-async def update_weight(weight: float):
-    """Handle weight update"""
-    DB.execute(
-        "INSERT INTO measurements (datetime, weight) VALUES (?, ?)",
-        (datetime.now().isoformat(), weight)
+def create_progress_modal_card(title: str, create_fn, modal_id: str):
+    """Create a modal card"""
+    return (
+        fh.Card(
+            fh.Header(fh.H3(title, cls="text-xl font-bold mb-4 text-primary-content")),
+            create_fn(),
+            cls="bg-base-200 shadow-lg rounded-lg"
+        ),
+        modal_id
     )
-    return fh.P(
-        "Weight updated successfully!",
-        cls="text-green-600 font-semibold text-center mt-4"
+
+def create_goal_form():
+    """Create the fitness goal form"""
+    return fh.Form(
+        hx_post="/update_goal",
+        hx_target="#goal-result",
+        cls="space-y-4"
+    )(
+        fh.Div(
+            fh.Label("Fitness Goal", cls="label text-primary-content"),
+            fh.Select(
+                *[
+                    fh.Option(goal.value.title(), value=goal.value)
+                    for goal in Goals
+                ],
+                name="fitness_goal",
+                cls="select select-bordered w-full bg-base-200 text-primary-content"
+            ),
+            cls="form-control"
+        ),
+        fh.Button(
+            "Update Goal",
+            type="submit",
+            cls="btn btn-primary w-full"
+        ),
+        fh.Div(id="goal-result")
     )
+
+def measurements_modal():
+    """Create the measurements tracking modal"""
+    weight, feet, inches = get_latest_measurements()
+    return fh.Div(
+        fh.Dialog(
+            fh.Div(
+                fh.Div(
+                    fh.Button(
+                        "×",
+                        cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                        onclick="closeMeasurementsModal()",
+                        style="outline: none; box-shadow: none;"
+                    ),
+                    fh.H3("Update Measurements", cls="text-xl font-bold text-center mt-4 mb-8 text-primary-content"),
+                    fh.Form(
+                        hx_post="/update_measurements",
+                        hx_target="#measurements-result",
+                        cls="w-[90%] mx-auto space-y-6"
+                    )(
+                        fh.Div(
+                            fh.Label("Weight (lbs)", cls="label text-primary-content"),
+                            fh.Input(
+                                type="number",
+                                name="weight",
+                                step="0.1",
+                                min="0",
+                                required=True,
+                                placeholder="Enter your weight",
+                                value=str(weight),
+                                cls="input input-bordered w-full bg-base-200 text-primary-content"
+                            ),
+                            cls="form-control"
+                        ),
+                        fh.Div(
+                            fh.Label("Height", cls="label text-primary-content"),
+                            fh.Div(
+                                fh.Div(
+                                    fh.Label("Feet", cls="label text-primary-content"),
+                                    fh.Input(
+                                        type="number",
+                                        name="height_feet",
+                                        step="1",
+                                        min="0",
+                                        max="9",
+                                        placeholder="ft",
+                                        value=str(feet),
+                                        cls="input input-bordered w-full bg-base-200 text-primary-content"
+                                    ),
+                                    cls="form-control"
+                                ),
+                                fh.Div(
+                                    fh.Label("Inches", cls="label text-primary-content"),
+                                    fh.Input(
+                                        type="number",
+                                        name="height_inches",
+                                        min="0",
+                                        max="11",
+                                        placeholder="in",
+                                        value=str(inches),
+                                        cls="input input-bordered w-full bg-base-200 text-primary-content"
+                                    ),
+                                    cls="form-control"
+                                ),
+                                cls="grid grid-cols-2 gap-4"
+                            ),
+                            cls="form-control"
+                        ),
+                        fh.Button(
+                            "Save Measurements",
+                            type="submit",
+                            cls="btn btn-primary w-full mt-6"
+                        ),
+                        fh.Div(id="measurements-result", cls="mt-4"),
+                        cls="mx-8"
+                    ),
+                    cls="p-6"
+                ),
+                cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg relative w-full"
+            ),
+            id="measurements-modal",
+            cls="modal"
+        ),
+        fh.Script("""
+            function openMeasurementsModal() {
+                document.getElementById('measurements-modal').showModal();
+            }
+            
+            function closeMeasurementsModal() {
+                document.getElementById('measurements-modal').close();
+            }
+        """)
+    )
+
+async def update_measurements(request: fh.Request):
+    """Handle measurements update"""
+    # Insert weight measurement
+    form = await request.form()
+    weight = float(form["weight"])
+    height_feet = float(form["height_feet"])
+    height_inches = float(form["height_inches"])
+    total_height = (height_feet * 12) + height_inches
+    insert_user_measurements(
+        database=DB,
+        height=total_height,
+        weight=weight,
+        datetime=datetime.now()
+    )
+
+    return fh.Div(
+        fh.P(
+            "Measurements updated successfully!",
+            cls="text-green-600 font-semibold text-center mt-4"
+        ),
+        fh.Script("""
+            setTimeout(() => {
+                closeMeasurementsModal();
+                window.location.reload();
+            }, 1000);
+        """)
+    ) 
