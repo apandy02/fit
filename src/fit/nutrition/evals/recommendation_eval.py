@@ -3,15 +3,22 @@ import os
 from typing import Any, Dict, Tuple
 
 import ell
+from pydantic import BaseModel, Field
 
 from fit.nutrition.assistants import (make_recommendations,
                                       natural_language_macros)
-from fit.nutrition.data import MealRecommendation, NutritionalInformation
+from fit.nutrition.data_models import (MealRecommendation,
+                                       NutritionalInformation)
 
 ell.init(store="./logdir") 
 
 MACRONUTRIENTS = ["protein", "carbohydrates", "fat"]
 MICRONUTRIENTS = ["vitamin_a", "vitamin_c", "vitamin_d", "calcium", "iron", "potassium", "sodium"]
+DEFAULT_MODEL = "gpt-4o-2024-08-06" # TODO: change to a cheaper model 
+
+class MealSemanticSimilarity(BaseModel):
+    """A dataclass that contains the semantic similarity for a meal."""
+    similarity: float = Field(description="the semantic similarity of the meal to the user's preferences")
 
 def prepare_eval_data():
     data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
@@ -100,6 +107,30 @@ def calculate_penalty(final_totals: Dict[str, float], targets: Dict[str, float])
             
     return -min(penalty, 1.0)  # Cap penalty at -1
 
+@ell.complex(model=DEFAULT_MODEL, response_format=MealSemanticSimilarity)
+def semantic_similarity(meal: MealRecommendation, user_preferences: str):
+    """Given a meal that is recommended by our recommendation system
+    and the user's preferences, calculate a similarity score between that 
+    and the user's preferences on a 0 to 1 scale. if the meal sounds 
+    like a perfect match for our user, give it 1, if it is completely 
+    out of distribution, give it a 0
+    """
+    user_str = f"Meal title: {meal.title}, meal ingredients: {meal.ingredients}"
+    user_str = f"{user_str} User preferences: {user_preferences}"
+    return user_str
+
+def semantic_similarity_metric(datapoint: Dict[str, Any], output: MealRecommendation) -> float:
+    """Calculate semantic similarity score for non-explorative recommendations."""
+    user_preferences = datapoint["input"]["user_preferences"]
+    returned_recommendations = output.content[0].parsed.meals
+    similarities = []
+    for meal in returned_recommendations:
+        if not meal.is_explorative:
+            similarity = semantic_similarity(meal, user_preferences)
+            similarities.append(similarity.content[0].parsed.similarity)
+    
+    return sum(similarities) / len(similarities)
+
 def recommendation_metric(datapoint: Dict[str, Any], output: MealRecommendation) -> float:
     """
     Evaluates recommendations based on how well they optimize the target nutrient
@@ -117,6 +148,7 @@ def recommendation_metric(datapoint: Dict[str, Any], output: MealRecommendation)
     final_score = (0.7 * target_score) + (0.3 * (1 + penalty))
     return final_score
 
+
 if __name__ == "__main__":
     data = prepare_eval_data()
 
@@ -125,8 +157,12 @@ if __name__ == "__main__":
     eval = ell.evaluation.Evaluation(
         name="recommendation_eval",
         dataset=dataset,
-        metrics={"recommendation_score": recommendation_metric}
+        metrics={
+            "recommendation_score": recommendation_metric,
+            "semantic_similarity_score": semantic_similarity_metric
+        }
     )
 
     result = eval.run(make_recommendations)
     print("Average recommendation score:", result.results.metrics["recommendation_score"].mean())
+    print("Average semantic similarity score:", result.results.metrics["semantic_similarity_score"].mean())

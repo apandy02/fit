@@ -2,17 +2,19 @@ import io
 from datetime import datetime
 
 import fasthtml.common as fh
+from PIL import Image
+
 import fit.nutrition.assistants as assistants
 import fit.web.common as common
 import fit.web.databases as databases
 import fit.web.nutrition.ui as ui
-from fit.nutrition.data import (Carbohydrates, ConditionalNutrients, Fats,
-                                Goals, Macronutrients, MealBreakdown,
-                                Micronutrients, NutritionalInformation)
+from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
+                                       Fats, Goals, Macronutrients,
+                                       MealBreakdown, Micronutrients,
+                                       NutritionalInformation)
 from fit.nutrition.targets import calculate_macro_targets
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import DB, active_tracker, micronutrient_goals
-from PIL import Image
 
 
 def get_daily_overview():

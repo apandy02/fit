@@ -1,4 +1,4 @@
-from fit.nutrition.data import Goals
+from fit.nutrition.data_models import Goals
 
 
 def calculate_caloric_target(calories_burned: float, goal: Goals) -> float:

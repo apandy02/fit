@@ -92,6 +92,9 @@ class MealRecommendation(BaseModel):
     ingredients: str = Field(
         description="predicted ingredients and amounts. formatted comma separated, not bullet points"
     )
+    is_explorative: bool = Field(
+        description="whether the meal is explorative or not. ie, is it a meal that the user would not typically eat"
+    )
 
 class Recommendations(BaseModel):
     """A dataclass that contains the meal recommendations for a food."""

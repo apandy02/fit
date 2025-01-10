@@ -1,9 +1,10 @@
 from datetime import datetime
 
 import fasthtml.common as fh
+
 import fit.nutrition.assistants as assistants
 import fit.web.nutrition.food_plots as food_plots
-from fit.nutrition.data import MealBreakdown
+from fit.nutrition.data_models import MealBreakdown
 from fit.web.common import create_overview_card, create_time_filter
 
 
@@ -428,11 +429,8 @@ def create_metric_overview_section(title, metrics_data, filtered_metrics, all_me
                 id=dropdown_id
             ),
             cls="relative inline-block text-left ml-2"
-
-
         )
 
-    
     return fh.Section(
         fh.Div(
             fh.H3(f"{title}", cls="text-2xl font-bold text-center mb-8 text-primary-content"),
