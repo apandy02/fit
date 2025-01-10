@@ -14,7 +14,7 @@ ell.init(store="./logdir")
 
 MACRONUTRIENTS = ["protein", "carbohydrates", "fat"]
 MICRONUTRIENTS = ["vitamin_a", "vitamin_c", "vitamin_d", "calcium", "iron", "potassium", "sodium"]
-DEFAULT_MODEL = "gpt-4o-2024-08-06" # TODO: change to a cheaper model 
+DEFAULT_MODEL = "gpt-4o-mini-2024-07-18" # TODO: change to a cheaper model 
 
 class MealSemanticSimilarity(BaseModel):
     """A dataclass that contains the semantic similarity for a meal."""
