@@ -466,7 +466,7 @@ async def get_nutrient_suggestions(nutrient: str):
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
     restrictions = databases.get_dietary_restrictions(DB, "default")
-    user_preferences = assistants.summarize_user_preferences(databases.get_all_meal_summaries(DB)).content[0].parsed # TODO: cache the output of this so that we aren't calling it every time
+    user_preferences = assistants.summarize_user_preferences(databases.get_all_meal_summaries(DB)) # TODO: cache the output of this so that we aren't calling it every time
 
     recommendations = assistants.make_recommendations(
         consumption=daily_nutrition,
