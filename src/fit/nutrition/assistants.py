@@ -57,7 +57,7 @@ def summarize_user_preferences(meals: list[MealBreakdown]) -> str:
 @ell.complex(model=DEFAULT_MODEL, response_format=Recommendations)
 def make_recommendations(
         consumption: NutritionalInformation,
-        targets: NutritionalInformation,
+        targets: dict[str, float],
         target_nutrient: str,
         user_preferences: str,
         restrictions: list[str]

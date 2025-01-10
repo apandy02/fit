@@ -1,0 +1,49 @@
+[
+    {
+        "consumption": {
+            "calories": 1808.3,
+            "conditional_nutrients": {
+                "creatine": 0
+            },
+            "macronutrients": {
+                "carbohydrates": {
+                    "added_sugar": 0,
+                    "fiber": 20,
+                    "total": 195,
+                    "total_sugar": 0
+                },
+                "fat": {
+                    "saturated": 0,
+                    "total": 55.5,
+                    "trans": 0
+                },
+                "protein": 137
+            },
+            "micronutrients": {
+                "calcium": 1805,
+                "iron": 11,
+                "potassium": 2130,
+                "sodium": 3065,
+                "vitamin_a": 7300,
+                "vitamin_c": 63,
+                "vitamin_d": 125
+            }
+        },
+        "restrictions": null,
+        "target_nutrient": "protein",
+        "targets": {
+            "calcium": 1000,
+            "calories": 1547,
+            "carbs": 155,
+            "fat": 52,
+            "iron": 18,
+            "potassium": 3400,
+            "protein": 116,
+            "sodium": 1500,
+            "vitamin_a": 900,
+            "vitamin_c": 90,
+            "vitamin_d": 15
+        },
+        "user_preferences": "Based on the list of meals provided, the user's dietary preferences and patterns can be analyzed as follows: The user frequently eats Indian cuisine, with dishes like Methi Thepla, Lamb Ghosh, Butter Chicken, and Chicken Tikka Masala. They also enjoy Italian dishes like pasta and Asian cuisine like ramen. Common protein sources include eggs and lamb."
+    }
+]
