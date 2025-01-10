@@ -3,8 +3,9 @@ from datetime import datetime
 
 import fasthtml.common as fh
 from fit.nutrition.data_models import Goals
-from fit.web.common import page_outline, DB
-from fit.web.databases import insert_user_measurements, get_user_measurements, get_latest_user_measurements
+from fit.web.common import DB, page_outline
+from fit.web.databases import (get_latest_user_measurements,
+                               get_user_measurements, insert_user_measurements)
 
 
 def get():

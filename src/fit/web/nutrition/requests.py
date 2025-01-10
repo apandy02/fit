@@ -10,7 +10,8 @@ from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
                                        Fats, Goals, Macronutrients,
                                        MealBreakdown, Micronutrients,
                                        NutritionalInformation)
-from fit.nutrition.targets import calculate_macro_targets, estimate_daily_water_intake
+from fit.nutrition.targets import (calculate_macro_targets,
+                                   estimate_daily_water_intake)
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import DB, active_tracker, micronutrient_goals
 from PIL import Image

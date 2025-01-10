@@ -74,8 +74,7 @@ MICRO_GOALS = {
 def estimate_daily_water_intake(
         weight_lbs: float,
         gender: str,
-        daily_calories_burned: float,
-        hot_environment: bool = False
+        daily_calories_burned: float
     ) -> float:
     """
     Estimates daily water intake in milliliters (mL).
@@ -101,8 +100,5 @@ def estimate_daily_water_intake(
     elif gender.lower() == "female":
         if total_water < 2700:
             total_water = 2700
-
-    if hot_environment:
-        total_water += 300
 
     return total_water
