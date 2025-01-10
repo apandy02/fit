@@ -1,10 +1,10 @@
 import unittest
-from fit.nutrition.evals.recommendation_eval import (
-    calculate_target_score,
-    calculate_penalty,
-    calculate_final_totals,
-    prepare_eval_data,
-)
+
+from fit.nutrition.evals.recommendation_eval import (calculate_final_totals,
+                                                     calculate_penalty,
+                                                     calculate_target_score,
+                                                     prepare_eval_data)
+
 
 class TestRecommendationEval(unittest.TestCase):
     @classmethod

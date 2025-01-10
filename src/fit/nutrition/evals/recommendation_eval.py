@@ -1,9 +1,13 @@
-import ell
-import os
 import json
-from typing import Dict, Tuple, Any
-from fit.nutrition.assistants import make_recommendations, natural_language_macros
-from fit.nutrition.data import NutritionalInformation, MealRecommendation
+import os
+from typing import Any, Dict, Tuple
+
+import ell
+
+from fit.nutrition.assistants import (make_recommendations,
+                                      natural_language_macros)
+from fit.nutrition.data import MealRecommendation, NutritionalInformation
+
 ell.init(store="./logdir") 
 
 MACRONUTRIENTS = ["protein", "carbohydrates", "fat"]
