@@ -229,7 +229,7 @@ def summarize_daily_meals_and_targets(meals: list[MealBreakdown], target: dict[s
     meals_str = ""
     for _, meal in enumerate(meals, 1):
         meals_str += f"""Meal {meal.title} - {meal.calories} calories, 
-            {meal.macronutrients.protein}g protein, {meal.macronutrients.carbohydrates}g carbs, 
+            {meal.macronutrients.protein}g protein, {meal.macronutrients.carbohydrates}g carbohydrates, 
             {meal.macronutrients.fat}g fat\n
             Micros: {meal.micronutrients.vitamin_a}IU vit A, {meal.micronutrients.vitamin_c}mg vit C, 
             {meal.micronutrients.iron}mg iron, {meal.micronutrients.calcium}mg calcium, 
@@ -237,7 +237,7 @@ def summarize_daily_meals_and_targets(meals: list[MealBreakdown], target: dict[s
         """
     targets_str = f"""
         Calories: {target["calories"]}, Protein: {target["protein"]}g,
-        Carbohydrates: {target["carbs"]}g, Fat: {target["fat"]}g
+        Carbohydrates: {target["carbohydrates"]}g, Fat: {target["fat"]}g
         Micronutrient targets: Vitamin A: {target["vitamin_a"]}IU, Vitamin C: {target["vitamin_c"]}mg,
         Iron: {target["iron"]}mg, Calcium: {target["calcium"]}mg,
         Sodium: {target["sodium"]}mg, Potassium: {target["potassium"]}mg

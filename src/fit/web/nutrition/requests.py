@@ -60,7 +60,7 @@ def get_weekly_nutrition_data(date: datetime):
     data = {
         "calories": {"consumed": [], "goal": [], "burned": []},
         "protein": {"consumed": [], "goal": []},
-        "carbs": {"consumed": [], "goal": []}, 
+        "carbohydrates": {"consumed": [], "goal": []}, 
         "fat": {"consumed": [], "goal": []},
         "vitamin_a": {"consumed": [], "goal": []},
         "vitamin_c": {"consumed": [], "goal": []},
@@ -93,7 +93,7 @@ def get_daily_nutrition_data(date: datetime):
     return {
         "calories": {"consumed": [daily_consumption.calories], "goal": [goals["calories"]], "burned": [calories_burned]},
         "protein": {"consumed": [daily_consumption.macronutrients.protein], "goal": [goals["protein"]]},
-        "carbs": {"consumed": [daily_consumption.macronutrients.carbohydrates.total], "goal": [goals["carbs"]]},
+        "carbohydrates": {"consumed": [daily_consumption.macronutrients.carbohydrates.total], "goal": [goals["carbohydrates"]]},
         "fat": {"consumed": [daily_consumption.macronutrients.fat.total], "goal": [goals["fat"]]},
         "vitamin_a": {"consumed": [daily_consumption.micronutrients.vitamin_a], "goal": [micronutrient_goals["vitamin_a"]]},
         "vitamin_c": {"consumed": [daily_consumption.micronutrients.vitamin_c], "goal": [micronutrient_goals["vitamin_c"]]},
@@ -255,7 +255,7 @@ async def save_supplement(request: fh.Request):
         nutrition_info = NutritionalInformation(
             calories=form["calories"],
             protein=form["protein"],
-            carbs=form["carbs"],
+            carbohydrates=form["carbohydrates"],
             fat=form["fat"],
             fiber=form["fiber"],
             vitamin_a=form["vitamin_a"],

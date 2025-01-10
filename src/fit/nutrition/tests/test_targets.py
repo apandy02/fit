@@ -34,19 +34,19 @@ class TestTargets(unittest.TestCase):
         self.assertEqual(result["calories"], 2200)
         self.assertEqual(result["protein"], 165)
         self.assertEqual(result["fat"], 73)
-        self.assertEqual(result["carbs"], 220)
+        self.assertEqual(result["carbohydrates"], 220)
         
         result = calculate_macro_targets(2000, Goals.LOSE_WEIGHT)
         self.assertEqual(result["calories"], 1800)
         self.assertEqual(result["protein"], 135)
         self.assertEqual(result["fat"], 60)
-        self.assertEqual(result["carbs"], 180)
+        self.assertEqual(result["carbohydrates"], 180)
         
         result = calculate_macro_targets(2000, Goals.MAINTAIN)
         self.assertEqual(result["calories"], 2000)
         self.assertEqual(result["protein"], 150)
         self.assertEqual(result["fat"], 67)
-        self.assertEqual(result["carbs"], 200)
+        self.assertEqual(result["carbohydrates"], 200)
 
     def test_micro_goals(self):
         self.assertIn("male", MICRO_GOALS)

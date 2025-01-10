@@ -470,7 +470,7 @@ def create_macro_section(data, visible_metrics, view_type: str):
     macro_metrics = [
         {"name": "Calories", "column_name": "calories", "unit": "", "plot_id": "calories"},
         {"name": "Protein", "column_name": "protein", "unit": "g", "plot_id": "protein"},
-        {"name": "Carbohydrates", "column_name": "carbs", "unit": "g", "plot_id": "carbs"},
+        {"name": "Carbohydrates", "column_name": "carbohydrates", "unit": "g", "plot_id": "carbohydrates"},
         {"name": "Fat", "column_name": "fat", "unit": "g", "plot_id": "fat"}
     ]
 

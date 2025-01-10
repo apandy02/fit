@@ -7,6 +7,9 @@ ell.init(store="./logdir")  # Enable versioning and storage
 
 # 2. A small dataset:
 
+MACRONUTRIENTS = ["protein", "carbohydrates", "fat"]
+MICRONUTRIENTS = ["vitamin_a", "vitamin_c", "vitamin_d", "calcium", "iron", "potassium", "sodium"]
+
 data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
 recommendations_path = os.path.join(data_dir, "recommendations.json")
 with open(recommendations_path, "r") as f:
@@ -38,58 +41,60 @@ def recommendation_metric(datapoint, output):
     targets = datapoint["input"]["targets"]
     target_nutrient = datapoint["input"]["target_nutrient"]
     
-    # Get nutritional info for each recommended meal
-    total_additional = None
+    # Calculate average nutritional info across recommended meals
+    recommendation_averages = {nutrient: 0 for nutrient in MACRONUTRIENTS + MICRONUTRIENTS}
+    recommendation_averages['calories'] = 0
+    
+    num_meals = len(output.content[0].parsed.meals)
+    
     for meal in output.content[0].parsed.meals:
         meal_desc = f"{meal.title}: {meal.ingredients}"
         meal_breakdown = natural_language_macros(meal_desc).content[0].parsed
+        recommendation_averages['calories'] += meal_breakdown.calories
+        for nutrient in MACRONUTRIENTS:
+            nutrient_value = getattr(meal_breakdown.macronutrients, nutrient)
+            if isinstance(nutrient_value, float):
+                recommendation_averages[nutrient] += nutrient_value
+            else: 
+                recommendation_averages[nutrient] += nutrient_value.total
         
-        # Convert MealBreakdown to NutritionalInformation
-        meal_nutrition = NutritionalInformation(
-            calories=meal_breakdown.calories,
-            conditional_nutrients=meal_breakdown.conditional_nutrients.dict(),
-            macronutrients=meal_breakdown.macronutrients.dict(),
-            micronutrients=meal_breakdown.micronutrients.dict()
-        )
-        
-        if total_additional is None:
-            total_additional = meal_nutrition
+        for nutrient in MICRONUTRIENTS:
+            recommendation_averages[nutrient] += getattr(meal_breakdown.micronutrients, nutrient)
+    
+    
+    # Calculate averages
+    final_totals = {}
+    for nutrient in MACRONUTRIENTS:
+        recommendation_averages[nutrient] /= num_meals
+        nutrient_value = getattr(current.macronutrients, nutrient)
+        if isinstance(nutrient_value, float):
+            final_totals[nutrient] = recommendation_averages[nutrient] + nutrient_value
         else:
-            total_additional = total_additional + meal_nutrition
+            final_totals[nutrient] = recommendation_averages[nutrient] + nutrient_value.total
+        
+    for nutrient in MICRONUTRIENTS:
+        recommendation_averages[nutrient] /= num_meals
+        final_totals[nutrient] = recommendation_averages[nutrient] + getattr(current.micronutrients, nutrient)
     
-    # Calculate final totals
-    final_totals = current + total_additional
-    
+    final_totals['calories'] = recommendation_averages['calories'] + current.calories
     # Calculate score components
     # 1. How close we get to target nutrient (0 to 1, 1 being perfect)
     target_score = 1.0 - abs(
-        getattr(final_totals, target_nutrient) - getattr(targets, target_nutrient)
-    ) / getattr(targets, target_nutrient)
+        final_totals[target_nutrient] - targets[target_nutrient]
+    ) / targets[target_nutrient]
     
     # 2. Penalty for overshooting other nutrients (-1 to 0, 0 being perfect)
     penalty = 0
-    nutrients_to_check = [
-        "calories", "protein", 
-        ("macronutrients", "carbohydrates", "total"),
-        ("macronutrients", "fat", "total")
-    ]
     
-    for nutrient in nutrients_to_check:
-        if isinstance(nutrient, tuple):
-            final_val = final_totals
-            target_val = targets
-            for attr in nutrient:
-                final_val = getattr(final_val, attr)
-                target_val = getattr(target_val, attr)
-        else:
-            final_val = getattr(final_totals, nutrient)
-            target_val = getattr(targets, nutrient)
+    for nutrient in MACRONUTRIENTS + MICRONUTRIENTS:
+       
+        final_val = final_totals[nutrient]
+        target_val = targets[nutrient]
             
         if final_val > target_val:
             penalty += (final_val - target_val) / target_val
             
     penalty = -min(penalty, 1.0)  # Cap penalty at -1
-    
     # Combine scores (weighted average favoring target optimization)
     final_score = (0.7 * target_score) + (0.3 * (1 + penalty))
     return final_score

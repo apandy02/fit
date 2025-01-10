@@ -11,7 +11,7 @@ md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
 ALL_METRICS = [
     "calories",
     "protein",
-    "carbs", 
+    "carbohydrates", 
     "fat",
     "fiber",
     "vitamin_a",
