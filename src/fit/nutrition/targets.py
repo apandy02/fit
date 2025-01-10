@@ -38,7 +38,7 @@ def calculate_macro_targets(calories_burned: float, goal: Goals) -> dict:
         
     Returns:
         dict: Dictionary containing all daily targets:
-            - calories, protein, fat, carbs
+            - calories, protein, fat, carbohydrates
     """
     caloric_target = calculate_caloric_target(calories_burned, goal)
     
@@ -46,7 +46,7 @@ def calculate_macro_targets(calories_burned: float, goal: Goals) -> dict:
         "calories": round(caloric_target),
         "protein": round(calculate_protein_target(caloric_target)),
         "fat": round(calculate_fat_target(caloric_target)),
-        "carbs": round(calculate_carb_target(caloric_target))
+        "carbohydrates": round(calculate_carb_target(caloric_target))
     }
 
 
