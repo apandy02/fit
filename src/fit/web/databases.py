@@ -465,7 +465,6 @@ def get_daily_water_consumption(database: fh.Database, date: datetime) -> float:
         SELECT SUM(water_consumed_ml) as water_consumed_ml FROM water WHERE date = ?
     """
     result = database.execute(query, (str(date),)).fetchone()
-    print(result)
     return result[0]
 
 def get_user_measurements(database: fh.Database) -> dict:
@@ -475,6 +474,17 @@ def get_user_measurements(database: fh.Database) -> dict:
     """
     result = database.execute(query).fetchall()
     return result
+
+def get_latest_user_measurements(database: fh.Database) -> dict:
+    """Get the latest user measurements from the database"""
+    query = """
+        SELECT weight, height FROM measurements ORDER BY datetime DESC LIMIT 1
+    """
+    result = database.execute(query).fetchone()
+    return {
+        "weight": result[0],
+        "height": result[1]
+    }
 
 def insert_user_measurements(database: fh.Database, height: float, weight: float, datetime: datetime):
     """Insert user measurements into the database"""

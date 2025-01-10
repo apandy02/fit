@@ -4,7 +4,7 @@ from datetime import datetime
 import fasthtml.common as fh
 from fit.nutrition.data_models import Goals
 from fit.web.common import page_outline, DB
-from fit.web.databases import insert_user_measurements, get_user_measurements
+from fit.web.databases import insert_user_measurements, get_user_measurements, get_latest_user_measurements
 
 
 def get():
@@ -63,17 +63,11 @@ def get():
 
 def get_latest_measurements():
     """Get the latest measurements from the database"""
-    latest = DB.execute("""
-        SELECT weight, height 
-        FROM measurements 
-        ORDER BY datetime DESC
-    """).fetchone()
-
-    print(latest)
+    latest = get_latest_user_measurements(DB)
     
     if latest:
-        weight = latest[0] if latest[0] is not None else 0
-        height = latest[1] if latest[1] is not None else 0
+        weight = latest["weight"] if latest["weight"] is not None else 0
+        height = latest["height"] if latest["height"] is not None else 0
         feet = height // 12 if height > 0 else 0
         inches = height % 12 if height > 0 else 0
     else:

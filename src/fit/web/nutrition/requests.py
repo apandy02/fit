@@ -10,7 +10,7 @@ from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
                                        Fats, Goals, Macronutrients,
                                        MealBreakdown, Micronutrients,
                                        NutritionalInformation)
-from fit.nutrition.targets import calculate_macro_targets
+from fit.nutrition.targets import calculate_macro_targets, estimate_daily_water_intake
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import DB, active_tracker, micronutrient_goals
 from PIL import Image
@@ -91,7 +91,9 @@ def get_daily_nutrition_data(date: datetime):
     goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     daily_consumption = databases.get_daily_cumulative_nutrition(DB, date)
     water_consumed = databases.get_daily_water_consumption(DB, date)
-    water_goal = 2700 # TODO: estimate water goal
+    user_info = databases.get_user_data(DB)
+    measurements = databases.get_latest_user_measurements(DB)
+    water_goal = estimate_daily_water_intake(measurements["weight"], user_info["gender"], calories_burned)
     
     return {
         "calories": {"consumed": [daily_consumption.calories], "goal": [goals["calories"]], "burned": [calories_burned]},
