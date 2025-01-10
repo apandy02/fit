@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 from fit.trackers.base import FitnessTracker
 from fit.trackers.implementations.whoop import Whoop
 
-SECRETS_PATH = "data/secrets.json"
+SECRETS_PATH = "data/secrets.json" # TODO move to db 
 CONFIG_PATH = "data/config.json"
 
 def create_tracker(tracker_type: str, username: str, password: str) -> FitnessTracker:
