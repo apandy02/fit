@@ -3,11 +3,12 @@ import os
 from typing import Any, Dict, Tuple
 
 import ell
+from pydantic import BaseModel, Field
+
 from fit.nutrition.assistants import (make_recommendations,
                                       natural_language_macros)
 from fit.nutrition.data_models import (MealRecommendation,
                                        NutritionalInformation)
-from pydantic import BaseModel, Field
 
 ell.init(store="./logdir") 
 
