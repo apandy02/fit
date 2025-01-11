@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import fasthtml.common as fh
 
@@ -458,14 +458,41 @@ def water_tracking_modal():
         """)
     )
 
-def create_page_header(current_view: str):
+def create_page_header(current_view: str, date: datetime.date = None):
     """Create the page header with title and time filter"""
+    today = datetime.today().date()
+    
+    # Create date navigation if we're in daily view
+    date_nav = None
+    if current_view == "daily" and date is not None:
+        next_date = date + timedelta(days=1)
+        prev_date = date - timedelta(days=1)
+        
+        date_nav = fh.Div(
+            fh.A(
+                "←",
+                href=f"/nutrition/{prev_date.strftime('%Y-%m-%d')}",
+                cls="text-xl font-light text-primary-content hover:text-primary-content"
+            ),
+            fh.P(
+                date.strftime("%B %d, %Y"),
+                cls="text-lg text-primary-content mx-4"
+            ),
+            fh.A(
+                "→",
+                href=f"/nutrition/{next_date.strftime('%Y-%m-%d')}" if date < today else "#",
+                cls=f"text-xl font-light {'text-primary-content hover:text-primary-content' if date < today else 'text-gray-400 cursor-not-allowed'}"
+            ),
+            cls="flex items-center justify-center mt-4"
+        )
+    
     return fh.Div(
         fh.P("Nutrition", cls="text-3xl font-bold text-center mb-6 text-primary-content"),
         fh.Div(
             create_time_filter(current_view),
             cls="flex justify-center mb-8"
         ),
+        date_nav if date_nav else None,
         supplement_modal(),
         water_tracking_modal(),
         cls="mb-8"
@@ -572,10 +599,10 @@ def create_conditional_section(data, visible_metrics, view_type: str):
     ]
     return create_metric_overview_section("Conditionally Essential Nutrients", data, filtered_metrics, conditional_metrics, view_type)
 
-def create_metrics_grid(data, visible_metrics, water_metrics, view_type: str):
+def create_metrics_grid(data, visible_metrics, water_metrics, view_type: str, date: datetime.date = None):
     """Create the grid of metric cards"""
     sections = [
-        create_overview_card(view_type),
+        create_overview_card(view_type, date),
         create_macro_section(data, visible_metrics, view_type),
         create_micro_section(data, visible_metrics, view_type),
         create_conditional_section(data, visible_metrics, view_type),
