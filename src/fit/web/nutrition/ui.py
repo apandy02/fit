@@ -493,8 +493,9 @@ def create_page_header(current_view: str, date: datetime.date = None):
             cls="flex justify-center mb-8"
         ),
         date_nav if date_nav else None,
-        supplement_modal(),
-        water_tracking_modal(),
+        supplement_modal(date: datetime.dateda
+        te),
+        water_tracking_modal(date),
         cls="mb-8"
     )
 
@@ -733,7 +734,8 @@ def create_nutrition_card(nutrition_info: MealBreakdown | None, card_title: str 
             )
     ) #TODO: make this more dynamic
 
-def supplement_modal():
+def supplement_modal(date: datetime.date):
+    log_supplement_endpoint = f"/log_supplement_consumption/{date.strftime('%Y-%m-%d')}"
     """Create the supplement tracking modal"""
     return fh.Div(
         fh.Dialog(
@@ -807,7 +809,7 @@ def supplement_modal():
                     ),
                     fh.Div(
                         fh.Form(
-                            hx_post="/log_supplement_consumption",
+                            hx_post=log_supplement_endpoint,
                             hx_target="#log-supplement-result",
                             cls="w-[90%] mx-auto space-y-6"
                         )(

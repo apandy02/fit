@@ -301,7 +301,7 @@ def get_dietary_restrictions(database: fh.Database, user_id: str):
     result = database.execute(query, (user_id,)).fetchone()
     return result[0]
 
-def insert_supplement(database: fh.Database, name: str, consumption_time: str, nutritional_info: NutritionalInformation):
+def insert_supplement(database: fh.Database, name: str, consumption_time: str, nutritional_info: NutritionalInformation, date: str):
     """
     Insert or update a supplement definition in the database.
     """
@@ -337,6 +337,7 @@ def insert_supplement(database: fh.Database, name: str, consumption_time: str, n
         potassium=nutritional_info.micronutrients.potassium,
         sodium=nutritional_info.micronutrients.sodium,
         meal_time=consumption_time,
+        date_entered=date,
         is_supplement=True,
     )
 

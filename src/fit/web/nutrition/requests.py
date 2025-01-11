@@ -294,7 +294,7 @@ async def get_supplements():
         required=True
     )
 
-async def log_supplement_consumption(request: fh.Request):
+async def log_supplement_consumption(date: str | None = None, request: fh.Request):
     """Log a supplement consumption entry"""
     try:
         form = await request.form()
