@@ -227,13 +227,13 @@ def get_daily_cumulative_nutrition(database: fh.Database, date: datetime):
 
     return result_info
 
-def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdown, meal_time: str):
+def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdown, meal_date: str, meal_time: str):
     """
     Insert a meal into the database.
     """
     meals_table = database.t.meals
     meals_table.insert(
-        date_entered=datetime.date(datetime.today()),
+        date_entered=meal_date,
         meal_time=meal_time,
         user_description=meal_description,
         llm_summary=meal.title,
