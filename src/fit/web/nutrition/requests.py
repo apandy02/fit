@@ -218,34 +218,7 @@ async def save_meal(request: fh.Request):
         )    
         databases.insert_meal(DB, form["title"], nutrition_info, meal_datetime)
         
-        return fh.Div(
-            fh.P(
-                "Meal saved successfully!",
-                cls="text-green-500 font-semibold text-center mb-4"
-            ),
-            fh.Script("""
-                // Show success message briefly
-                setTimeout(() => {
-                    // Reset text form
-                    const textForm = document.querySelector('#text-result');
-                    if (textForm) textForm.innerHTML = '';
-                    const textArea = document.querySelector('textarea[name="meal_description"]');
-                    if (textArea) textArea.value = '';
-                    
-                    // Reset image form
-                    const imageForm = document.querySelector('#image-result');
-                    if (imageForm) imageForm.innerHTML = '';
-                    const fileInput = document.querySelector('input[type="file"]');
-                    if (fileInput) fileInput.value = '';
-                    
-                    // Close the modal
-                    closeModal();
-                    
-                    // Reload the page to show updated data
-                    window.location.reload();
-                }, 1000);
-            """)
-        )
+        return fh.Response(headers={"HX-Redirect": "/nutrition"}, status_code=200)
     except Exception as e:
         return fh.P(
             f"Error saving meal: {str(e)}",
