@@ -2,7 +2,6 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
-
 from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
                                        Fats, Macronutrients, MealBreakdown,
                                        Micronutrients, NutritionalInformation)
@@ -227,13 +226,13 @@ def get_daily_cumulative_nutrition(database: fh.Database, date: datetime):
 
     return result_info
 
-def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdown, meal_time: str):
+def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdown, meal_date: str, meal_time: str):
     """
     Insert a meal into the database.
     """
     meals_table = database.t.meals
     meals_table.insert(
-        date_entered=datetime.date(datetime.today()),
+        date_entered=meal_date,
         meal_time=meal_time,
         user_description=meal_description,
         llm_summary=meal.title,
@@ -301,7 +300,7 @@ def get_dietary_restrictions(database: fh.Database, user_id: str):
     result = database.execute(query, (user_id,)).fetchone()
     return result[0]
 
-def insert_supplement(database: fh.Database, name: str, consumption_time: str, nutritional_info: NutritionalInformation):
+def insert_supplement(database: fh.Database, name: str, consumption_time: str, nutritional_info: NutritionalInformation, date: str):
     """
     Insert or update a supplement definition in the database.
     """
@@ -337,6 +336,7 @@ def insert_supplement(database: fh.Database, name: str, consumption_time: str, n
         potassium=nutritional_info.micronutrients.potassium,
         sodium=nutritional_info.micronutrients.sodium,
         meal_time=consumption_time,
+        date_entered=date,
         is_supplement=True,
     )
 

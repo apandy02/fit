@@ -1,7 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import fasthtml.common as fh
-
 import fit.nutrition.assistants as assistants
 import fit.web.nutrition.food_plots as food_plots
 from fit.nutrition.data_models import MealBreakdown
@@ -136,6 +135,7 @@ def create_meal_prompt_form(
                     ),
                     cls="form-control"
                 ),
+                fh.Div("BLAH"),
                 fh.Div(
                     fh.Label("Meal Time", cls="label text-primary-content"),
                     fh.Input(
@@ -153,20 +153,22 @@ def create_meal_prompt_form(
                     type="submit",
                     cls="btn btn-primary w-full"
                 )
-            ),            cls="p-6"
+            ),            
+            cls="p-6"
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-12 shadow-none "
     )
 
-def create_text_input_form(is_feedback: bool = False, original_description: str = None):
+def create_text_input_form(is_feedback: bool = False, original_description: str = None, date: str | None = None):
     """Create the text input form for meal description"""
+    analyze_endpoint = f"/analyze_text/{date}" if date is not None else "/analyze_text"
     if not is_feedback:
         return create_meal_prompt_form(
             title="Describe Your Meal",
             textarea_label="Meal Description",
             textarea_placeholder="Example: I had a grilled chicken sandwich with lettuce, tomato and mayo",
             submit_text="Analyze Description",
-            hx_post_url="/analyze_text",
+            hx_post_url=analyze_endpoint,
             rows=3
         )
     else:
@@ -253,7 +255,7 @@ def create_image_upload_form():
         cls="bg-base-200 shadow-lg rounded-lg"
     )
 
-def create_modal_content():
+def create_modal_content(date: str | None = None):
     """Create the content for the food tracking modal"""
     return fh.Div(
         # Close button
@@ -307,7 +309,7 @@ def create_modal_content():
                 id="image-input"
             ),
             fh.Div(
-                create_text_input_form(),
+                create_text_input_form(date=date),
                 cls="hidden w-[90%] mx-auto",
                 id="text-input"
             ),
@@ -316,7 +318,7 @@ def create_modal_content():
         cls="bg-transparent rounded-lg relative w-full max-w-lg"
     )
 
-def food_tracking_modal():
+def food_tracking_modal(date: str | None = None):
     """Create the food tracking modal"""
     return fh.Div(
         fh.Div(
@@ -325,7 +327,7 @@ def food_tracking_modal():
             onclick="closeModal()"
         ),
         fh.Div(
-            create_modal_content(),
+            create_modal_content(date),
             cls="fixed inset-0 flex items-center justify-center p-4 hidden",
             id="food-modal"
         ),
@@ -390,8 +392,11 @@ def food_tracking_modal():
         """)
     )
 
-def water_tracking_modal():
+def water_tracking_modal(date: datetime | None = None):
     """Create the water tracking modal"""
+    if date is None:
+        date = datetime.today().date()
+    log_water_endpoint = f"/log_water/{date.strftime('%Y-%m-%d')}"
     return fh.Div(
         fh.Dialog(
             fh.Div(
@@ -404,7 +409,7 @@ def water_tracking_modal():
                     ),
                     fh.H3("Log Water", cls="text-xl font-bold text-center mt-4 mb-8 text-primary-content"),
                     fh.Form(
-                        hx_post="/log_water",
+                        hx_post=log_water_endpoint,
                         hx_target="#water-log-result",
                         cls="w-[90%] mx-auto space-y-6"
                     )(
@@ -458,16 +463,43 @@ def water_tracking_modal():
         """)
     )
 
-def create_page_header(current_view: str):
+def create_page_header(current_view: str, date: datetime.date = None):
     """Create the page header with title and time filter"""
+    today = datetime.today().date()
+    
+    # Create date navigation if we're in daily view
+    date_nav = None
+    if current_view == "daily" and date is not None:
+        next_date = date + timedelta(days=1)
+        prev_date = date - timedelta(days=1)
+        
+        date_nav = fh.Div(
+            fh.A(
+                "←",
+                href=f"/nutrition/{prev_date.strftime('%Y-%m-%d')}",
+                cls="text-xl font-light text-primary-content hover:text-primary-content"
+            ),
+            fh.P(
+                date.strftime("%B %d, %Y"),
+                cls="text-lg text-primary-content mx-4"
+            ),
+            fh.A(
+                "→",
+                href=f"/nutrition/{next_date.strftime('%Y-%m-%d')}" if date < today else "#",
+                cls=f"text-xl font-light {'text-primary-content hover:text-primary-content' if date < today else 'text-gray-400 cursor-not-allowed'}"
+            ),
+            cls="flex items-center justify-center mt-4"
+        )
+    
     return fh.Div(
         fh.P("Nutrition", cls="text-3xl font-bold text-center mb-6 text-primary-content"),
         fh.Div(
             create_time_filter(current_view),
             cls="flex justify-center mb-8"
         ),
-        supplement_modal(),
-        water_tracking_modal(),
+        date_nav if date_nav else None,
+        supplement_modal(date),
+        water_tracking_modal(date),
         cls="mb-8"
     )
 
@@ -572,10 +604,10 @@ def create_conditional_section(data, visible_metrics, view_type: str):
     ]
     return create_metric_overview_section("Conditionally Essential Nutrients", data, filtered_metrics, conditional_metrics, view_type)
 
-def create_metrics_grid(data, visible_metrics, water_metrics, view_type: str):
+def create_metrics_grid(data, visible_metrics, water_metrics, view_type: str, date: datetime.date = None):
     """Create the grid of metric cards"""
     sections = [
-        create_overview_card(view_type),
+        create_overview_card(view_type, date),
         create_macro_section(data, visible_metrics, view_type),
         create_micro_section(data, visible_metrics, view_type),
         create_conditional_section(data, visible_metrics, view_type),
@@ -641,7 +673,8 @@ def create_form_section(title, inputs, cls="mb-6"):
         cls=cls
     )
 
-def create_meal_breakdown(nutrition_info, meal_time: str = None):
+def create_meal_breakdown(nutrition_info, meal_time: str = None, date: str | None = None):
+    save_meal_endpoint = f"/save_meal/{date}" if date is not None else "/save_meal"
     return fh.Card(
         fh.Div(
             fh.H4("Ingredients", cls="font-medium mb-2 text-primary-content"),
@@ -650,7 +683,7 @@ def create_meal_breakdown(nutrition_info, meal_time: str = None):
                 cls="mb-6 text-primary-content"
             ),
             fh.Form(
-                hx_post="/save_meal",
+                hx_post=save_meal_endpoint,
                 hx_target="#save-result",
                 cls="space-y-6"
             )(
@@ -706,7 +739,8 @@ def create_nutrition_card(nutrition_info: MealBreakdown | None, card_title: str 
             )
     ) #TODO: make this more dynamic
 
-def supplement_modal():
+def supplement_modal(date: datetime.date):
+    log_supplement_endpoint = f"/log_supplement_consumption/{date.strftime('%Y-%m-%d')}"
     """Create the supplement tracking modal"""
     return fh.Div(
         fh.Dialog(
@@ -780,7 +814,7 @@ def supplement_modal():
                     ),
                     fh.Div(
                         fh.Form(
-                            hx_post="/log_supplement_consumption",
+                            hx_post=log_supplement_endpoint,
                             hx_target="#log-supplement-result",
                             cls="w-[90%] mx-auto space-y-6"
                         )(

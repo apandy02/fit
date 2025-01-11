@@ -1,5 +1,4 @@
 import fasthtml.common as fh
-
 import fit.web.nutrition.requests as nutrition
 import fit.web.performance as performance
 import fit.web.progress as progress
@@ -22,13 +21,18 @@ modal_css = fh.Link(rel="stylesheet", href="/static/public/modal.css")
 app = fh.FastHTML(hdrs=(tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
 
 # Food routes
-app.get("/nutrition")(nutrition.get_daily_overview)
 app.get("/nutrition/weekly")(nutrition.get_weekly_overview)
+app.get("/nutrition/{date}")(nutrition.get_daily_overview)
+app.get("/nutrition")(nutrition.get_daily_overview)
 app.post("/analyze_text")(nutrition.analyze_text)
+app.post("/analyze_text/{date:str}")(nutrition.analyze_text)
 app.post("/analyze_image")(nutrition.analyze_image)
+app.post("/analyze_image/{date:str}")(nutrition.analyze_image)
+app.post("/generate_daily_overview/{date:str}")(nutrition.generate_daily_overview)
 app.post("/generate_daily_overview")(nutrition.generate_daily_overview)
 app.post("/generate_weekly_overview")(nutrition.generate_weekly_overview)
 app.post("/save_meal")(nutrition.save_meal)
+app.post("/save_meal/{date:str}")(nutrition.save_meal)
 app.post("/reset_text_form")(nutrition.reset_text_form)
 app.post("/regenerate_analysis")(nutrition.regenerate_analysis)
 app.post("/hide_metric/{plot_id}")(nutrition.hide_metric)
@@ -39,7 +43,9 @@ app.post("/save_supplement")(nutrition.save_supplement)
 app.get("/get_supplements")(nutrition.get_supplements)
 app.post("/get_nutrient_suggestions/{nutrient}")(nutrition.get_nutrient_suggestions)
 app.post("/log_supplement_consumption")(nutrition.log_supplement_consumption)
+app.post("/log_supplement_consumption/{date:str}")(nutrition.log_supplement_consumption)
 app.post("/log_water")(nutrition.log_water)
+app.post("/log_water/{date:str}")(nutrition.log_water)
 
 # Progress routes
 app.get("/progress")(progress.get)

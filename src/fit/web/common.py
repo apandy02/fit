@@ -1,10 +1,11 @@
+import datetime
+
 import fasthtml.common as fh
 import fh_bootstrap as fhb
-from markdown import markdown
-
 from fit.nutrition.targets import MICRO_GOALS
 from fit.trackers.manager import get_active_tracker
 from fit.web.databases import init_db
+from markdown import markdown
 
 DB_PATH = "data/nutrition.db"
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
@@ -182,15 +183,21 @@ def Markdown(s, exts=md_exts, **kw):
 
 # TODO: make it so that more parameters can be passed in to the function so it can be used to generate 
 # more than just nutrition overviews
-def create_overview_card(view_type: str):
+def create_overview_card(view_type: str, date: datetime.date = None):
     """Create the overview card with analysis button"""
+    print(f"date: {date}")
+    if date is not None:
+        endpoint = f"/generate_daily_overview/{date.strftime('%Y-%m-%d')}"
+    else:
+        endpoint = "/generate_daily_overview"
+    
     return fh.Card(
         fh.Div(
             fh.Div(
                 fh.Button(
                     "Generate Daily Analysis" if view_type == "daily" else "Generate Weekly Analysis",
                     cls="btn btn-primary outline outline-1 outline-primary-content",
-                    hx_post="/generate_daily_overview" if view_type == "daily" else "/generate_weekly_overview", # TODO create functions to analyze workout data
+                    hx_post=endpoint if view_type == "daily" else "/generate_weekly_overview",
                     hx_target="#analysis-content"
                 ),
                 cls="flex justify-center mb-4"
