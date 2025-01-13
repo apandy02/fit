@@ -25,7 +25,6 @@ def get_daily_overview(date: str = None):
         try:
             date = datetime.strptime(date, "%Y-%m-%d").date()
         except ValueError:
-            # If invalid date format, default to today
             date = datetime.today().date()
     
     data = get_daily_nutrition_data(date)
