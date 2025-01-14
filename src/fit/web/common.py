@@ -206,7 +206,7 @@ def create_overview_card(view_type: str, date: datetime.date = None):
                 id="analysis-content",
                 cls="prose max-w-none prose-invert"
             ),
-            cls="p-6"
+            cls="px-6 py-4"
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mb-12 text-primary-content"
     )

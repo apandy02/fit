@@ -5,6 +5,8 @@ import fit.nutrition.assistants as assistants
 import fit.web.nutrition.food_plots as food_plots
 from fit.nutrition.data_models import MealBreakdown
 from fit.web.common import create_overview_card, create_time_filter
+from fit.web.databases import get_daily_meals
+from fit.web.common import DB
 
 
 def metric_card(
@@ -608,6 +610,7 @@ def create_metrics_grid(data, visible_metrics, water_metrics, view_type: str, da
     """Create the grid of metric cards"""
     sections = [
         create_overview_card(view_type, date),
+        create_meals_list(date) if view_type == "daily" else None,
         create_macro_section(data, visible_metrics, view_type),
         create_micro_section(data, visible_metrics, view_type),
         create_conditional_section(data, visible_metrics, view_type),
@@ -939,3 +942,58 @@ def supplement_modal(date: datetime.date):
             }
         """)
     )
+
+def create_meals_list(date: datetime.date):
+    """Create an expandable list of meals for the given date"""
+    meals = get_daily_meals(DB, date)
+    
+    if not meals:
+        content = fh.P("No meals logged for this day", cls="text-primary-content text-center"),
+
+    else:
+        content = fh.Div(
+        fh.Details(
+            fh.Summary(
+                fh.H3("Meals Logged", cls="text-xl font-bold text-primary-content inline-block"),
+                cls="cursor-pointer hover:opacity-80"
+            ),
+            fh.Div(
+                *[
+                    fh.Div(
+                        fh.Div(
+                            fh.P(meal[0].title, cls="text-lg font-bold text-primary-content"),
+                            fh.P(f"Time: {datetime.strptime(meal[1], '%H:%M').strftime('%I:%M %p')}", cls="text-sm text-primary-content opacity-80"),
+                            cls="mb-2"
+                        ),
+                        fh.P(meal[0].ingredients, cls="text-primary-content"),
+                        fh.Div(
+                            fh.P(f"Calories: {meal[0].calories:.0f} kcal", cls="text-primary-content"),
+                            fh.P(f"Protein: {meal[0].macronutrients.protein:.1f}g", cls="text-primary-content"),
+                            fh.P(f"Carbs: {meal[0].macronutrients.carbohydrates.total:.1f}g", cls="text-primary-content"),
+                            fh.P(f"Fat: {meal[0].macronutrients.fat.total:.1f}g", cls="text-primary-content"),
+                            cls="grid grid-cols-2 gap-2 mt-2 text-sm"
+                        ),
+                        cls="p-4 bg-base-300 rounded-lg mb-4 last:mb-0"
+                    )
+                    for meal in meals
+                ],
+                cls="mt-4 space-y-2"
+            ),
+            cls="p-6"
+        ),
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
+    )
+        
+    
+    return fh.Div(
+                fh.Div(
+                    fh.H4("Meals Logged", cls="text-lg font-semibold text-primary-content"),
+                    cls="collapse-title"
+                ),
+                fh.Div(
+                    content,
+                    cls="collapse-content bg-base-300"
+                ),
+                tabindex="0",
+                cls="collapse bg-base-200 outline outline-1 outline-primary-content rounded-lg hover:bg-base-300"
+            )

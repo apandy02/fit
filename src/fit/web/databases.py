@@ -127,6 +127,7 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
 def get_daily_meals(database: fh.Database, date: datetime):
     """
     Get meals entered for a given date.
+    Returns a list of tuples containing (MealBreakdown, meal_time)
     """
     query = """
         select llm_summary, ingredients, meal_time, calories, protein, carbohydrates, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
@@ -137,7 +138,7 @@ def get_daily_meals(database: fh.Database, date: datetime):
     """
     result = database.execute(query, (str(date),)).fetchall()
     return [
-        MealBreakdown(
+        (MealBreakdown(
             title=row[0],
             ingredients=row[1],
             calories=row[3],
@@ -158,7 +159,7 @@ def get_daily_meals(database: fh.Database, date: datetime):
             conditional_nutrients=ConditionalNutrients(
                 creatine=row[15]
             )
-        ) for row in result
+        ), row[2]) for row in result
     ]
 
 def get_all_meal_summaries(database: fh.Database):
