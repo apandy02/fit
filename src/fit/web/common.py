@@ -133,37 +133,28 @@ def page_outline(selidx, title, *c):
     """
     Return the common page outline for the frontend.
     """
+    pages = [
+        ("Food", "/nutrition"),
+        ("Kitchen", "/kitchen"),
+        ("Progress", "/progress"),
+        ("Performance", "/performance"),
+        ("Rest", "/rest"),
+        ("Profile", "/profile"),
+    ]
     return (
         fh.Title(title),
         fh.Body(
             fh.Html(data_theme="black"),
             fh.Div(
                 fh.Div(
-                    fh.A(
-                        "Food",
-                        href="/nutrition",
-                        cls="btn btn-ghost text-white",
-                    ),
-                    fh.A(
-                        "Progress",
-                        href="/progress", 
-                        cls="btn btn-ghost text-white",
-                    ),
-                    fh.A(
-                        "Performance",
-                        href="/performance",
-                        cls="btn btn-ghost text-white",
-                    ),
-                    fh.A(
-                        "Rest",
-                        href="/rest",
-                        cls="btn btn-ghost text-white",
-                    ),
-                    fh.A(
-                        "Profile",
-                        href="/profile",
-                        cls="btn btn-ghost text-white",
-                    ),
+                    *[
+                        fh.A(
+                            title,
+                            href=link,
+                            cls="btn btn-ghost text-white",
+                        )
+                        for title, link in pages
+                    ],
                     cls="flex justify-center items-center flex-1",
                 ),
                 cls="navbar bg-base-100 bg-opacity-100 rounded-m h-[5vh] flex justify-center outline outline-1 outline-primary-content",
@@ -175,6 +166,7 @@ def page_outline(selidx, title, *c):
         ),
         
     )
+
 
 def Markdown(s, exts=md_exts, **kw):
     """
