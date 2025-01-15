@@ -1,4 +1,5 @@
 import fasthtml.common as fh
+
 from fit.trackers.manager import (get_active_tracker_type, load_secrets,
                                   save_secrets)
 from fit.web.common import DB, page_outline
