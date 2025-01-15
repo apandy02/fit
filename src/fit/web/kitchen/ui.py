@@ -1,8 +1,5 @@
-from datetime import datetime
 
 import fasthtml.common as fh
-
-from fit.web.common import DB
 
 
 def create_text_input_form(
