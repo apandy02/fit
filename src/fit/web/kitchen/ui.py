@@ -5,7 +5,7 @@ def kitchen_page_content(inventory: dict):
     """Create the main kitchen page content"""
     content = fh.Article(
         fh.Div(
-            fh.H2("Kitchen Inventory", cls="text-3xl font-bold text-primary-content mb-8"),
+            fh.H2("My Kitchen", cls="text-3xl font-bold text-primary-content mb-8 text-center"),
             create_kitchen_sections(inventory),
             create_add_items_modal(),
             create_fab(),
@@ -65,18 +65,19 @@ def create_expandable_section(title: str, items: list):
 
 def create_item_card(item: tuple):
     """Create a card for an item"""
+    item['title'] = item['title'].capitalize()
     return fh.Card(
+        fh.Button("×", cls="absolute top-2 right-2 flex items-center justify-center h-8 w-8 hover:bg-base-300 focus:bg-base-300 rounded-lg bg-base-400 border-none outline-none text-primary-content text-xl font-light"),
         fh.Div(
-            fh.H2(item['title'], cls="card-title"),
-            fh.P(f"{item['quantity']} {item['unit']}"),
+            fh.H2(item['title'], cls="card-title justify-center text-lg mb-2 text-primary-content"),
+            fh.P(f"Quantity: {item['quantity']} {item['unit']}", cls="text-center text-primary-content text-sm"),
             fh.Div(
-                fh.Button("✏️", cls="btn btn-ghost btn-sm"),
-                fh.Button("🗑️", cls="btn btn-ghost btn-sm"),
-                cls="card-actions justify-end mt-4"
+                fh.Button("Edit", cls="px-4 py-2 bg-base-200 hover:bg-base-100 rounded-lg text-primary-content text-sm outline outline-1 outline-primary-content"),
+                cls="card-actions justify-center mt-3"
             ),
-            cls="card-body"
+            cls="card-body items-center text-center py-4 px-4"
         ),
-        cls="card bg-base-100 shadow-xl"
+        cls="card bg-base-300 shadow-xl rounded-xl outline outline-1 outline-primary-content mt-4 max-w-[250px] relative"
     )
 
 
