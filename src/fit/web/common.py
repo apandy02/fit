@@ -1,11 +1,13 @@
 import datetime
+from functools import wraps
 
 import fasthtml.common as fh
 import fh_bootstrap as fhb
+from markdown import markdown
+
 from fit.nutrition.targets import MICRO_GOALS
 from fit.trackers.manager import get_active_tracker
 from fit.web.databases import init_db
-from markdown import markdown
 
 DB_PATH = "data/nutrition.db"
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
@@ -128,18 +130,29 @@ def create_modal(content, modal_id="modal"):
         """)
     )
 
-def page_outline(selidx, title, *c):
+def page_outline(selidx, title, logged_in: bool, display_nav: bool, *c):
     """
     Return the common page outline for the frontend.
     """
-    pages = [
-        ("Food", "/nutrition"),
-        ("Kitchen", "/kitchen"),
-        ("Progress", "/progress"),
-        ("Performance", "/performance"),
-        ("Rest", "/rest"),
-        ("Profile", "/profile"),
-    ]
+    if display_nav:
+        if logged_in:
+            pages = [
+                ("Food", "/nutrition"),
+                ("Kitchen", "/kitchen"),
+                ("Progress", "/progress"),
+                ("Performance", "/performance"),
+                ("Rest", "/rest"),
+                ("Profile", "/profile"),
+            ]
+            justify = "center"
+        else:
+            pages = [
+                ("Login", "/login"),
+            ]
+            justify = "right"
+    else:
+        pages = []
+        justify = "center"
     return (
         fh.Title(title),
         fh.Body(
@@ -154,9 +167,9 @@ def page_outline(selidx, title, *c):
                         )
                         for title, link in pages
                     ],
-                    cls="flex justify-center items-center flex-1",
+                    cls=f"flex justify-{justify} items-center flex-1",
                 ),
-                cls="navbar bg-base-100 bg-opacity-100 rounded-m h-[5vh] flex justify-center outline outline-1 outline-primary-content",
+                cls=f"navbar bg-base-100 bg-opacity-100 rounded-m h-[5vh] flex justify-{justify} outline outline-1 outline-primary-content",
             ),
             fh.Div(
                 fh.Div(*c, cls="min-h-[calc(100vh-8vh)] pb-[3vh]"),
@@ -216,24 +229,4 @@ def create_time_filter(current_view: str):
             hx_trigger="change",
         ),
         cls="mt-6 mb-8 flex justify-center"
-    )
-
-def create_text_form_input(label_text, input_name, input_value, input_type="number", step="0.1", width="w-full"):
-    """Helper function to create a form input with label"""
-    if input_type == "number":
-        value = 0.0 if input_value is None or input_value == "" else float(input_value)
-        formatted_value = "{:.1f}".format(value)
-    else:
-        formatted_value = input_value
-
-    return fh.Div(
-        fh.Label(label_text, cls="label text-primary-content"),
-        fh.Input(
-            type=input_type,
-            name=input_name,
-            value=formatted_value,
-            step=step if input_type == "number" else None,
-            cls=f"input input-bordered {width} bg-base-200 outline  text-primary-content"
-        ),
-        cls="form-control"
     )
