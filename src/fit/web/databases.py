@@ -19,7 +19,6 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
     if meals_table not in db.t:
         meals_table.create(
             dict(
-                uuid=str,
                 date_entered=str,
                 ingredients=str,
                 meal_time=str,
@@ -40,7 +39,7 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
                 creatine=float,
                 is_supplement=bool,
             ),
-            pk='uuid'
+            pk="rowid"
         )
 
     # Table for storing supplement definitions
@@ -232,9 +231,10 @@ def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdow
     Insert a meal into the database.
     """
     meals_table = database.t.meals
-    meals_table.insert(
-        date_entered=meal_date,
-        meal_time=meal_time,
+    try:
+        meals_table.insert(
+            date_entered=meal_date,
+            meal_time=meal_time,
         user_description=meal_description,
         llm_summary=meal.title,
         ingredients=meal.ingredients,
@@ -251,8 +251,12 @@ def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdow
         sodium=meal.micronutrients.sodium,
         fiber=meal.macronutrients.carbohydrates.fiber,
         creatine=meal.conditional_nutrients.creatine,
-        is_supplement=False
-    )
+            is_supplement=False
+        )
+    except Exception as e:
+        print(e)
+        print(f"Error inserting meal: {e}")
+        raise e
 
 
 def get_visible_metrics(database: fh.Database, user_id: str):
@@ -481,7 +485,12 @@ def get_latest_user_measurements(database: fh.Database) -> dict:
     query = """
         SELECT weight, height FROM measurements ORDER BY datetime DESC LIMIT 1
     """
+   
     result = database.execute(query).fetchone()
+     # TODO: change to error raised
+    if result is None:
+        return None 
+    
     return {
         "weight": result[0],
         "height": result[1]

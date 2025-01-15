@@ -72,8 +72,8 @@ MICRO_GOALS = {
 }
 
 def estimate_daily_water_intake(
-        weight_lbs: float,
-        gender: str,
+        user_measurements: dict,
+        user_info: dict,
         daily_calories_burned: float
     ) -> float:
     """
@@ -88,6 +88,12 @@ def estimate_daily_water_intake(
     Returns:
         float: Estimated daily water intake in mL.
     """
+    if user_measurements is None or user_info is None:
+        return 3000
+    
+    weight_lbs = user_measurements["weight"]
+    gender = user_info["gender"]
+    
     weight_kg = weight_lbs * 0.453592
     base_water = weight_kg * 35
     activity_calories = max(0, daily_calories_burned - 2000)

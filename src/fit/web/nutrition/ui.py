@@ -675,7 +675,7 @@ def create_form_section(title, inputs, cls="mb-6"):
         cls=cls
     )
 
-def create_meal_breakdown(nutrition_info, meal_time: str = None, date: str | None = None):
+def create_meal_breakdown(nutrition_info, meal_time: str, date: str | None = None):
     save_meal_endpoint = f"/save_meal/{date}" if date is not None else "/save_meal"
     return fh.Card(
         fh.Div(
@@ -957,12 +957,12 @@ def create_meals_list(date: datetime.date):
                             fh.P(meal[0].title, cls="text-lg font-bold text-primary-content"),
                             fh.Div(
                                 fh.Button(
-                                    "✎",  # pen symbol
+                                    "✎",  
                                     cls="btn btn-ghost btn-sm px-1 hover:bg-base-300",
                                     onclick="/* Edit functionality will be added later */"
                                 ),
                                 fh.Button(
-                                    "🗑",  # trash symbol
+                                    "🗑",  
                                     cls="btn btn-ghost btn-sm px-1 hover:bg-base-300 text-error",
                                     onclick="/* Delete functionality will be added later */"
                                 ),
@@ -970,7 +970,8 @@ def create_meals_list(date: datetime.date):
                             ),
                             cls="flex justify-between items-center"
                         ),
-                        fh.P(f"Time: {datetime.strptime(meal[1], '%Y-%m-%dT%H:%M:%S').strftime('%I:%M %p')}", 
+                        fh.P(
+                            f"Time: {meal[1]}",
                             cls="text-sm text-primary-content opacity-80"
                         ),
                         cls="mb-2"
