@@ -2,8 +2,10 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
-from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
-                                       Fats, Macronutrients, MealBreakdown,
+
+from fit.nutrition.data_models import (KITCHEN_ITEM_CATEGORIES, Carbohydrates,
+                                       ConditionalNutrients, Fats,
+                                       Macronutrients, MealBreakdown,
                                        Micronutrients, NutritionalInformation)
 
 # TODO: consider creating a class for the database
@@ -119,6 +121,18 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
         )
         user_data_table.insert(
             user_id=user_id,
+        )
+    
+    inventory_table = db.t.inventory
+    if inventory_table not in db.t:
+        inventory_table.create(
+            dict(
+                title=str,
+                quantity=float,
+                unit=str,
+                category=str,
+            ),
+            pk='rowid'
         )
 
     return db
@@ -533,3 +547,30 @@ def delete_meal(database: fh.Database, meal_id: int):
     except Exception as e:
         print(f"Error deleting meal: {e}")
         return False
+
+def insert_inventory_item(database: fh.Database, title: str, quantity: float, unit: str, category: str):
+    """Insert an inventory item into the database"""
+    database.t.inventory.insert(
+        title=title,
+        quantity=quantity,
+        unit=unit,
+        category=category,
+    )
+
+def get_inventory(database: fh.Database) -> list[tuple[str, float, str, str]]:
+    """Get the inventory from the database"""
+    query = """
+        SELECT title, quantity, unit, category FROM inventory
+    """
+    result = database.execute(query).fetchall()
+    results = {
+        category: [] for category in KITCHEN_ITEM_CATEGORIES
+    }
+    for row in result:
+        results[row[3]].append({
+            "title": row[0],
+            "quantity": row[1],
+            "unit": row[2]
+        })
+    
+    return results

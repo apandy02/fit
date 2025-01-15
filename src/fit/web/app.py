@@ -1,4 +1,5 @@
 import fasthtml.common as fh
+
 import fit.web.kitchen.requests as kitchen
 import fit.web.nutrition.requests as nutrition
 import fit.web.performance as performance
@@ -51,7 +52,9 @@ app.post("/log_water/{date:str}")(nutrition.log_water)
 
 # Kitchen routes
 app.get("/kitchen")(kitchen.get)
-
+app.post("/add_item")(kitchen.add_item)
+app.post("/decipher_text_inventory_addition")(kitchen.decipher_text_inventory_addition)
+app.get("/get_inventory")(kitchen.get_inventory)
 # Progress routes
 app.get("/progress")(progress.get)
 app.post("/update_measurements")(progress.update_measurements)

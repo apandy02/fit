@@ -1,5 +1,83 @@
-
 import fasthtml.common as fh
+
+
+def kitchen_page_content(inventory: dict):
+    """Create the main kitchen page content"""
+    content = fh.Article(
+        fh.Div(
+            fh.H2("Kitchen Inventory", cls="text-3xl font-bold text-primary-content mb-8"),
+            create_kitchen_sections(inventory),
+            create_add_items_modal(),
+            create_fab(),
+            cls="max-w-6xl mx-auto p-6"
+        ),
+        cls="bg-base-100"
+    )
+    return content 
+
+
+def create_kitchen_sections(inventory: dict):
+    """Create all kitchen inventory sections"""
+    sections = [
+        ("Produce", inventory.get("Produce", [])),
+        ("Meats & Fish", inventory.get("Meats & Fish", [])),
+        ("Dairy & Eggs", inventory.get("Dairy & Eggs", [])),
+        ("Bread & Grains", inventory.get("Bread & Grains", [])),
+        ("Frozen Items", inventory.get("Frozen Items", [])),
+        ("Snacks & Misc", inventory.get("Snacks & Misc", []))
+    ]
+    
+    return fh.Div(
+        *[create_expandable_section(title, content) for title, content in sections],
+        cls="space-y-8"
+    )
+
+def create_fab():
+    """Create the floating action button"""
+    return fh.Button(
+        "➕",
+        cls="btn btn-circle btn-lg fixed bottom-8 right-8 text-2xl",
+        onclick="openKitchenModal()"
+    )
+
+
+def create_expandable_section(title: str, items: list):
+    """Create an expandable section with a title and optional content"""
+    if len(items) == 0:
+        content = fh.P("No items added yet", cls="text-primary-content text-center")
+    else:
+        content = fh.Div(
+            *[create_item_card(item) for item in items],
+            cls="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        )
+
+    return fh.Div(
+        fh.Details(
+            fh.Summary(
+                fh.H3(title, cls="text-xl font-bold text-primary-content inline-block"),
+                cls="cursor-pointer hover:opacity-80"
+            ),
+            content,
+            cls="p-6"
+        ),
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
+    )
+
+def create_item_card(item: tuple):
+    """Create a card for an item"""
+    return fh.Card(
+        fh.Div(
+            fh.H2(item['title'], cls="card-title"),
+            fh.P(f"{item['quantity']} {item['unit']}"),
+            fh.Div(
+                fh.Button("✏️", cls="btn btn-ghost btn-sm"),
+                fh.Button("🗑️", cls="btn btn-ghost btn-sm"),
+                cls="card-actions justify-end mt-4"
+            ),
+            cls="card-body"
+        ),
+        cls="card bg-base-100 shadow-xl"
+    )
 
 
 def create_text_input_form(
@@ -9,7 +87,7 @@ def create_text_input_form(
     submit_text: str,
     hx_post_url: str,
     rows: int = 3,
-    hx_target: str = "#text-input",
+    hx_target: str = "#text-input-result",
     extra_fields: list = None,
     header_buttons: list = None
 ):
@@ -28,9 +106,9 @@ def create_text_input_form(
         fh.Form(
             hx_post=hx_post_url,
             hx_target=hx_target,
+            hx_swap="innerHTML",
             cls="space-y-6 w-[90%] mx-auto"
         )(
-            *extra_fields,
             fh.Div(
                 fh.Label(textarea_label, cls="label text-lg text-primary-content mb-2"),
                 fh.Textarea(
@@ -45,7 +123,8 @@ def create_text_input_form(
                 submit_text,
                 type="submit",
                 cls="btn btn-primary w-full text-lg mt-4"
-            )
+            ),
+            fh.Div(id="text-input-result", cls="mt-4")
         ),
         cls="w-[600px] mx-auto px-8 py-6"
     )
@@ -172,10 +251,11 @@ def create_add_items_modal():
                         create_text_input_form(
                             title="List Your Items",
                             textarea_label="Items List",
-                            textarea_placeholder="Example: 2 apples, 1 loaf of whole wheat bread, 8 oz block of cheddar cheese",
+                            textarea_placeholder="Example: 2 apples, 1 loaf of whole wheat bread, 8 oz block of cheddar",
                             submit_text="Add Items",
-                            hx_post_url="/analyze_kitchen_items",  # This endpoint will be implemented later
-                            rows=3
+                            hx_post_url="/decipher_text_inventory_addition",
+                            rows=3,
+                            hx_target="#text-input-result"
                         ),
                         cls="p-6 hidden",
                         id="describe-view"
@@ -243,62 +323,3 @@ def create_add_items_modal():
             }
         """)
     )
-
-
-def create_fab():
-    """Create the floating action button"""
-    return fh.Button(
-        "➕",
-        cls="btn btn-circle btn-lg fixed bottom-8 right-8 text-2xl",
-        onclick="openKitchenModal()"
-    )
-
-
-def create_expandable_section(title: str, content=None):
-    """Create an expandable section with a title and optional content"""
-    if content is None:
-        content = fh.P("No items added yet", cls="text-primary-content text-center")
-
-    return fh.Div(
-        fh.Details(
-            fh.Summary(
-                fh.H3(title, cls="text-xl font-bold text-primary-content inline-block"),
-                cls="cursor-pointer hover:opacity-80"
-            ),
-            content,
-            cls="p-6"
-        ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
-    )
-
-
-def create_kitchen_sections():
-    """Create all kitchen inventory sections"""
-    sections = [
-        ("Produce", None),
-        ("Meats & Fish", None),
-        ("Dairy & Eggs", None),
-        ("Bread & Grains", None),
-        ("Frozen Items", None),
-        ("Snacks & Misc", None)
-    ]
-    
-    return fh.Div(
-        *[create_expandable_section(title, content) for title, content in sections],
-        cls="space-y-8"
-    )
-
-
-def kitchen_page_content():
-    """Create the main kitchen page content"""
-    content = fh.Article(
-        fh.Div(
-            fh.H2("Kitchen Inventory", cls="text-3xl font-bold text-primary-content mb-8"),
-            create_kitchen_sections(),
-            create_add_items_modal(),
-            create_fab(),
-            cls="max-w-6xl mx-auto p-6"
-        ),
-        cls="bg-base-100"
-    )
-    return content 
