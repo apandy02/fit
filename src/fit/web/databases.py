@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
+
 from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
                                        Fats, Macronutrients, MealBreakdown,
                                        Micronutrients, NutritionalInformation)
@@ -19,7 +20,6 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
     if meals_table not in db.t:
         meals_table.create(
             dict(
-                uuid=str,
                 date_entered=str,
                 ingredients=str,
                 meal_time=str,
@@ -40,7 +40,7 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
                 creatine=float,
                 is_supplement=bool,
             ),
-            pk='uuid'
+            pk="rowid"
         )
 
     # Table for storing supplement definitions
@@ -124,42 +124,65 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
 
     return db
 
-def get_daily_meals(database: fh.Database, date: datetime):
-    """
-    Get meals entered for a given date.
+def get_daily_meals(database: fh.Database, date: datetime) -> list[dict]:
+    """Get all meals for a given date
+    
+    Returns a list of dictionaries, each containing:
+    - meal: MealBreakdown object with the meal's nutritional information
+    - meal_time: datetime.time object representing when the meal was consumed
+    - rowid: integer representing the meal's unique identifier in the database
     """
     query = """
-        select llm_summary, ingredients, meal_time, calories, protein, carbohydrates, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
-        calcium, iron, potassium, sodium, creatine
-        from meals 
-        where date_entered = ?
-        order by meal_time
+        SELECT rowid, llm_summary, ingredients, meal_time, calories, protein, carbohydrates, fat, fiber,
+               vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium, sodium, creatine
+        FROM meals 
+        WHERE date_entered = ? AND is_supplement = 0
+        ORDER BY meal_time ASC
     """
-    result = database.execute(query, (str(date),)).fetchall()
-    return [
-        MealBreakdown(
-            title=row[0],
-            ingredients=row[1],
-            calories=row[3],
+    
+    results = database.execute(query, (str(date),)).fetchall()
+    meals = []
+    for row in results:
+        rowid = row[0]
+        meal = MealBreakdown(
+            title=row[1],
+            ingredients=row[2],
+            calories=row[4],
             macronutrients=Macronutrients(
-                protein=row[4],
-                carbohydrates=Carbohydrates(total=row[5], fiber=row[7], total_sugar=0, added_sugar=0),
-                fat=Fats(total=row[6], saturated=0, trans=0),
+                protein=row[5],
+                carbohydrates=Carbohydrates(
+                    total=row[6],
+                    fiber=row[8],
+                    total_sugar=0,
+                    added_sugar=0
+                ),
+                fat=Fats(
+                    total=row[7],
+                    saturated=0,
+                    trans=0
+                )
             ),
             micronutrients=Micronutrients(
-                vitamin_a=row[8],
-                vitamin_c=row[9],
-                vitamin_d=row[10],
-                calcium=row[11],
-                iron=row[12],
-                potassium=row[13],
-                sodium=row[14]
+                vitamin_a=row[9],
+                vitamin_c=row[10],
+                vitamin_d=row[11],
+                calcium=row[12],
+                iron=row[13],
+                potassium=row[14],
+                sodium=row[15]
             ),
             conditional_nutrients=ConditionalNutrients(
-                creatine=row[15]
+                creatine=row[16]
             )
-        ) for row in result
-    ]
+        )
+        meal_time = datetime.strptime(row[3], "%H:%M:%S").time()
+        meals.append({
+            "meal": meal,
+            "meal_time": meal_time,
+            "rowid": rowid
+        })
+    
+    return meals
 
 def get_all_meal_summaries(database: fh.Database):
     """
@@ -231,9 +254,10 @@ def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdow
     Insert a meal into the database.
     """
     meals_table = database.t.meals
-    meals_table.insert(
-        date_entered=meal_date,
-        meal_time=meal_time,
+    try:
+        meals_table.insert(
+            date_entered=meal_date,
+            meal_time=meal_time,
         user_description=meal_description,
         llm_summary=meal.title,
         ingredients=meal.ingredients,
@@ -250,8 +274,12 @@ def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdow
         sodium=meal.micronutrients.sodium,
         fiber=meal.macronutrients.carbohydrates.fiber,
         creatine=meal.conditional_nutrients.creatine,
-        is_supplement=False
-    )
+            is_supplement=False
+        )
+    except Exception as e:
+        print(e)
+        print(f"Error inserting meal: {e}")
+        raise e
 
 
 def get_visible_metrics(database: fh.Database, user_id: str):
@@ -480,7 +508,12 @@ def get_latest_user_measurements(database: fh.Database) -> dict:
     query = """
         SELECT weight, height FROM measurements ORDER BY datetime DESC LIMIT 1
     """
+   
     result = database.execute(query).fetchone()
+     # TODO: change to error raised
+    if result is None:
+        return None 
+    
     return {
         "weight": result[0],
         "height": result[1]
@@ -492,3 +525,12 @@ def insert_user_measurements(database: fh.Database, height: float, weight: float
         INSERT INTO measurements (datetime, height, weight) VALUES (?, ?, ?)
     """
     database.execute(query, (str(datetime.isoformat()), height, weight))
+
+def delete_meal(database: fh.Database, meal_id: int):
+    """Delete a meal from the database by its rowid."""
+    try:
+        database.t.meals.delete(meal_id)
+        return True
+    except Exception as e:
+        print(f"Error deleting meal: {e}")
+        return False

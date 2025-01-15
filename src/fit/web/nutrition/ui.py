@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
 
 import fasthtml.common as fh
+
 import fit.nutrition.assistants as assistants
 import fit.web.nutrition.food_plots as food_plots
 from fit.nutrition.data_models import MealBreakdown
-from fit.web.common import create_overview_card, create_time_filter
+from fit.web.common import DB, create_overview_card, create_time_filter
+from fit.web.databases import get_daily_meals
 
 
 def metric_card(
@@ -135,7 +137,6 @@ def create_meal_prompt_form(
                     ),
                     cls="form-control"
                 ),
-                fh.Div("BLAH"),
                 fh.Div(
                     fh.Label("Meal Time", cls="label text-primary-content"),
                     fh.Input(
@@ -608,6 +609,7 @@ def create_metrics_grid(data, visible_metrics, water_metrics, view_type: str, da
     """Create the grid of metric cards"""
     sections = [
         create_overview_card(view_type, date),
+        create_meals_list(date) if view_type == "daily" else None,
         create_macro_section(data, visible_metrics, view_type),
         create_micro_section(data, visible_metrics, view_type),
         create_conditional_section(data, visible_metrics, view_type),
@@ -673,7 +675,7 @@ def create_form_section(title, inputs, cls="mb-6"):
         cls=cls
     )
 
-def create_meal_breakdown(nutrition_info, meal_time: str = None, date: str | None = None):
+def create_meal_breakdown(nutrition_info, meal_time: str, date: str | None = None):
     save_meal_endpoint = f"/save_meal/{date}" if date is not None else "/save_meal"
     return fh.Card(
         fh.Div(
@@ -938,4 +940,61 @@ def supplement_modal(date: datetime.date):
                 document.getElementById('supplement-modal').close();
             }
         """)
+    )
+
+def create_meals_list(date: datetime.date):
+    """Create an expandable list of meals for the given date"""
+    meals = get_daily_meals(DB, date)
+    
+    if not meals:
+        content = fh.P("No meals logged for this day", cls="text-primary-content text-center")
+    else:
+        content = fh.Div(
+            *[
+                fh.Div(
+                    fh.Div(
+                        fh.Div(
+                            fh.P(meal["meal"].title, cls="text-lg font-bold text-primary-content"),
+                            fh.Div(
+                                fh.Button(
+                                    "🗑",  
+                                    cls="btn btn-ghost btn-sm px-1 hover:bg-base-300 text-error",
+                                    hx_post=f"/delete_meal/{meal['rowid']}",
+                                    hx_target="closest div.meal-card",
+                                    hx_swap="outerHTML"
+                                ),
+                                cls="flex items-center gap-1"
+                            ),
+                            cls="flex justify-between items-center"
+                        ),
+                        fh.P(
+                            f"Time: {meal['meal_time'].strftime('%I:%M %p')}",
+                            cls="text-sm text-primary-content opacity-80"
+                        ),
+                        cls="mb-2"
+                    ),
+                    fh.Div(
+                        fh.P(f"Calories: {meal['meal'].calories:.0f} kcal", cls="text-primary-content"),
+                        fh.P(f"Protein: {meal['meal'].macronutrients.protein:.1f}g", cls="text-primary-content"),
+                        fh.P(f"Carbs: {meal['meal'].macronutrients.carbohydrates.total:.1f}g", cls="text-primary-content"),
+                        fh.P(f"Fat: {meal['meal'].macronutrients.fat.total:.1f}g", cls="text-primary-content"),
+                        cls="grid grid-cols-2 gap-2 mt-2 text-sm"
+                    ),
+                    cls="p-4 bg-base-300 rounded-lg mb-4 last:mb-0 meal-card"
+                )
+                for meal in meals
+            ],
+            cls="mt-4 space-y-2"
+        )
+    
+    return fh.Div(
+        fh.Details(
+            fh.Summary(
+                fh.H3("Meals Logged", cls="text-xl font-bold text-primary-content inline-block"),
+                cls="cursor-pointer hover:opacity-80"
+            ),
+            content,
+            cls="p-6"
+        ),
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
     )

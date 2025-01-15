@@ -2,6 +2,8 @@ import io
 from datetime import datetime
 
 import fasthtml.common as fh
+from PIL import Image
+
 import fit.nutrition.assistants as assistants
 import fit.web.common as common
 import fit.web.databases as databases
@@ -14,7 +16,6 @@ from fit.nutrition.targets import (calculate_macro_targets,
                                    estimate_daily_water_intake)
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import DB, active_tracker, micronutrient_goals
-from PIL import Image
 
 
 def get_daily_overview(date: str = None):
@@ -101,7 +102,7 @@ def get_daily_nutrition_data(date: datetime):
     water_consumed = databases.get_daily_water_consumption(DB, date)
     user_info = databases.get_user_data(DB)
     measurements = databases.get_latest_user_measurements(DB)
-    water_goal = estimate_daily_water_intake(measurements["weight"], user_info["gender"], calories_burned)
+    water_goal = estimate_daily_water_intake(measurements, user_info, calories_burned)
     
     return {
         "calories": {"consumed": [daily_consumption.calories], "goal": [goals["calories"]], "burned": [calories_burned]},
@@ -152,12 +153,12 @@ async def toggle_dropdown(dropdown_id: str):
         id=dropdown_id
     )
 
-def feedback_form(meal_description: str, meal_datetime: datetime, nutrition_info: MealBreakdown, date: str | None = None):
+def feedback_form(meal_description: str, meal_time, nutrition_info: MealBreakdown, date: str | None = None):
     """Create a consistent feedback form layout used by both analyze and regenerate functions"""
     return fh.Div(
         fh.Div(
             ui.create_text_input_form(is_feedback=True, original_description=meal_description),
-            ui.create_meal_breakdown(nutrition_info, meal_time=meal_datetime, date=date),
+            ui.create_meal_breakdown(nutrition_info, meal_time=meal_time, date=date),
             cls="space-y-4 w-[90%] mx-auto"
         ),
         id="text-input"
@@ -169,11 +170,9 @@ async def analyze_text(request: fh.Request, date: str | None = None):
     meal_description = form["meal_description"]
     meal_time = form["meal_time"]
     nutrition_info = assistants.natural_language_macros(meal_description).content[0].parsed
-    today = datetime.today().date()
     meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
-    meal_datetime = datetime.combine(today, meal_time_obj).isoformat()
     
-    return feedback_form(meal_description, meal_datetime, nutrition_info, date)
+    return feedback_form(meal_description, meal_time_obj, nutrition_info, date)
 
 async def analyze_image(food_image: fh.UploadFile, additional_context: str, meal_time: str, date: str | None = None):
     """Handle image upload and analysis"""
@@ -181,11 +180,9 @@ async def analyze_image(food_image: fh.UploadFile, additional_context: str, meal
     contents = await food_image.read()
     image = Image.open(io.BytesIO(contents))
     nutrition_info = assistants.image_macros(image, additional_context).content[0].parsed
-    today = datetime.today().date()
     meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
-    meal_datetime = datetime.combine(today, meal_time_obj).isoformat()
-    
-    return feedback_form(additional_context, meal_datetime, nutrition_info, date)
+
+    return feedback_form(additional_context, meal_time_obj, nutrition_info, date)
 
 async def save_meal(request: fh.Request, date: str | None = None):
     """Save the meal with user-adjusted nutrition values"""
@@ -195,6 +192,7 @@ async def save_meal(request: fh.Request, date: str | None = None):
             date = datetime.today().date()
 
         meal_time = form["meal_time"]
+
         macronutrients = Macronutrients(
             protein=form["protein"],
             carbohydrates=Carbohydrates(
@@ -229,15 +227,27 @@ async def save_meal(request: fh.Request, date: str | None = None):
             micronutrients=micronutrients,
             conditional_nutrients=conditional_nutrients
         )    
+        print(f"Inserting meal: {form['title']} at {meal_time} on {date}")
         databases.insert_meal(DB, form["title"], nutrition_info, date, meal_time)
-        
+        print("Meal inserted successfully")
         return fh.Response(headers={"HX-Redirect": "/nutrition"}, status_code=200)
+    
     except Exception as e:
         return fh.P(
             f"Error saving meal: {str(e)}",
             cls="text-red-500 font-semibold text-center"
         )
-    
+
+async def delete_meal(meal_id: int):
+    """Delete a meal from the database and return updated meals list"""
+    success = databases.delete_meal(DB, meal_id)
+    if success:
+        return None  # This will remove the meal card from the UI
+    else:
+        return fh.P(
+            "Error deleting meal",
+            cls="text-red-500 font-semibold text-center"
+        )
 
 async def save_supplement(request: fh.Request):
     """Save the supplement with user-adjusted nutrition values"""

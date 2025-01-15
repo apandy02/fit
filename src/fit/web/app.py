@@ -1,4 +1,5 @@
 import fasthtml.common as fh
+
 import fit.web.nutrition.requests as nutrition
 import fit.web.performance as performance
 import fit.web.progress as progress
@@ -33,6 +34,7 @@ app.post("/generate_daily_overview")(nutrition.generate_daily_overview)
 app.post("/generate_weekly_overview")(nutrition.generate_weekly_overview)
 app.post("/save_meal")(nutrition.save_meal)
 app.post("/save_meal/{date:str}")(nutrition.save_meal)
+app.post("/delete_meal/{meal_id:int}")(nutrition.delete_meal)
 app.post("/reset_text_form")(nutrition.reset_text_form)
 app.post("/regenerate_analysis")(nutrition.regenerate_analysis)
 app.post("/hide_metric/{plot_id}")(nutrition.hide_metric)

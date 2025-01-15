@@ -2,10 +2,11 @@ import datetime
 
 import fasthtml.common as fh
 import fh_bootstrap as fhb
+from markdown import markdown
+
 from fit.nutrition.targets import MICRO_GOALS
 from fit.trackers.manager import get_active_tracker
 from fit.web.databases import init_db
-from markdown import markdown
 
 DB_PATH = "data/nutrition.db"
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
@@ -206,7 +207,7 @@ def create_overview_card(view_type: str, date: datetime.date = None):
                 id="analysis-content",
                 cls="prose max-w-none prose-invert"
             ),
-            cls="p-6"
+            cls="px-6 py-4"
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mb-12 text-primary-content"
     )
