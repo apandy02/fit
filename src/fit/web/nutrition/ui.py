@@ -137,7 +137,6 @@ def create_meal_prompt_form(
                     ),
                     cls="form-control"
                 ),
-                fh.Div("BLAH"),
                 fh.Div(
                     fh.Label("Meal Time", cls="label text-primary-content"),
                     fh.Input(
@@ -948,52 +947,56 @@ def create_meals_list(date: datetime.date):
     meals = get_daily_meals(DB, date)
     
     if not meals:
-        content = fh.P("No meals logged for this day", cls="text-primary-content text-center"),
-
+        content = fh.P("No meals logged for this day", cls="text-primary-content text-center")
     else:
         content = fh.Div(
+            *[
+                fh.Div(
+                    fh.Div(
+                        fh.Div(
+                            fh.P(meal[0].title, cls="text-lg font-bold text-primary-content"),
+                            fh.Div(
+                                fh.Button(
+                                    "✎",  # pen symbol
+                                    cls="btn btn-ghost btn-sm px-1 hover:bg-base-300",
+                                    onclick="/* Edit functionality will be added later */"
+                                ),
+                                fh.Button(
+                                    "🗑",  # trash symbol
+                                    cls="btn btn-ghost btn-sm px-1 hover:bg-base-300 text-error",
+                                    onclick="/* Delete functionality will be added later */"
+                                ),
+                                cls="flex items-center gap-1"
+                            ),
+                            cls="flex justify-between items-center"
+                        ),
+                        fh.P(f"Time: {datetime.strptime(meal[1], '%Y-%m-%dT%H:%M:%S').strftime('%I:%M %p')}", 
+                            cls="text-sm text-primary-content opacity-80"
+                        ),
+                        cls="mb-2"
+                    ),
+                    fh.Div(
+                        fh.P(f"Calories: {meal[0].calories:.0f} kcal", cls="text-primary-content"),
+                        fh.P(f"Protein: {meal[0].macronutrients.protein:.1f}g", cls="text-primary-content"),
+                        fh.P(f"Carbs: {meal[0].macronutrients.carbohydrates.total:.1f}g", cls="text-primary-content"),
+                        fh.P(f"Fat: {meal[0].macronutrients.fat.total:.1f}g", cls="text-primary-content"),
+                        cls="grid grid-cols-2 gap-2 mt-2 text-sm"
+                    ),
+                    cls="p-4 bg-base-300 rounded-lg mb-4 last:mb-0"
+                )
+                for meal in meals
+            ],
+            cls="mt-4 space-y-2"
+        )
+    
+    return fh.Div(
         fh.Details(
             fh.Summary(
                 fh.H3("Meals Logged", cls="text-xl font-bold text-primary-content inline-block"),
                 cls="cursor-pointer hover:opacity-80"
             ),
-            fh.Div(
-                *[
-                    fh.Div(
-                        fh.Div(
-                            fh.P(meal[0].title, cls="text-lg font-bold text-primary-content"),
-                            fh.P(f"Time: {datetime.strptime(meal[1], '%H:%M').strftime('%I:%M %p')}", cls="text-sm text-primary-content opacity-80"),
-                            cls="mb-2"
-                        ),
-                        fh.P(meal[0].ingredients, cls="text-primary-content"),
-                        fh.Div(
-                            fh.P(f"Calories: {meal[0].calories:.0f} kcal", cls="text-primary-content"),
-                            fh.P(f"Protein: {meal[0].macronutrients.protein:.1f}g", cls="text-primary-content"),
-                            fh.P(f"Carbs: {meal[0].macronutrients.carbohydrates.total:.1f}g", cls="text-primary-content"),
-                            fh.P(f"Fat: {meal[0].macronutrients.fat.total:.1f}g", cls="text-primary-content"),
-                            cls="grid grid-cols-2 gap-2 mt-2 text-sm"
-                        ),
-                        cls="p-4 bg-base-300 rounded-lg mb-4 last:mb-0"
-                    )
-                    for meal in meals
-                ],
-                cls="mt-4 space-y-2"
-            ),
+            content,
             cls="p-6"
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
     )
-        
-    
-    return fh.Div(
-                fh.Div(
-                    fh.H4("Meals Logged", cls="text-lg font-semibold text-primary-content"),
-                    cls="collapse-title"
-                ),
-                fh.Div(
-                    content,
-                    cls="collapse-content bg-base-300"
-                ),
-                tabindex="0",
-                cls="collapse bg-base-200 outline outline-1 outline-primary-content rounded-lg hover:bg-base-300"
-            )
