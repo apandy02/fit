@@ -226,9 +226,10 @@ def _weekly_io_analysis_simple(
         ell.user(user_data)
     ]
 
-def summarize_daily_meals_and_targets(meals: list[MealBreakdown], target: dict[str, float]) -> tuple[str, str]:
+def summarize_daily_meals_and_targets(meals: list[dict], target: dict[str, float]) -> tuple[str, str]:
     meals_str = ""
-    for _, meal in enumerate(meals, 1):
+    for _, meal_data in enumerate(meals, 1):
+        meal = meal_data["meal"]
         meals_str += f"""Meal {meal.title} - {meal.calories} calories, 
             {meal.macronutrients.protein}g protein, {meal.macronutrients.carbohydrates}g carbohydrates, 
             {meal.macronutrients.fat}g fat\n

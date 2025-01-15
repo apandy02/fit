@@ -237,7 +237,17 @@ async def save_meal(request: fh.Request, date: str | None = None):
             f"Error saving meal: {str(e)}",
             cls="text-red-500 font-semibold text-center"
         )
-    
+
+async def delete_meal(meal_id: int):
+    """Delete a meal from the database and return updated meals list"""
+    success = databases.delete_meal(DB, meal_id)
+    if success:
+        return None  # This will remove the meal card from the UI
+    else:
+        return fh.P(
+            "Error deleting meal",
+            cls="text-red-500 font-semibold text-center"
+        )
 
 async def save_supplement(request: fh.Request):
     """Save the supplement with user-adjusted nutrition values"""

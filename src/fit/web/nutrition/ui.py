@@ -954,36 +954,33 @@ def create_meals_list(date: datetime.date):
                 fh.Div(
                     fh.Div(
                         fh.Div(
-                            fh.P(meal[0].title, cls="text-lg font-bold text-primary-content"),
+                            fh.P(meal["meal"].title, cls="text-lg font-bold text-primary-content"),
                             fh.Div(
-                                fh.Button(
-                                    "✎",  
-                                    cls="btn btn-ghost btn-sm px-1 hover:bg-base-300",
-                                    onclick="/* Edit functionality will be added later */"
-                                ),
                                 fh.Button(
                                     "🗑",  
                                     cls="btn btn-ghost btn-sm px-1 hover:bg-base-300 text-error",
-                                    onclick="/* Delete functionality will be added later */"
+                                    hx_post=f"/delete_meal/{meal['rowid']}",
+                                    hx_target="closest div.meal-card",
+                                    hx_swap="outerHTML"
                                 ),
                                 cls="flex items-center gap-1"
                             ),
                             cls="flex justify-between items-center"
                         ),
                         fh.P(
-                            f"Time: {meal[1]}",
+                            f"Time: {meal['meal_time'].strftime('%I:%M %p')}",
                             cls="text-sm text-primary-content opacity-80"
                         ),
                         cls="mb-2"
                     ),
                     fh.Div(
-                        fh.P(f"Calories: {meal[0].calories:.0f} kcal", cls="text-primary-content"),
-                        fh.P(f"Protein: {meal[0].macronutrients.protein:.1f}g", cls="text-primary-content"),
-                        fh.P(f"Carbs: {meal[0].macronutrients.carbohydrates.total:.1f}g", cls="text-primary-content"),
-                        fh.P(f"Fat: {meal[0].macronutrients.fat.total:.1f}g", cls="text-primary-content"),
+                        fh.P(f"Calories: {meal['meal'].calories:.0f} kcal", cls="text-primary-content"),
+                        fh.P(f"Protein: {meal['meal'].macronutrients.protein:.1f}g", cls="text-primary-content"),
+                        fh.P(f"Carbs: {meal['meal'].macronutrients.carbohydrates.total:.1f}g", cls="text-primary-content"),
+                        fh.P(f"Fat: {meal['meal'].macronutrients.fat.total:.1f}g", cls="text-primary-content"),
                         cls="grid grid-cols-2 gap-2 mt-2 text-sm"
                     ),
-                    cls="p-4 bg-base-300 rounded-lg mb-4 last:mb-0"
+                    cls="p-4 bg-base-300 rounded-lg mb-4 last:mb-0 meal-card"
                 )
                 for meal in meals
             ],
