@@ -286,3 +286,14 @@ def decipher_inventory(inventory_str: str) -> dm.KitchenInventory:
     You are going to take this description and return a list of the items in the inventory.
     """
     return inventory_str
+
+@ell.complex(model=DEFAULT_MODEL, response_format=dm.KitchenInventory)
+def inventory_from_image(image: Image.Image, additional_context: str = "") -> dm.KitchenInventory:
+    system_message = """
+    given an image of what the user's kitchen looks like, return a list of the items in the kitchen.
+    If the image does not contain foods the kitchen, return an empty list.
+    """
+    return [
+        ell.system(system_message),
+        ell.user([additional_context, image]),
+    ]
