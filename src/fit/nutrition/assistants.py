@@ -143,7 +143,7 @@ def _daily_io_analysis_pydantic(sys_message: str, user_data: str) -> dm.Nutritio
 
 @ell.simple(model=DEFAULT_MODEL, max_tokens=2048)
 def _daily_io_analysis_simple(sys_message: str, user_data: str) -> str:
-    sys_message += f"You must absolutely respond in this format as a json string with no exceptions: {NutritionFeedback.model_json_schema()}"
+    sys_message += f"You must absolutely respond in this format as a json string with no exceptions: {dm.NutritionFeedback.model_json_schema()}"
     return [
         ell.system(sys_message),
         ell.user(user_data)
@@ -219,7 +219,7 @@ def _weekly_io_analysis_simple(
         sys_message: str,
         user_data: str
 ) -> str:
-    sys_message += f"You must absolutely respond in this format with no exceptions. {NutritionFeedback.model_json_schema()}"
+    sys_message += f"You must absolutely respond in this format with no exceptions. {dm.NutritionFeedback.model_json_schema()}"
     return [
         ell.system(sys_message),
         ell.user(user_data)
