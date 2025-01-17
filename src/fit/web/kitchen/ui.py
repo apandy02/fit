@@ -352,7 +352,7 @@ def create_editable_inventory_form(inventory: KitchenInventory):
                 fh.Button(
                     "Save Items",
                     type="submit",
-                    cls="btn btn-primary w-full mt-4"
+                    cls="btn btn-primary w-full mt-4 ml-4"
                 ),
                 fh.Div(id="save-result", cls="mt-4"),
                 cls="pr-8 space-y-4"
