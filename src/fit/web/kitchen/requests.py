@@ -124,3 +124,13 @@ async def add_inventory_from_text(request: fh.Request):
             f"Error analyzing items: {str(e)}",
             cls="text-red-500 font-semibold text-center"
         )
+
+async def delete_inventory_item(rowid: int):
+    """Delete an inventory item"""
+    try:
+        common.DB.t.inventory.delete(rowid)
+        # Return an empty div that will replace the card
+        return fh.Div()
+    except Exception as e:
+        print(e)
+        return fh.Response(status=500)

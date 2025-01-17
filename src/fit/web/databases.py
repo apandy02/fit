@@ -559,17 +559,20 @@ def insert_inventory_item(database: fh.Database, title: str, quantity: float, un
 def get_inventory(database: fh.Database) -> list[tuple[str, float, str, str]]:
     """Get the inventory from the database"""
     query = """
-        SELECT title, quantity, unit, category FROM inventory
+        SELECT rowid, title, quantity, unit, category FROM inventory
     """
     result = database.execute(query).fetchall()
     results = {
         category: [] for category in KITCHEN_ITEM_CATEGORIES
     }
+
     for row in result:
-        results[row[3]].append({
-            "title": row[0],
-            "quantity": row[1],
-            "unit": row[2]
+        print(f"{row=}")
+        results[row[4]].append({
+            "rowid": row[0],
+            "title": row[1],
+            "quantity": row[2],
+            "unit": row[3], 
         })
     
     return results

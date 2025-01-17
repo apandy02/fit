@@ -21,6 +21,7 @@ def kitchen_page_content(inventory: dict):
 
 def create_kitchen_sections(inventory: dict):
     """Create all kitchen inventory sections"""
+    print(f"{inventory=}")
     sections = [
         ("Produce", inventory.get("Produce", [])),
         ("Meats & Fish", inventory.get("Meats & Fish", [])),
@@ -69,8 +70,15 @@ def create_expandable_section(title: str, items: list):
 def create_item_card(item: tuple):
     """Create a card for an item"""
     item['title'] = item['title'].capitalize()
+    print(item)
     return fh.Card(
-        fh.Button("×", cls="absolute top-2 right-2 flex items-center justify-center h-8 w-8 hover:bg-base-300 focus:bg-base-300 rounded-lg bg-base-400 border-none outline-none text-primary-content text-xl font-light"),
+        fh.Button(
+            "×",
+            cls="absolute top-2 right-2 flex items-center justify-center h-8 w-8 hover:bg-base-300 focus:bg-base-300 rounded-lg bg-base-400 border-none outline-none text-primary-content text-xl font-light",
+            hx_post=f"/delete_inventory_item/{item['rowid']}",
+            hx_target="closest .card",
+            hx_swap="outerHTML"
+        ),
         fh.Div(
             fh.H2(item['title'], cls="card-title justify-center text-lg mb-2 text-primary-content"),
             fh.P(f"Quantity: {item['quantity']} {item['unit']}", cls="text-center text-primary-content text-sm"),
@@ -332,32 +340,56 @@ def create_editable_inventory_form(inventory: KitchenInventory):
     return fh.Div(
         fh.Form(
             hx_post="/save_inventory",
-            hx_target="#save-result"
+            hx_target="#save-result",
+            id="inventory-form"
         )(
             fh.Div(
                 fh.Div(
                     *[create_editable_inventory_card(inventory, index) for index, inventory in enumerate(inventory.items)],
-                    cls="space-y-4"
+                    cls="space-y-4",
+                    id="inventory-items"
                 ),
                 fh.Button(
                     "Save Items",
                     type="submit",
-                    cls="btn btn-primary w-full mt-4 justify-center ml-4"
+                    cls="btn btn-primary w-full mt-4"
                 ),
                 fh.Div(id="save-result", cls="mt-4"),
                 cls="pr-8 space-y-4"
             )
-        )
+        ),
+        fh.Script("""
+            function removeInventoryItem(index) {
+                const itemElement = document.getElementById(`inventory-item-${index}`);
+                if (itemElement) {
+                    itemElement.remove();
+                    
+                    // If no items left, close modal and refresh
+                    const itemsContainer = document.getElementById('inventory-items');
+                    if (itemsContainer.children.length === 0) {
+                        closeKitchenModal();
+                        window.location.reload();
+                    }
+                }
+            }
+        """)
     )
 
 def create_editable_inventory_card(inventory: KitchenItem, index: int):
     """Create a card for editing a single inventory item"""
     return fh.Card(
+        fh.Button(
+            "×",
+            cls="absolute right-2 top-2 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+            onclick=f"removeInventoryItem({index})",
+            style="outline: none; box-shadow: none;"
+        ),
         fh.Div(
             create_item_form(inventory, index),
             cls="p-4"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg shadow-none mt-4 w-full"
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg shadow-none mt-4 w-full relative",
+        id=f"inventory-item-{index}"
     )
 
 def create_option_form_input(options: list, input_name: str, input_value: str):
