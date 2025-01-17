@@ -52,7 +52,8 @@ app.post("/log_water/{date:str}")(nutrition.log_water)
 # Kitchen routes
 app.get("/kitchen")(kitchen.get)
 app.post("/add_item")(kitchen.add_item)
-app.post("/decipher_text_inventory_addition")(kitchen.decipher_text_inventory_addition)
+app.post("/decipher_text_inventory_addition")(kitchen.add_inventory_from_text)
+app.post("/save_inventory")(kitchen.save_inventory)
 app.get("/get_inventory")(kitchen.get_inventory)
 # Progress routes
 app.get("/progress")(progress.get)

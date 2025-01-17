@@ -1,4 +1,6 @@
 import fasthtml.common as fh
+from fit.nutrition.data_models import KitchenItem, KitchenInventory
+from fit.web.common import create_form_input
 
 
 def kitchen_page_content(inventory: dict):
@@ -88,7 +90,7 @@ def create_text_input_form(
     submit_text: str,
     hx_post_url: str,
     rows: int = 3,
-    hx_target: str = "#text-input-result",
+    hx_target: str = "#describe-view",
     extra_fields: list = None,
     header_buttons: list = None
 ):
@@ -102,16 +104,16 @@ def create_text_input_form(
         fh.Div(
             fh.H3(title, cls="text-2xl font-bold text-primary-content inline-block"),
             *header_buttons,
-            cls="flex justify-between items-center mb-8"
+            cls="flex justify-between items-center mb-4"
         ),
         fh.Form(
             hx_post=hx_post_url,
             hx_target=hx_target,
-            hx_swap="innerHTML",
-            cls="space-y-6 w-[90%] mx-auto"
+            hx_swap="outerHTML",
+            cls="space-y-4 w-[90%] mx-auto"
         )(
             fh.Div(
-                fh.Label(textarea_label, cls="label text-lg text-primary-content mb-2"),
+                fh.Label(textarea_label, cls="label text-lg text-primary-content mb-1"),
                 fh.Textarea(
                     name="items_description",
                     placeholder=textarea_placeholder,
@@ -123,11 +125,10 @@ def create_text_input_form(
             fh.Button(
                 submit_text,
                 type="submit",
-                cls="btn btn-primary w-full text-lg mt-4"
-            ),
-            fh.Div(id="text-input-result", cls="mt-4")
+                cls="btn btn-primary w-full text-lg mt-2"
+            )
         ),
-        cls="w-[600px] mx-auto px-8 py-6"
+        cls="w-full mx-auto px-4 py-2"
     )
 
 
@@ -256,7 +257,7 @@ def create_add_items_modal():
                             submit_text="Add Items",
                             hx_post_url="/decipher_text_inventory_addition",
                             rows=3,
-                            hx_target="#text-input-result"
+                            hx_target="#describe-view"
                         ),
                         cls="p-6 hidden",
                         id="describe-view"
@@ -279,12 +280,12 @@ def create_add_items_modal():
                         cls="p-6 hidden",
                         id="image-view"
                     ),
-                    cls="relative"
+                    cls="relative overflow-y-auto max-h-[80vh]"
                 ),
-                cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg relative w-full"
+                cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg relative w-full max-w-lg"
             ),
             id="kitchen-modal",
-            cls="modal"
+            cls="modal modal-middle"
         ),
         fh.Script("""
             function openKitchenModal() {
@@ -324,3 +325,95 @@ def create_add_items_modal():
             }
         """)
     )
+
+def create_editable_inventory_form(inventory: KitchenInventory):
+    """Create a form for editing inventory items"""
+    return fh.Div(
+        *[create_editable_inventory_card(inventory) for inventory in inventory.items],
+        cls="pr-8"
+    )
+
+def create_editable_inventory_card(inventory: KitchenItem):
+    """Create a card for editing a single inventory item"""
+    save_item_endpoint = "/save_item"
+    return fh.Card(
+        fh.Form(
+            hx_post=save_item_endpoint,
+            hx_target="#save-result",
+            cls="space-y-4 p-4"
+        )(
+            create_item_form(inventory),
+            fh.Button(
+                "Save Items",
+                type="submit",
+                cls="btn btn-primary w-full"
+            ),
+            fh.Div(id="save-result", cls="mt-4")
+        ),
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg shadow-none mt-4 w-full"
+    )
+
+def create_item_form(item: KitchenItem):
+    """Create a form for editing a single inventory item"""
+    return fh.Div(
+        create_form_input(
+            label_text="Item Name",
+            input_name="item_name",
+            input_value=item.name,
+            input_type="text"
+        ),
+        create_form_input(
+            label_text="Quantity",
+            input_name="quantity",
+            input_value=item.quantity,
+            input_type="number",
+            step="0.1"
+        ),
+        create_form_input(
+            label_text="Unit",
+            input_name="unit",
+            input_value=item.unit,
+            input_type="text"
+        ),
+        create_form_input(
+            label_text="Category",
+            input_name="category",
+            input_value=item.category,
+            input_type="text"
+        ),
+        cls="space-y-4",
+        id="describe-view"
+    )
+
+async def add_inventory_from_text(request: fh.Request):
+    """Analyze the text input for inventory addition"""
+    try:
+        form = await request.form()
+        text = form.get("items_description")
+        inventory = assistants.decipher_inventory(text).content[0].parsed
+        return fh.Div(
+            fh.Button(
+                "←",
+                cls="absolute left-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                onclick="showBulkView()",
+                style="outline: none; box-shadow: none;"
+            ),
+            fh.Button(
+                "×",
+                cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                onclick="closeKitchenModal()",
+                style="outline: none; box-shadow: none;"
+            ),
+            fh.Div(
+                ui.create_editable_inventory_form(inventory),
+                cls="px-6"
+            ),
+            cls="p-6",
+            id="describe-view"
+        )
+    except Exception as e:
+        print(e)
+        return fh.P(
+            f"Error analyzing items: {str(e)}",
+            cls="text-red-500 font-semibold text-center"
+        )
