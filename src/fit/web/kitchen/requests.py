@@ -1,11 +1,11 @@
+import io
+
 import fasthtml.common as fh
 import fit.web.common as common
 import fit.web.databases as db
 import fit.web.kitchen.ui as ui
 from fit.nutrition import assistants as assistants
 from PIL import Image
-import io
-import json
 
 
 def get():
@@ -28,40 +28,6 @@ async def add_item(request: fh.Request):
     except Exception as e:
         print(e)
         return fh.Response(status=500)
-
-
-async def add_inventory_from_text(request: fh.Request):
-    """Analyze the text input for inventory addition"""
-    try:
-        form = await request.form()
-        text = form.get("items_description")
-        inventory = assistants.decipher_inventory(text).content[0].parsed
-        return fh.Div(
-            fh.Button(
-                "←",
-                cls="absolute left-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
-                onclick="showBulkView()",
-                style="outline: none; box-shadow: none;"
-            ),
-            fh.Button(
-                "×",
-                cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
-                onclick="closeKitchenModal()",
-                style="outline: none; box-shadow: none;"
-            ),
-            ui.create_editable_inventory_form(inventory),
-            fh.Script("""
-                document.getElementById('describe-view').classList.remove('hidden');
-            """),
-            cls="p-6",
-            id="describe-view"
-        )
-    except Exception as e:
-        print(e)
-        return fh.P(
-            f"Error analyzing items: {str(e)}",
-            cls="text-red-500 font-semibold text-center"
-        )
 
 async def add_inventory_from_image(food_image: fh.UploadFile, additional_context: str):
     """Add an inventory from an image"""
