@@ -1,6 +1,7 @@
 import fasthtml.common as fh
 from fit.nutrition.data_models import KitchenItem, KitchenInventory
-from fit.web.common import create_form_input
+from fit.web.common import create_text_form_input
+from fit.web.kitchen.constants import INVENTORY_UNITS, INVENTORY_CATEGORIES
 
 
 def kitchen_page_content(inventory: dict):
@@ -329,57 +330,70 @@ def create_add_items_modal():
 def create_editable_inventory_form(inventory: KitchenInventory):
     """Create a form for editing inventory items"""
     return fh.Div(
-        *[create_editable_inventory_card(inventory) for inventory in inventory.items],
-        cls="pr-8"
+        fh.Form(
+            hx_post="/save_inventory",
+            hx_target="#save-result"
+        )(
+            fh.Div(
+                fh.Div(
+                    *[create_editable_inventory_card(inventory, index) for index, inventory in enumerate(inventory.items)],
+                    cls="space-y-4"
+                ),
+                fh.Button(
+                    "Save Items",
+                    type="submit",
+                    cls="btn btn-primary w-full mt-4 justify-center ml-4"
+                ),
+                fh.Div(id="save-result", cls="mt-4"),
+                cls="pr-8 space-y-4"
+            )
+        )
     )
 
-def create_editable_inventory_card(inventory: KitchenItem):
+def create_editable_inventory_card(inventory: KitchenItem, index: int):
     """Create a card for editing a single inventory item"""
-    save_item_endpoint = "/save_item"
     return fh.Card(
-        fh.Form(
-            hx_post=save_item_endpoint,
-            hx_target="#save-result",
-            cls="space-y-4 p-4"
-        )(
-            create_item_form(inventory),
-            fh.Button(
-                "Save Items",
-                type="submit",
-                cls="btn btn-primary w-full"
-            ),
-            fh.Div(id="save-result", cls="mt-4")
+        fh.Div(
+            create_item_form(inventory, index),
+            cls="p-4"
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg shadow-none mt-4 w-full"
     )
 
-def create_item_form(item: KitchenItem):
+def create_option_form_input(options: list, input_name: str, input_value: str):
+    """Create a form input for a dropdown menu"""
+    return fh.Select(
+        *[fh.Option(option, value=option, selected=(option == input_value)) for option in options],
+        cls="select select-bordered w-full max-w-xs",
+        name=input_name
+    )
+
+
+def create_item_form(item: KitchenItem, index: int):
     """Create a form for editing a single inventory item"""
     return fh.Div(
-        create_form_input(
+        create_text_form_input(
             label_text="Item Name",
-            input_name="item_name",
+            input_name=f"items[{index}][title]",
             input_value=item.name,
             input_type="text"
         ),
-        create_form_input(
+        create_text_form_input(
             label_text="Quantity",
-            input_name="quantity",
+            input_name=f"items[{index}][quantity]",
             input_value=item.quantity,
             input_type="number",
             step="0.1"
         ),
-        create_form_input(
-            label_text="Unit",
-            input_name="unit",
-            input_value=item.unit,
-            input_type="text"
+        create_option_form_input(
+            options=INVENTORY_UNITS,
+            input_name=f"items[{index}][unit]",
+            input_value=item.unit
         ),
-        create_form_input(
-            label_text="Category",
-            input_name="category",
-            input_value=item.category,
-            input_type="text"
+        create_option_form_input(
+            options=INVENTORY_CATEGORIES,
+            input_name=f"items[{index}][category]",
+            input_value=item.category
         ),
         cls="space-y-4",
         id="describe-view"

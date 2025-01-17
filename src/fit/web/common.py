@@ -218,7 +218,7 @@ def create_time_filter(current_view: str):
         cls="mt-6 mb-8 flex justify-center"
     )
 
-def create_form_input(label_text, input_name, input_value, input_type="number", step="0.1"):
+def create_text_form_input(label_text, input_name, input_value, input_type="number", step="0.1"):
     """Helper function to create a form input with label"""
     if input_type == "number":
         value = 0.0 if input_value is None or input_value == "" else float(input_value)

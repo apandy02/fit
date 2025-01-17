@@ -4,7 +4,7 @@ import fasthtml.common as fh
 import fit.nutrition.assistants as assistants
 import fit.web.nutrition.food_plots as food_plots
 from fit.nutrition.data_models import MealBreakdown
-from fit.web.common import (DB, create_form_input, create_overview_card,
+from fit.web.common import (DB, create_text_form_input, create_overview_card,
                             create_time_filter)
 from fit.web.databases import get_daily_meals
 
@@ -704,20 +704,20 @@ def create_nutrition_card(nutrition_info: MealBreakdown | None, card_title: str 
     """Create a card containing ingredients text and editable nutrition form"""
     return (
             create_form_section(card_title, [# separate the title from the actual nutriotioanl form so it can be used for multiple purposes
-                    create_form_input(title_field, "title", nutrition_info.title if nutrition_info else None, input_type="text"),
-                    create_form_input("Calories (kcal)", "calories", nutrition_info.calories if nutrition_info else None),
-                    create_form_input("Protein (g)", "protein", nutrition_info.macronutrients.protein if nutrition_info else None),
-                    create_form_input("Carbohydrates (g)", "carbohydrates", nutrition_info.macronutrients.carbohydrates.total if nutrition_info else None),
-                    create_form_input("Fat (g)", "fat", nutrition_info.macronutrients.fat.total if nutrition_info else None),
-                    create_form_input("Fiber (g)", "fiber", nutrition_info.macronutrients.carbohydrates.fiber if nutrition_info else None),
-                    create_form_input("Vitamin A (IU)", "vitamin_a", nutrition_info.micronutrients.vitamin_a if nutrition_info else None),
-                    create_form_input("Vitamin C (mg)", "vitamin_c", nutrition_info.micronutrients.vitamin_c if nutrition_info else None),
-                    create_form_input("Vitamin D (IU)", "vitamin_d", nutrition_info.micronutrients.vitamin_d if nutrition_info else None),
-                    create_form_input("Calcium (mg)", "calcium", nutrition_info.micronutrients.calcium if nutrition_info else None),
-                    create_form_input("Iron (mg)", "iron", nutrition_info.micronutrients.iron if nutrition_info else None),
-                    create_form_input("Potassium (mg)", "potassium", nutrition_info.micronutrients.potassium if nutrition_info else None),
-                    create_form_input("Sodium (mg)", "sodium", nutrition_info.micronutrients.sodium if nutrition_info else None),
-                    create_form_input("Creatine (g)", "creatine", nutrition_info.conditional_nutrients.creatine if nutrition_info else None),
+                    create_text_form_input(title_field, "title", nutrition_info.title if nutrition_info else None, input_type="text"),
+                    create_text_form_input("Calories (kcal)", "calories", nutrition_info.calories if nutrition_info else None),
+                    create_text_form_input("Protein (g)", "protein", nutrition_info.macronutrients.protein if nutrition_info else None),
+                    create_text_form_input("Carbohydrates (g)", "carbohydrates", nutrition_info.macronutrients.carbohydrates.total if nutrition_info else None),
+                    create_text_form_input("Fat (g)", "fat", nutrition_info.macronutrients.fat.total if nutrition_info else None),
+                    create_text_form_input("Fiber (g)", "fiber", nutrition_info.macronutrients.carbohydrates.fiber if nutrition_info else None),
+                    create_text_form_input("Vitamin A (IU)", "vitamin_a", nutrition_info.micronutrients.vitamin_a if nutrition_info else None),
+                    create_text_form_input("Vitamin C (mg)", "vitamin_c", nutrition_info.micronutrients.vitamin_c if nutrition_info else None),
+                    create_text_form_input("Vitamin D (IU)", "vitamin_d", nutrition_info.micronutrients.vitamin_d if nutrition_info else None),
+                    create_text_form_input("Calcium (mg)", "calcium", nutrition_info.micronutrients.calcium if nutrition_info else None),
+                    create_text_form_input("Iron (mg)", "iron", nutrition_info.micronutrients.iron if nutrition_info else None),
+                    create_text_form_input("Potassium (mg)", "potassium", nutrition_info.micronutrients.potassium if nutrition_info else None),
+                    create_text_form_input("Sodium (mg)", "sodium", nutrition_info.micronutrients.sodium if nutrition_info else None),
+                    create_text_form_input("Creatine (g)", "creatine", nutrition_info.conditional_nutrients.creatine if nutrition_info else None),
                 ]
             )
     ) #TODO: make this more dynamic
