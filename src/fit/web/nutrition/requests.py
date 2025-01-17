@@ -347,7 +347,7 @@ async def regenerate_analysis(feedback: str, original_description: str):
     meal_time_obj = datetime.now().time()
     meal_datetime = datetime.combine(today, meal_time_obj).isoformat()
     
-    return feedback_form(original_description, meal_datetime, improved_info)
+    return ui.feedback_form(original_description, meal_datetime, improved_info)
 
 async def hide_metric(plot_id: str):
     """Hide a metric by removing it from visible_metrics"""
