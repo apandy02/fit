@@ -1,6 +1,7 @@
-from fit.web.common import page_outline
-from fasthtml.oauth import OAuth
 import fasthtml.common as fh
+
+from fit.web.common import page_outline
+
 
 def get_login_page(req, fitbit_login_link: str):
     auth_card = fh.Form(

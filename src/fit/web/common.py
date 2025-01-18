@@ -1,10 +1,9 @@
 import datetime
+from functools import wraps
 
 import fasthtml.common as fh
 import fh_bootstrap as fhb
 from markdown import markdown
-from functools import wraps
-
 
 from fit.nutrition.targets import MICRO_GOALS
 from fit.trackers.manager import get_active_tracker

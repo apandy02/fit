@@ -1,15 +1,16 @@
 import fasthtml.common as fh
+from fasthtml.common import RedirectResponse
+from fasthtml.oauth import redir_url
 
+import fit.web.kitchen.requests as kitchen
 import fit.web.nutrition.requests as nutrition
 import fit.web.performance as performance
 import fit.web.progress as progress
 import fit.web.rest as rest
-from fit.web.auth.login_page import get_login_page
 import fit.web.user_profile as user_profile
-import fit.web.kitchen.requests as kitchen
-from fasthtml.oauth import OAuth, redir_url
-from fasthtml.common import RedirectResponse
 from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
+from fit.web.auth.login_page import get_login_page
+
 tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
 amcharts = [
     fh.Script(src="https://cdn.amcharts.com/lib/5/index.js"),

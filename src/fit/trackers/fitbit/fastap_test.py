@@ -1,9 +1,9 @@
 import os
 from typing import Optional
-from fastapi import FastAPI, Request, HTTPException, status, Query
-from fastapi.responses import RedirectResponse, HTMLResponse
+
 from authlib.integrations.requests_client import OAuth2Session
-from urllib.parse import urlencode
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import RedirectResponse
 
 # ------------------------------------------------------------------------------
 # 1. FASTAPI APP

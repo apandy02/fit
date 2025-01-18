@@ -1,10 +1,12 @@
+import base64
+import hashlib
 import json
+import os
 from pathlib import Path
+
+import httpx
 from oauthlib.oauth2 import WebApplicationClient
-from fasthtml.oauth import _AppClient
-import os, hashlib, base64, httpx
-from oauthlib.oauth2 import WebApplicationClient
-from urllib.parse import urlencode
+
 
 def make_code_verifier_and_challenge():
     code_verifier = base64.urlsafe_b64encode(os.urandom(64)).decode('utf-8').rstrip('=')
