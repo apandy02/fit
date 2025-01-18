@@ -6,6 +6,10 @@ import fit.web.progress as progress
 import fit.web.rest as rest
 import fit.web.user_profile as user_profile
 import fit.web.kitchen.requests as kitchen
+from fasthtml.oauth import OAuth
+from fasthtml.common import RedirectResponse
+from fit.web.fitbit_client import fitbit_client_oauth
+
 
 tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
 amcharts = [
@@ -71,6 +75,7 @@ app.get("/rest")(rest.get)
 # performance routes
 app.get("/performance")(performance.get)
 
+
 fh.reg_re_param("imgext", "png")
 
 
@@ -78,4 +83,27 @@ fh.reg_re_param("imgext", "png")
 def get(path: str):
     return fh.FileResponse(f"{path}")
 
+@app.get('/')
+def home(auth): return fh.P('Logged in!'), fh.A('Log out', href='/logout')
+
+@app.get('/login')
+def login(req): return fh.Div(fh.P("Not logged in"), fh.A('Log in', href=oauth.login_link(req)))
+
+
+
+scope = ["activity", "heartrate", "profile"]
+
+class Auth(OAuth):
+    def get_auth(self, info, ident, session, state):
+        print(f"info: {info}")
+        email = info.email or ''
+        if info.email_verified:
+            return RedirectResponse('/nutrition', status_code=303)
+
+oauth = Auth(app, fitbit_client_oauth, redir_path='/login')
+
+
+
 fh.serve() 
+
+

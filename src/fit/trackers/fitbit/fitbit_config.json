@@ -1,0 +1,6 @@
+{
+    "client_id": "23PY7Y",
+    "client_secret": "3e63f08e452017cb850e94abd31a7140",
+    "redirect_uri": "http://localhost:8000/nutrition`",
+    "refresh_token_uri": "https://api.fitbit.com/oauth2/token"
+}

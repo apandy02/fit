@@ -33,7 +33,7 @@ def create_kitchen_sections():
         ("Frozen Items", None),
         ("Snacks & Misc", None)
     ]
-    
+
     return fh.Div(
         *[create_expandable_section(title, content) for title, content in sections],
         cls="space-y-8"
