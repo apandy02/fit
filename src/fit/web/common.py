@@ -3,6 +3,8 @@ import datetime
 import fasthtml.common as fh
 import fh_bootstrap as fhb
 from markdown import markdown
+from functools import wraps
+
 
 from fit.nutrition.targets import MICRO_GOALS
 from fit.trackers.manager import get_active_tracker
@@ -129,18 +131,42 @@ def create_modal(content, modal_id="modal"):
         """)
     )
 
-def page_outline(selidx, title, *c):
+def basic_auth(f):
+    """
+    Decorator for basic authentication.
+    """
+
+    @wraps(f)
+    def wrapper(session, *args, **kwargs):
+        if "auth" not in session:
+            return fh.RedirectResponse("/login", status_code=303)
+        return f(session, *args, **kwargs)
+
+    return wrapper
+
+def page_outline(selidx, title, logged_in: bool, display_nav: bool, *c):
     """
     Return the common page outline for the frontend.
     """
-    pages = [
-        ("Food", "/nutrition"),
-        ("Kitchen", "/kitchen"),
-        ("Progress", "/progress"),
-        ("Performance", "/performance"),
-        ("Rest", "/rest"),
-        ("Profile", "/profile"),
-    ]
+    if display_nav:
+        if logged_in:
+            pages = [
+                ("Food", "/nutrition"),
+                ("Kitchen", "/kitchen"),
+                ("Progress", "/progress"),
+                ("Performance", "/performance"),
+                ("Rest", "/rest"),
+                ("Profile", "/profile"),
+            ]
+            justify = "center"
+        else:
+            pages = [
+                ("Login", "/login"),
+            ]
+            justify = "right"
+    else:
+        pages = []
+        justify = "center"
     return (
         fh.Title(title),
         fh.Body(
@@ -155,9 +181,9 @@ def page_outline(selidx, title, *c):
                         )
                         for title, link in pages
                     ],
-                    cls="flex justify-center items-center flex-1",
+                    cls=f"flex justify-{justify} items-center flex-1",
                 ),
-                cls="navbar bg-base-100 bg-opacity-100 rounded-m h-[5vh] flex justify-center outline outline-1 outline-primary-content",
+                cls=f"navbar bg-base-100 bg-opacity-100 rounded-m h-[5vh] flex justify-{justify} outline outline-1 outline-primary-content",
             ),
             fh.Div(
                 fh.Div(*c, cls="min-h-[calc(100vh-8vh)] pb-[3vh]"),

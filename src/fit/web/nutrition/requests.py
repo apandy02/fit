@@ -17,7 +17,7 @@ from fit.nutrition.targets import (calculate_macro_targets,
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import DB, active_tracker, micronutrient_goals
 
-
+@common.basic_auth
 def get_daily_overview(date: str = None):
     """Return the nutritional overview page content"""
     if date is None:

@@ -4,12 +4,12 @@ import fit.web.nutrition.requests as nutrition
 import fit.web.performance as performance
 import fit.web.progress as progress
 import fit.web.rest as rest
+from fit.web.auth.login_page import get_login_page
 import fit.web.user_profile as user_profile
 import fit.web.kitchen.requests as kitchen
-from fasthtml.oauth import OAuth
+from fasthtml.oauth import OAuth, redir_url
 from fasthtml.common import RedirectResponse
-from fit.web.fitbit_client import fitbit_client_oauth
-
+from fit.web.auth.clients import fitbit_client_oauth
 
 tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
 amcharts = [
@@ -87,9 +87,22 @@ def get(path: str):
 def home(auth): return fh.P('Logged in!'), fh.A('Log out', href='/logout')
 
 @app.get('/login')
-def login(req): return fh.Div(fh.P("Not logged in"), fh.A('Log in', href=oauth.login_link(req)))
+def login(req): 
+    login_link = oauth.login_link(req)
+    return get_login_page(req, fitbit_login_link=login_link)
 
 
+auth_callback_path = "/auth_redirect"
+
+@app.get(auth_callback_path)
+def auth_redirect(code:str):
+    return fh.P(f"code: {code}")
+
+def before(req, session):
+    auth = req.scope['auth' ] = session.get('user_id', None)
+    if not auth: return RedirectResponse('/login', status_code=303)
+    fh.counts.xtra(name=auth)
+bware = fh.Beforeware(before, skip=['/login', auth_callback_path])
 
 scope = ["activity", "heartrate", "profile"]
 
@@ -100,7 +113,7 @@ class Auth(OAuth):
         if info.email_verified:
             return RedirectResponse('/nutrition', status_code=303)
 
-oauth = Auth(app, fitbit_client_oauth, redir_path='/login')
+oauth = Auth(app, fitbit_client_oauth, redir_path=auth_callback_path)
 
 
 

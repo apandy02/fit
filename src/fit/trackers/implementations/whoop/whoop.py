@@ -50,6 +50,37 @@ class Whoop(FitnessTracker):
         self._session.register_client_auth_method(("password_json", self._auth_password_json))
 
         super().__init__()
+
+        def _authenticate(self) -> None:
+            """Authenticate OAuth2Session by fetching token.
+        
+            If `user_id` is `None`, it will be set according to the `user_id` returned with
+            the token.
+
+            Raises:
+                requests.exceptions.HTTPError: If authentication fails due to invalid credentials
+                ValueError: If user ID cannot be retrieved from token response
+            """
+            try:
+                self._session.fetch_token(
+                    url=f"{self.AUTH_URL}/oauth/token", 
+                    username=self._username,
+                    password=self._password,
+                    grant_type="password",
+                )
+            except Exception as e:
+                raise RuntimeError(f"Failed to authenticate with Whoop: {str(e)}")
+
+            if not self.user_id:
+                user_id = self._session.token.get("user", {}).get("id")
+                if not user_id:
+                    raise ValueError("Could not retrieve user ID from authentication response")
+                self.user_id = str(user_id)
+
+    def _auth_password_json(self, _client, _method, uri, headers, body):
+        body = json.dumps(dict(extract_params(body)))
+        headers["Content-Type"] = "application/json"
+        return uri, headers, body
     
     def get_daily_resting_heart_rate(self, day: datetime.date) -> float:
         cycle_dict = self._max_overlap_cycle(day=day, cycles=self._get_cycles_for_day(day))
@@ -126,37 +157,6 @@ class Whoop(FitnessTracker):
             dict[str, Any]: A dictionary of cycle data.
         """
         return self._max_overlap_cycle(day=day, cycles=self._get_cycles_for_day(day))
-
-    def _authenticate(self) -> None:
-        """Authenticate OAuth2Session by fetching token.
-    
-        If `user_id` is `None`, it will be set according to the `user_id` returned with
-        the token.
-
-        Raises:
-            requests.exceptions.HTTPError: If authentication fails due to invalid credentials
-            ValueError: If user ID cannot be retrieved from token response
-        """
-        try:
-            self._session.fetch_token(
-                url=f"{self.AUTH_URL}/oauth/token", 
-                username=self._username,
-                password=self._password,
-                grant_type="password",
-            )
-        except Exception as e:
-            raise RuntimeError(f"Failed to authenticate with Whoop: {str(e)}")
-
-        if not self.user_id:
-            user_id = self._session.token.get("user", {}).get("id")
-            if not user_id:
-                raise ValueError("Could not retrieve user ID from authentication response")
-            self.user_id = str(user_id)
-
-    def _auth_password_json(self, _client, _method, uri, headers, body):
-        body = json.dumps(dict(extract_params(body)))
-        headers["Content-Type"] = "application/json"
-        return uri, headers, body
 
 
     def _make_request(
