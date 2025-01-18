@@ -9,8 +9,7 @@ import fit.web.user_profile as user_profile
 import fit.web.kitchen.requests as kitchen
 from fasthtml.oauth import OAuth, redir_url
 from fasthtml.common import RedirectResponse
-from fit.web.auth.clients import fitbit_client_oauth
-
+from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
 tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
 amcharts = [
     fh.Script(src="https://cdn.amcharts.com/lib/5/index.js"),
@@ -86,35 +85,33 @@ def get(path: str):
 @app.get('/')
 def home(auth): return fh.P('Logged in!'), fh.A('Log out', href='/logout')
 
-@app.get('/login')
-def login(req): 
-    login_link = oauth.login_link(req)
-    return get_login_page(req, fitbit_login_link=login_link)
-
-
 auth_callback_path = "/auth_redirect"
-
-@app.get(auth_callback_path)
-def auth_redirect(code:str):
-    return fh.P(f"code: {code}")
-
 def before(req, session):
     auth = req.scope['auth' ] = session.get('user_id', None)
     if not auth: return RedirectResponse('/login', status_code=303)
     fh.counts.xtra(name=auth)
 bware = fh.Beforeware(before, skip=['/login', auth_callback_path])
 
+@app.get('/login')
+def login(req):
+    redir = redir_url(req, auth_callback_path)
+    login_link = fitbit_client.login_link(redir, scope=scope)
+    print(login_link)
+    return get_login_page(req, fitbit_login_link=login_link)
+
+
+
+@app.get(auth_callback_path)
+def auth_redirect(code:str, request):
+    redir = redir_url(request, auth_callback_path)
+    print(fitbit_client.__dir__())
+    print(f"fitbit_client.token: {fitbit_client.token}")
+    user_info = fitbit_client.fetch_access_token(code, redir)
+    print(f"user_info: {user_info}")
+    #print(user_info)
+
+
 scope = ["activity", "heartrate", "profile"]
-
-class Auth(OAuth):
-    def get_auth(self, info, ident, session, state):
-        print(f"info: {info}")
-        email = info.email or ''
-        if info.email_verified:
-            return RedirectResponse('/nutrition', status_code=303)
-
-oauth = Auth(app, fitbit_client_oauth, redir_path=auth_callback_path)
-
 
 
 fh.serve() 
