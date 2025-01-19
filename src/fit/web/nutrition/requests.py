@@ -62,7 +62,7 @@ def overview_page_content(data: list[dict], current_view: str, date: datetime.da
         ),
         cls="bg-base-100",
     )
-    return common.page_outline(1, "Nutritional Overview", content)
+    return common.page_outline(1, "Nutritional Overview", True, True, content)
 
 def get_weekly_nutrition_data(week: list[datetime]):
     """Get the current nutrition data for display"""

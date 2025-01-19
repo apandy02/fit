@@ -13,7 +13,7 @@ def get():
     inventory = get_inventory()
     print(inventory)
     content = ui.kitchen_page_content(inventory)
-    return common.page_outline(1, "Kitchen Inventory", content) 
+    return common.page_outline(1, "Kitchen Inventory", True, True, content) 
 
 async def add_item(request: fh.Request):
     """Add an item to the kitchen inventory"""

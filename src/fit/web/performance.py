@@ -33,7 +33,7 @@ def get():
             create_fab_menu(fab_buttons),
             cls="max-w-4xl mx-auto p-6"
         ),
-    return page_outline(3, "Performance Tracking", content) 
+    return page_outline(3, "Performance Tracking", True, True, content) 
 
 def performance_card(title: str, value: str):
     return fh.Card(
