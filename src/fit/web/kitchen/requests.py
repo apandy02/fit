@@ -1,5 +1,3 @@
-import fasthtml.common as fh
-
 import fit.web.common as common
 import fit.web.kitchen.ui as ui
 

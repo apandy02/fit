@@ -1,11 +1,10 @@
 import fasthtml.common as fh
-
+import fit.web.kitchen.requests as kitchen
 import fit.web.nutrition.requests as nutrition
 import fit.web.performance as performance
 import fit.web.progress as progress
 import fit.web.rest as rest
 import fit.web.user_profile as user_profile
-import fit.web.kitchen.requests as kitchen
 
 tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
 amcharts = [

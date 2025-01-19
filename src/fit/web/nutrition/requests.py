@@ -2,8 +2,6 @@ import io
 from datetime import datetime
 
 import fasthtml.common as fh
-from PIL import Image
-
 import fit.nutrition.assistants as assistants
 import fit.web.common as common
 import fit.web.databases as databases
@@ -16,6 +14,7 @@ from fit.nutrition.targets import (calculate_macro_targets,
                                    estimate_daily_water_intake)
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import DB, active_tracker, micronutrient_goals
+from PIL import Image
 
 
 def get_daily_overview(date: str = None):
@@ -37,7 +36,8 @@ def get_weekly_overview():
     """Return the weekly nutritional overview page content"""
     week = get_current_week_dates()
     data = get_weekly_nutrition_data(week)
-    return overview_page_content(data, "weekly")
+    date = datetime.today().date()
+    return overview_page_content(data, "weekly", date)
 
 
 def overview_page_content(data: list[dict], current_view: str, date: datetime.date = None):

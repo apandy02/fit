@@ -1,7 +1,6 @@
 import datetime
 
 import fasthtml.common as fh
-
 from fit.web.common import (active_tracker, create_fab_menu,
                             create_overview_card, create_time_filter,
                             page_outline)
@@ -47,21 +46,25 @@ def rest_card(title: str, value: str):
 def get_rest_metrics_section():
     """Return the rest tracking metrics section"""
     recovery, sleep = get_rest_info()
+    print(recovery)
     
     return fh.Div(
         fh.Div(
             fh.H3("Today's Recovery", cls="text-xl font-bold text-primary-content mb-8 text-center"),
             fh.Div(
-                rest_card("Recovery Score", f"{recovery['recovery_score']}%"),
-                rest_card("Resting Heart Rate", f"{recovery['resting_heart_rate']} bpm"),
-                rest_card("HRV", f"{recovery['hrv_rmssd_milli']:.2f} ms"),
-                cls="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 md:[&>*:last-child:nth-child(2n-1)]:col-span-2 md:[&>*:last-child:nth-child(2n-1)]:mx-auto md:[&>*:last-child:nth-child(2n-1)]:w-1/2"
+                fh.P("No recovery data available for today", cls="text-primary-content text-center italic") if not recovery else
+                fh.Div(
+                    rest_card("Recovery Score", f"{recovery.get('recovery_score', 'N/A')}%"),
+                    rest_card("Resting Heart Rate", f"{recovery.get('resting_heart_rate', 'N/A')} bpm"), 
+                    rest_card("HRV", f"{recovery.get('hrv_rmssd_milli', 'N/A'):.2f} ms" if recovery.get('hrv_rmssd_milli') is not None else "N/A ms"),
+                    cls="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 md:[&>*:last-child:nth-child(2n-1)]:col-span-2 md:[&>*:last-child:nth-child(2n-1)]:mx-auto md:[&>*:last-child:nth-child(2n-1)]:w-1/2"
+                ),
             ),
             cls="mb-16"
         ),
         fh.Div(
             fh.H3("Today's Sleep", cls="text-xl font-bold text-primary-content mb-8 text-center"),
-            create_sleep_cards(sleep) if sleep else fh.P("No sleep recorded today", cls="text-primary-content text-center italic"),
+            create_sleep_cards(sleep) if sleep else fh.P("No sleep data available for today", cls="text-primary-content text-center italic"),
             cls="mb-8"
         ),
         cls="p-6"
@@ -100,6 +103,8 @@ def get_rest_info():
         recovery_scores = None
     
     sleep = active_tracker.get_daily_sleep(today)
+    print(f"sleep: {sleep}")
+    print(f"recovery: {recovery}")
 
     
     return recovery_scores, sleep  

@@ -1,8 +1,5 @@
-from datetime import datetime
 
 import fasthtml.common as fh
-
-from fit.web.common import DB
 
 
 def create_expandable_section(title: str, content=None):
