@@ -36,7 +36,8 @@ def get_weekly_overview():
     """Return the weekly nutritional overview page content"""
     week = get_current_week_dates()
     data = get_weekly_nutrition_data(week)
-    return overview_page_content(data, "weekly")
+    date = datetime.today().date()
+    return overview_page_content(data, "weekly", date)
 
 
 def overview_page_content(data: list[dict], current_view: str, date: datetime.date = None):
