@@ -1,17 +1,17 @@
-from datetime import datetime
-
 import fasthtml.common as fh
-from fasthtml.common import RedirectResponse
-from fasthtml.oauth import redir_url
-
+from datetime import datetime
 import fit.web.kitchen.requests as kitchen
 import fit.web.nutrition.requests as nutrition
 import fit.web.performance as performance
 import fit.web.progress as progress
 import fit.web.rest as rest
 import fit.web.user_profile as user_profile
+
+from fasthtml.common import RedirectResponse
+from fasthtml.oauth import redir_url
 from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
 from fit.web.auth.login_page import get_login_page
+
 
 tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
 amcharts = [
@@ -28,8 +28,6 @@ dlink = fh.Link(
 modal_css = fh.Link(rel="stylesheet", href="/static/public/modal.css")
 
 def before(req, session):
-    print("running beforeware")
-    print(f"session: {session}")
     access_token_expiry = session.get('access_token_expiry', None)
     req.scope['auth'] = access_token_expiry
     
@@ -82,8 +80,6 @@ app.post("/update_measurements")(progress.update_measurements)
 # Profile routes
 app.get("/profile")(user_profile.get)
 app.post("/update_profile")(user_profile.update_profile)
-app.post("/connect_tracker")(user_profile.connect_tracker)
-app.post("/set_active_tracker")(user_profile.set_active_tracker)
 app.post("/add_restriction")(user_profile.add_restriction)
 app.post("/remove_restriction")(user_profile.remove_restriction)
 
@@ -117,12 +113,12 @@ def login(req):
 @app.get(f"{auth_callback_path}/fitbit")
 def fitbit_auth_redirect(code:str, request, session):
     redir = redir_url(request, f"{auth_callback_path}/fitbit")
-    print(f"redir: {redir}")
     access_token_dict = fitbit_client.fetch_access_token(code, redir)
     session['access_token'] = access_token_dict['access_token']
     session['access_token_expiry'] = access_token_dict['expires_at']
     session['refresh_token'] = access_token_dict['refresh_token']
-    print(f"session: {session}")
+    session["tracker"] = "fitbit"
+    return RedirectResponse('/nutrition', status_code=303)
 
     # user_info = fitbit_client.get_info(access_token)
     # print(f"user_info: {user_info}")
