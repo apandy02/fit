@@ -60,7 +60,7 @@ def get():
         ),
         cls="bg-base-100"
     )
-    return page_outline(2, "Progress Tracking", content)
+    return page_outline(2, "Progress Tracking", True, True, content)
 
 def get_latest_measurements():
     """Get the latest measurements from the database"""

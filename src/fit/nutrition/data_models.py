@@ -99,3 +99,25 @@ class MealRecommendation(BaseModel):
 class Recommendations(BaseModel):
     """A dataclass that contains the meal recommendations for a food."""
     meals: List[MealRecommendation] = Field(description="A list of 5 meals to be recommended to the user")
+
+KITCHEN_ITEM_CATEGORIES = [
+    "Produce",
+    "Meats & Fish",
+    "Dairy & Eggs",
+    "Bread & Grains",
+    "Frozen Items",
+    "Snacks & Misc"
+]
+
+class KitchenItem(BaseModel):
+    """A dataclass that contains the kitchen item for a food."""
+    name: str = Field(description="the name of the kitchen item")
+    quantity: float = Field(description="the quantity of the kitchen item")
+    unit: str = Field(description="the unit of the quantity of the kitchen item")
+    category: str = Field(
+        description=f"the category of the kitchen item, choose from: {KITCHEN_ITEM_CATEGORIES}"
+    )
+
+class KitchenInventory(BaseModel):
+    """A dataclass that contains the kitchen inventory for a food."""
+    items: List[KitchenItem] = Field(description="the items in the kitchen inventory")

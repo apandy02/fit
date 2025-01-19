@@ -31,7 +31,7 @@ def get():
             create_fab_menu(fab_buttons),
             cls="max-w-4xl mx-auto p-6"
         ),
-    return page_outline(4, "Rest Tracking", content)
+    return page_outline(4, "Rest Tracking", True, True, content)
 
 def rest_card(title: str, value: str):
     return fh.Card(

@@ -3,21 +3,20 @@ from datetime import datetime
 import ell
 from PIL import Image
 
-from fit.nutrition.data_models import (MealBreakdown, NutritionalInformation,
-                                       NutritionFeedback, Recommendations)
+import fit.nutrition.data_models as dm
 
 STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
 DEFAULT_MODEL = "gpt-4o-2024-08-06"
 
-@ell.complex(model=DEFAULT_MODEL, response_format=MealBreakdown)
-def natural_language_macros(food: str) -> MealBreakdown:
+@ell.complex(model=DEFAULT_MODEL, response_format=dm.MealBreakdown)
+def natural_language_macros(food: str) -> dm.MealBreakdown:
     """given what the user ate, return the macro nutrients in grams.
     If the user query is not food, return 0 for all macros.
     """
     return food
 
-@ell.complex(model=DEFAULT_MODEL, response_format=MealBreakdown)
-def improve_breakdown(breakdown: MealBreakdown, user_feedback: str) -> MealBreakdown:
+@ell.complex(model=DEFAULT_MODEL, response_format=dm.MealBreakdown)
+def improve_breakdown(breakdown: dm.MealBreakdown, user_feedback: str) -> dm.MealBreakdown:
     """
     Given the user's feedback on your prediction of the breakdown of their meal,
     improve the breakdown.
@@ -28,8 +27,8 @@ def improve_breakdown(breakdown: MealBreakdown, user_feedback: str) -> MealBreak
     """
     return prompt
 
-@ell.complex(model=DEFAULT_MODEL, response_format=MealBreakdown)
-def image_macros(image: Image.Image, additional_context: str) -> MealBreakdown:
+@ell.complex(model=DEFAULT_MODEL, response_format=dm.MealBreakdown)
+def image_macros(image: Image.Image, additional_context: str) -> dm.MealBreakdown:
     system_message = """
     given an image of what the user ate, return the macro nutrients in grams.
     If the image is not food, return 0 for all macros. The user may or may not
@@ -42,7 +41,7 @@ def image_macros(image: Image.Image, additional_context: str) -> MealBreakdown:
     ]
         
 @ell.complex(model=DEFAULT_MODEL, max_tokens=200)
-def summarize_user_preferences(meals: list[MealBreakdown]) -> str:
+def summarize_user_preferences(meals: list[dm.MealBreakdown]) -> str:
     """Given a list of meals the user has eaten, analyze their dietary preferences and patterns.
     For example: "The user frequently eats Indian food, and seems to consume chicken as their 
     primary protein. They also seem to like yogurt."
@@ -55,14 +54,14 @@ def summarize_user_preferences(meals: list[MealBreakdown]) -> str:
     prompt = f"Here are the meals I have eaten: {meals}"
     return prompt
 
-@ell.complex(model=DEFAULT_MODEL, response_format=Recommendations)
+@ell.complex(model=DEFAULT_MODEL, response_format=dm.Recommendations)
 def make_recommendations(
-        consumption: NutritionalInformation,
+        consumption: dm.NutritionalInformation,
         targets: dict[str, float],
         target_nutrient: str,
         user_preferences: str,
         restrictions: list[str]
-    ) -> Recommendations:
+    ) -> dm.Recommendations:
     """You will be given the user's consumed nutritional information, their nutritional targets,
     their dietary restrictions, and a specific nutrient they are asking you for food recommendations to 
     improve.
@@ -88,7 +87,7 @@ def make_recommendations(
     return user_input
 
 # TODO: cleanup the following two functions using a factory 
-def daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float], restrictions: list[str]) -> NutritionFeedback:
+def daily_io_analysis(meals: list[dm.MealBreakdown], target: dict[str, float], restrictions: list[str]) -> dm.NutritionFeedback:
     """
     Analyzes the user's daily intake and target and produces an overview with feedback.
     
@@ -131,12 +130,12 @@ def daily_io_analysis(meals: list[MealBreakdown], target: dict[str, float], rest
     if DEFAULT_MODEL in STRUCTURED_MODELS:
         return _daily_io_analysis_pydantic(sys_message, user_data)
     else:
-        return NutritionFeedback.model_validate_json(
+        return dm.NutritionFeedback.model_validate_json(
             _daily_io_analysis_simple(sys_message, user_data)
         )
 
-@ell.complex(model=DEFAULT_MODEL, response_format=NutritionFeedback, max_tokens=2048)
-def _daily_io_analysis_pydantic(sys_message: str, user_data: str) -> NutritionFeedback:
+@ell.complex(model=DEFAULT_MODEL, response_format=dm.NutritionFeedback, max_tokens=2048)
+def _daily_io_analysis_pydantic(sys_message: str, user_data: str) -> dm.NutritionFeedback:
     return [
         ell.system(sys_message),
         ell.user(user_data)
@@ -144,17 +143,17 @@ def _daily_io_analysis_pydantic(sys_message: str, user_data: str) -> NutritionFe
 
 @ell.simple(model=DEFAULT_MODEL, max_tokens=2048)
 def _daily_io_analysis_simple(sys_message: str, user_data: str) -> str:
-    sys_message += f"You must absolutely respond in this format as a json string with no exceptions: {NutritionFeedback.model_json_schema()}"
+    sys_message += f"You must absolutely respond in this format as a json string with no exceptions: {dm.NutritionFeedback.model_json_schema()}"
     return [
         ell.system(sys_message),
         ell.user(user_data)
     ]
 
 def weekly_io_analysis(
-        meals: dict[datetime, list[MealBreakdown]],
+        meals: dict[datetime, list[dm.MealBreakdown]],
         target: list[dict[str, float]],
         restrictions: list[str]
-) -> NutritionFeedback:
+) -> dm.NutritionFeedback:
     """
     Analyzes the user's weekly intake and target and produces an overview with feedback.
 
@@ -201,15 +200,15 @@ def weekly_io_analysis(
         )
     else:
         analysis = _weekly_io_analysis_simple(sys_message, user_data)
-        analysis = NutritionFeedback.model_validate_json(analysis)
+        analysis = dm.NutritionFeedback.model_validate_json(analysis)
     
     return analysis
 
-@ell.complex(model=DEFAULT_MODEL, response_format=NutritionFeedback)
+@ell.complex(model=DEFAULT_MODEL, response_format=dm.NutritionFeedback)
 def _weekly_io_analysis_pydantic(
         sys_message: str,
         user_data: str
-) -> NutritionFeedback:
+) -> dm.NutritionFeedback:
     return [
         ell.system(sys_message),
         ell.user(user_data)
@@ -220,7 +219,7 @@ def _weekly_io_analysis_simple(
         sys_message: str,
         user_data: str
 ) -> str:
-    sys_message += f"You must absolutely respond in this format with no exceptions. {NutritionFeedback.model_json_schema()}"
+    sys_message += f"You must absolutely respond in this format with no exceptions. {dm.NutritionFeedback.model_json_schema()}"
     return [
         ell.system(sys_message),
         ell.user(user_data)
@@ -279,3 +278,22 @@ def nutrient_analysis(
     analysis = f"{analysis} on average" if multiple_days else analysis
     
     return f"{prefix} {analysis}"
+
+
+@ell.complex(model=DEFAULT_MODEL, response_format=dm.KitchenInventory)
+def decipher_inventory(inventory_str: str) -> dm.KitchenInventory:
+    """The user is going to, in natural language, describe their kitchen inventory.
+    You are going to take this description and return a list of the items in the inventory.
+    """
+    return inventory_str
+
+@ell.complex(model=DEFAULT_MODEL, response_format=dm.KitchenInventory)
+def inventory_from_image(image: Image.Image, additional_context: str = "") -> dm.KitchenInventory:
+    system_message = """
+    given an image of what the user's kitchen looks like, return a list of the items in the kitchen.
+    If the image does not contain foods the kitchen, return an empty list.
+    """
+    return [
+        ell.system(system_message),
+        ell.user([additional_context, image]),
+    ]

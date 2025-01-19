@@ -193,7 +193,7 @@ def get():
         ),
         cls="bg-base-100"
     )
-    return page_outline(6, "Profile", content)
+    return page_outline(6, "Profile", True, True, content)
 
 
 def create_form_row(label: str, input_element):
