@@ -5,7 +5,8 @@ import fasthtml.common as fh
 import fit.nutrition.assistants as assistants
 import fit.web.nutrition.food_plots as food_plots
 from fit.nutrition.data_models import MealBreakdown
-from fit.web.common import DB, create_overview_card, create_time_filter
+from fit.web.common import (DB, create_overview_card, create_text_form_input,
+                            create_time_filter)
 from fit.web.databases import get_daily_meals
 
 
@@ -644,25 +645,6 @@ def create_nutrition_section(title: str, items: list, cls: str = "mb-4"):
         cls=cls
     )
 
-def create_form_input(label_text, input_name, input_value, input_type="number", step="0.1"):
-    """Helper function to create a form input with label"""
-    if input_type == "number":
-        value = 0.0 if input_value is None or input_value == "" else float(input_value)
-        formatted_value = "{:.1f}".format(value)
-    else:
-        formatted_value = input_value
-
-    return fh.Div(
-        fh.Label(label_text, cls="label text-primary-content"),
-        fh.Input(
-            type=input_type,
-            name=input_name,
-            value=formatted_value,
-            step=step if input_type == "number" else None,
-            cls="input input-bordered w-full bg-base-200 outline  text-primary-content"
-        ),
-        cls="form-control"
-    )
 
 def create_form_section(title, inputs, cls="mb-6"):
     """Helper function to create a form section with a title and inputs"""
@@ -723,20 +705,20 @@ def create_nutrition_card(nutrition_info: MealBreakdown | None, card_title: str 
     """Create a card containing ingredients text and editable nutrition form"""
     return (
             create_form_section(card_title, [# separate the title from the actual nutriotioanl form so it can be used for multiple purposes
-                    create_form_input(title_field, "title", nutrition_info.title if nutrition_info else None, input_type="text"),
-                    create_form_input("Calories (kcal)", "calories", nutrition_info.calories if nutrition_info else None),
-                    create_form_input("Protein (g)", "protein", nutrition_info.macronutrients.protein if nutrition_info else None),
-                    create_form_input("Carbohydrates (g)", "carbohydrates", nutrition_info.macronutrients.carbohydrates.total if nutrition_info else None),
-                    create_form_input("Fat (g)", "fat", nutrition_info.macronutrients.fat.total if nutrition_info else None),
-                    create_form_input("Fiber (g)", "fiber", nutrition_info.macronutrients.carbohydrates.fiber if nutrition_info else None),
-                    create_form_input("Vitamin A (IU)", "vitamin_a", nutrition_info.micronutrients.vitamin_a if nutrition_info else None),
-                    create_form_input("Vitamin C (mg)", "vitamin_c", nutrition_info.micronutrients.vitamin_c if nutrition_info else None),
-                    create_form_input("Vitamin D (IU)", "vitamin_d", nutrition_info.micronutrients.vitamin_d if nutrition_info else None),
-                    create_form_input("Calcium (mg)", "calcium", nutrition_info.micronutrients.calcium if nutrition_info else None),
-                    create_form_input("Iron (mg)", "iron", nutrition_info.micronutrients.iron if nutrition_info else None),
-                    create_form_input("Potassium (mg)", "potassium", nutrition_info.micronutrients.potassium if nutrition_info else None),
-                    create_form_input("Sodium (mg)", "sodium", nutrition_info.micronutrients.sodium if nutrition_info else None),
-                    create_form_input("Creatine (g)", "creatine", nutrition_info.conditional_nutrients.creatine if nutrition_info else None),
+                    create_text_form_input(title_field, "title", nutrition_info.title if nutrition_info else None, input_type="text"),
+                    create_text_form_input("Calories (kcal)", "calories", nutrition_info.calories if nutrition_info else None),
+                    create_text_form_input("Protein (g)", "protein", nutrition_info.macronutrients.protein if nutrition_info else None),
+                    create_text_form_input("Carbohydrates (g)", "carbohydrates", nutrition_info.macronutrients.carbohydrates.total if nutrition_info else None),
+                    create_text_form_input("Fat (g)", "fat", nutrition_info.macronutrients.fat.total if nutrition_info else None),
+                    create_text_form_input("Fiber (g)", "fiber", nutrition_info.macronutrients.carbohydrates.fiber if nutrition_info else None),
+                    create_text_form_input("Vitamin A (IU)", "vitamin_a", nutrition_info.micronutrients.vitamin_a if nutrition_info else None),
+                    create_text_form_input("Vitamin C (mg)", "vitamin_c", nutrition_info.micronutrients.vitamin_c if nutrition_info else None),
+                    create_text_form_input("Vitamin D (IU)", "vitamin_d", nutrition_info.micronutrients.vitamin_d if nutrition_info else None),
+                    create_text_form_input("Calcium (mg)", "calcium", nutrition_info.micronutrients.calcium if nutrition_info else None),
+                    create_text_form_input("Iron (mg)", "iron", nutrition_info.micronutrients.iron if nutrition_info else None),
+                    create_text_form_input("Potassium (mg)", "potassium", nutrition_info.micronutrients.potassium if nutrition_info else None),
+                    create_text_form_input("Sodium (mg)", "sodium", nutrition_info.micronutrients.sodium if nutrition_info else None),
+                    create_text_form_input("Creatine (g)", "creatine", nutrition_info.conditional_nutrients.creatine if nutrition_info else None),
                 ]
             )
     ) #TODO: make this more dynamic
@@ -997,4 +979,15 @@ def create_meals_list(date: datetime.date):
             cls="p-6"
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
+    )
+
+def feedback_form(meal_description: str, meal_time, nutrition_info: MealBreakdown, date: str | None = None):
+    """Create a consistent feedback form layout used by both analyze and regenerate functions"""
+    return fh.Div(
+        fh.Div(
+            create_text_input_form(is_feedback=True, original_description=meal_description),
+            create_meal_breakdown(nutrition_info, meal_time=meal_time, date=date),
+            cls="space-y-4 w-[90%] mx-auto"
+        ),
+        id="text-input"
     )

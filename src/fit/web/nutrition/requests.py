@@ -160,16 +160,6 @@ async def toggle_dropdown(dropdown_id: str):
         id=dropdown_id
     )
 
-def feedback_form(meal_description: str, meal_time, nutrition_info: MealBreakdown, date: str | None = None):
-    """Create a consistent feedback form layout used by both analyze and regenerate functions"""
-    return fh.Div(
-        fh.Div(
-            ui.create_text_input_form(is_feedback=True, original_description=meal_description),
-            ui.create_meal_breakdown(nutrition_info, meal_time=meal_time, date=date),
-            cls="space-y-4 w-[90%] mx-auto"
-        ),
-        id="text-input"
-    )
 
 async def analyze_text(request: fh.Request, date: str | None = None):
     """Handle meal description analysis"""
@@ -179,7 +169,7 @@ async def analyze_text(request: fh.Request, date: str | None = None):
     nutrition_info = assistants.natural_language_macros(meal_description).content[0].parsed
     meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
     
-    return feedback_form(meal_description, meal_time_obj, nutrition_info, date)
+    return ui.feedback_form(meal_description, meal_time_obj, nutrition_info, date)
 
 async def analyze_image(food_image: fh.UploadFile, additional_context: str, meal_time: str, date: str | None = None):
     """Handle image upload and analysis"""
@@ -189,7 +179,7 @@ async def analyze_image(food_image: fh.UploadFile, additional_context: str, meal
     nutrition_info = assistants.image_macros(image, additional_context).content[0].parsed
     meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
 
-    return feedback_form(additional_context, meal_time_obj, nutrition_info, date)
+    return ui.feedback_form(additional_context, meal_time_obj, nutrition_info, date)
 
 async def save_meal(request: fh.Request, date: str | None = None):
     """Save the meal with user-adjusted nutrition values"""
@@ -365,7 +355,7 @@ async def regenerate_analysis(feedback: str, original_description: str):
     meal_time_obj = datetime.now().time()
     meal_datetime = datetime.combine(today, meal_time_obj).isoformat()
     
-    return feedback_form(original_description, meal_datetime, improved_info)
+    return ui.feedback_form(original_description, meal_datetime, improved_info)
 
 async def hide_metric(plot_id: str):
     """Hide a metric by removing it from visible_metrics"""

@@ -130,19 +130,6 @@ def create_modal(content, modal_id="modal"):
         """)
     )
 
-def basic_auth(f):
-    """
-    Decorator for basic authentication.
-    """
-
-    @wraps(f)
-    def wrapper(session, *args, **kwargs):
-        if "auth" not in session:
-            return fh.RedirectResponse("/login", status_code=303)
-        return f(session, *args, **kwargs)
-
-    return wrapper
-
 def page_outline(selidx, title, logged_in: bool, display_nav: bool, *c):
     """
     Return the common page outline for the frontend.
@@ -191,7 +178,6 @@ def page_outline(selidx, title, logged_in: bool, display_nav: bool, *c):
         ),
         
     )
-
 
 def Markdown(s, exts=md_exts, **kw):
     """
@@ -242,4 +228,24 @@ def create_time_filter(current_view: str):
             hx_trigger="change",
         ),
         cls="mt-6 mb-8 flex justify-center"
+    )
+
+def create_text_form_input(label_text, input_name, input_value, input_type="number", step="0.1"):
+    """Helper function to create a form input with label"""
+    if input_type == "number":
+        value = 0.0 if input_value is None or input_value == "" else float(input_value)
+        formatted_value = "{:.1f}".format(value)
+    else:
+        formatted_value = input_value
+
+    return fh.Div(
+        fh.Label(label_text, cls="label text-primary-content"),
+        fh.Input(
+            type=input_type,
+            name=input_name,
+            value=formatted_value,
+            step=step if input_type == "number" else None,
+            cls="input input-bordered w-full bg-base-200 outline  text-primary-content"
+        ),
+        cls="form-control"
     )
