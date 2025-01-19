@@ -1,5 +1,4 @@
 import datetime
-from functools import wraps
 
 import fasthtml.common as fh
 import fh_bootstrap as fhb
