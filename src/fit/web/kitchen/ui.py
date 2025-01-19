@@ -44,7 +44,6 @@ def create_fab():
         onclick="openKitchenModal()"
     )
 
-
 def create_expandable_section(title: str, items: list):
     """Create an expandable section with a title and optional content"""
     if len(items) == 0:
