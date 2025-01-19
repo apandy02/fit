@@ -10,7 +10,8 @@ import fit.web.performance as performance
 import fit.web.progress as progress
 import fit.web.rest as rest
 import fit.web.user_profile as user_profile
-from fit.web.auth.clients import fitbit_client_oauth as fitbit_client, whoop_client_oauth as whoop_client
+from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
+from fit.web.auth.clients import whoop_client_oauth as whoop_client
 from fit.web.auth.login_page import get_login_page
 
 tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
