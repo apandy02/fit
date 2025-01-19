@@ -1,13 +1,17 @@
 import datetime
 
 import fasthtml.common as fh
-from fit.web.common import (active_tracker, create_fab_menu,
-                            create_overview_card, create_time_filter,
-                            page_outline)
+
+from fit.trackers.base import FitnessTracker
+from fit.trackers.implementations.whoop import Whoop
+from fit.trackers.manager import tracker_factory
+from fit.web.common import (create_fab_menu, create_overview_card,
+                            create_time_filter, page_outline)
 
 
-def get():
+def get(session):
     """Return the rest tracking page content"""
+    tracker = tracker_factory(session["tracker"], session["access_token"])
     fab_buttons = [
         ("Sleep", "😴", None),
         ("Strain", "📈", None),
@@ -24,7 +28,7 @@ def get():
                 create_time_filter("daily"),
                 create_overview_card("daily"),
                 fh.Div(
-                    get_rest_metrics_section()
+                    get_rest_metrics_section(tracker)
                 ),
                 cls="bg-black shadow-lg rounded-lg p-6"
             ),
@@ -43,10 +47,9 @@ def rest_card(title: str, value: str):
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg"
     )
 
-def get_rest_metrics_section():
+def get_rest_metrics_section(tracker: FitnessTracker):
     """Return the rest tracking metrics section"""
-    recovery, sleep = get_rest_info()
-    print(recovery)
+    recovery, sleep = get_rest_info(tracker)
     
     return fh.Div(
         fh.Div(
@@ -54,7 +57,7 @@ def get_rest_metrics_section():
             fh.Div(
                 fh.P("No recovery data available for today", cls="text-primary-content text-center italic") if not recovery else
                 fh.Div(
-                    rest_card("Recovery Score", f"{recovery.get('recovery_score', 'N/A')}%"),
+                    rest_card("Recovery Score", f"{recovery.get('score', 'N/A')}%") if isinstance(tracker, Whoop) else None,
                     rest_card("Resting Heart Rate", f"{recovery.get('resting_heart_rate', 'N/A')} bpm"), 
                     rest_card("HRV", f"{recovery.get('hrv_rmssd_milli', 'N/A'):.2f} ms" if recovery.get('hrv_rmssd_milli') is not None else "N/A ms"),
                     cls="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 md:[&>*:last-child:nth-child(2n-1)]:col-span-2 md:[&>*:last-child:nth-child(2n-1)]:mx-auto md:[&>*:last-child:nth-child(2n-1)]:w-1/2"
@@ -91,20 +94,31 @@ def create_sleep_cards(sleep_entries: list[dict]) -> fh.Div:
         cls="space-y-4"
     )
 
-def get_rest_info():
+def get_rest_info(tracker: FitnessTracker):
     """
     Retrieve rest and recovery information for the day
     """
     today = datetime.date.today()
-    recovery = active_tracker.get_daily_recovery(today)
-    if recovery is not None and len(recovery) > 0:
-        recovery_scores = recovery[0]["score"]
+    if isinstance(tracker, Whoop):
+        recovery = tracker.get_daily_recovery(today)
+        if recovery is not None and len(recovery) > 0:
+            recovery_scores = recovery[0]["score"]
+            recovery_score = recovery_scores["score"]
+            resting_hr = recovery_scores["resting_hr"]
+            hrv = recovery_scores["hrv"]
+        else:
+            recovery_scores = None
+        sleep = tracker.get_daily_sleep(today)
     else:
-        recovery_scores = None
+        resting_hr = tracker.get_daily_resting_heart_rate(today) #TODO: same as performance, make this code better at being device invariant
+        hrv = tracker.get_daily_hrv(today)
+        recovery_score = None
+        sleep = None # TODO: add sleep data for non-whoop trackers
     
-    sleep = active_tracker.get_daily_sleep(today)
-    print(f"sleep: {sleep}")
-    print(f"recovery: {recovery}")
-
+    recovery_data = {
+        "score": recovery_score,
+        "resting_hr": resting_hr,
+        "hrv": hrv,
+    }
     
-    return recovery_scores, sleep  
+    return recovery_data, sleep  

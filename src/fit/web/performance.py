@@ -1,14 +1,18 @@
 import datetime
 
 import fasthtml.common as fh
+
+from fit.trackers.base import FitnessTracker
+from fit.trackers.implementations.whoop import Whoop
+from fit.trackers.manager import tracker_factory
 from fit.utils.conversions import kj_to_kcal
-from fit.web.common import (active_tracker, create_fab_menu,
-                            create_overview_card, create_time_filter,
-                            page_outline)
+from fit.web.common import (create_fab_menu, create_overview_card,
+                            create_time_filter, page_outline)
 
 
-def get():
+def get(session):
     """Return the performance tracking page content"""
+    tracker = tracker_factory(session["tracker"], session["access_token"])
     fab_buttons = [
         ("Activity", "🏃", None), 
         ("Workout", "💪", None),  
@@ -25,7 +29,7 @@ def get():
                 create_time_filter("daily"),
                 create_overview_card("daily"),
                 fh.Div(
-                    get_performance_metrics_section()
+                    get_performance_metrics_section(tracker)
                 ),
                 cls="bg-black shadow-lg rounded-lg p-6"
             ),
@@ -33,6 +37,7 @@ def get():
             create_fab_menu(fab_buttons),
             cls="max-w-4xl mx-auto p-6"
         ),
+
     return page_outline(3, "Performance Tracking", True, True, content) 
 
 def performance_card(title: str, value: str):
@@ -45,16 +50,16 @@ def performance_card(title: str, value: str):
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg"
     )
 
-def get_performance_metrics_section():
+def get_performance_metrics_section(tracker: FitnessTracker):
     """Return the performance tracking card content"""
-    daily_stats, workouts = get_performance_info()
-    
+    daily_stats, workouts = get_performance_info(tracker)
+    print(f"daily_stats: {daily_stats}")
     return fh.Div(
         # Cycle Metrics Grid
         fh.Div(
             fh.H3("Today's Overview", cls="text-xl font-bold text-primary-content mb-6 text-center"),
             fh.Div(
-                performance_card("Strain", f"{daily_stats['strain']:.2f}"), # TODO: this is contingent on the tracker being a whoop
+                performance_card("Strain", f"{daily_stats['strain']:.2f}") if isinstance(tracker, Whoop) else None,
                 performance_card("Calories", f"{int(daily_stats['calories'])}"),
                 performance_card("Average Heart Rate", f"{int(daily_stats['average_heart_rate'])} bpm"),
                 performance_card("Max Heart Rate", f"{int(daily_stats['max_heart_rate'])} bpm"),
@@ -70,15 +75,23 @@ def get_performance_metrics_section():
         cls="p-6"
     )
 
-def get_performance_info():
+def get_performance_info(tracker: FitnessTracker):
     """
     Retrieve performance information for the day
     """
     today = datetime.date.today()
-    cycle = active_tracker.get_cycle_for_day(today)
-    daily_stats = cycle["score"]
-    daily_stats["calories"] = kj_to_kcal(daily_stats["kilojoule"])
-    workouts = active_tracker.get_daily_workouts(today)
+    if isinstance(tracker, Whoop):
+        cycle = tracker.get_cycle_for_day(today)
+        daily_stats = cycle["score"]
+        daily_stats["calories"] = kj_to_kcal(daily_stats["kilojoule"])
+    else:
+        daily_stats = {
+            "calories": tracker.get_daily_calories_burned(today),
+            "average_heart_rate": 55,
+            "max_heart_rate": 100,
+        } # TODO: wrap the retrieval of averages etc into functions so we can use them here
+
+    workouts = tracker.get_daily_workouts(today)
     return daily_stats, workouts
 
 def create_workout_cards(workouts: list[dict]) -> fh.Div:

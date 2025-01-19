@@ -1,10 +1,17 @@
+from datetime import datetime
+
 import fasthtml.common as fh
+from fasthtml.common import RedirectResponse
+from fasthtml.oauth import redir_url
+
 import fit.web.kitchen.requests as kitchen
 import fit.web.nutrition.requests as nutrition
 import fit.web.performance as performance
 import fit.web.progress as progress
 import fit.web.rest as rest
 import fit.web.user_profile as user_profile
+from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
+from fit.web.auth.login_page import get_login_page
 
 tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
 amcharts = [
@@ -19,7 +26,21 @@ dlink = fh.Link(
     href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.css",
 )
 modal_css = fh.Link(rel="stylesheet", href="/static/public/modal.css")
-app = fh.FastHTML(hdrs=(tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
+
+def before(req, session):
+    access_token_expiry = session.get('access_token_expiry', None)
+    req.scope['auth'] = access_token_expiry
+    
+    # Check if token is missing or expired
+    if not access_token_expiry or datetime.now().timestamp() > access_token_expiry:
+        return RedirectResponse('/login', status_code=303)
+        
+    # fh.counts.xtra(name=access_token_expiry)
+
+auth_callback_path = "/auth_redirect"
+
+bware = fh.Beforeware(before, skip=['/login', auth_callback_path, auth_callback_path + '/fitbit'])
+app = fh.FastHTML(before=bware, hdrs=(tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
 
 # Food routes
 app.get("/nutrition/weekly")(nutrition.get_weekly_overview)
@@ -63,8 +84,6 @@ app.post("/update_measurements")(progress.update_measurements)
 # Profile routes
 app.get("/profile")(user_profile.get)
 app.post("/update_profile")(user_profile.update_profile)
-app.post("/connect_tracker")(user_profile.connect_tracker)
-app.post("/set_active_tracker")(user_profile.set_active_tracker)
 app.post("/add_restriction")(user_profile.add_restriction)
 app.post("/remove_restriction")(user_profile.remove_restriction)
 
@@ -74,6 +93,7 @@ app.get("/rest")(rest.get)
 # performance routes
 app.get("/performance")(performance.get)
 
+
 fh.reg_re_param("imgext", "png")
 
 
@@ -81,4 +101,36 @@ fh.reg_re_param("imgext", "png")
 def get(path: str):
     return fh.FileResponse(f"{path}")
 
+@app.get('/')
+def home(auth): return fh.P('Logged in!'), fh.A('Log out', href='/logout')
+
+
+
+@app.get('/login')
+def login(req):
+    redir = redir_url(req, f"{auth_callback_path}/fitbit")
+    login_link = fitbit_client.login_link(redir, scope=scope)
+    return get_login_page(req, fitbit_login_link=login_link)
+
+
+
+@app.get(f"{auth_callback_path}/fitbit")
+def fitbit_auth_redirect(code:str, request, session):
+    redir = redir_url(request, f"{auth_callback_path}/fitbit")
+    access_token_dict = fitbit_client.fetch_access_token(code, redir)
+    session['access_token'] = access_token_dict['access_token']
+    session['access_token_expiry'] = access_token_dict['expires_at']
+    session['refresh_token'] = access_token_dict['refresh_token']
+    session["tracker"] = "fitbit"
+    return RedirectResponse('/nutrition', status_code=303)
+
+    # user_info = fitbit_client.get_info(access_token)
+    # print(f"user_info: {user_info}")
+
+
+scope = ["activity", "heartrate", "profile"]
+
+
 fh.serve() 
+
+

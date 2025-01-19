@@ -107,7 +107,7 @@ def create_text_input_form(
         extra_fields = []
     if header_buttons is None:
         header_buttons = []
-
+  
     return fh.Div(
         fh.Div(
             fh.H3(title, cls="text-2xl font-bold text-primary-content inline-block"),

@@ -2,23 +2,29 @@ import io
 from datetime import datetime
 
 import fasthtml.common as fh
+from PIL import Image
+
 import fit.nutrition.assistants as assistants
 import fit.web.common as common
 import fit.web.databases as databases
 import fit.web.nutrition.ui as ui
+from fit.nutrition.data_models import \
+    NutritionalInformation  # TODO: cleanup this horrible import mess
 from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
                                        Fats, Goals, Macronutrients,
-                                       MealBreakdown, Micronutrients,
-                                       NutritionalInformation)
+                                       MealBreakdown, Micronutrients)
 from fit.nutrition.targets import (calculate_macro_targets,
                                    estimate_daily_water_intake)
+from fit.trackers.base import FitnessTracker
+from fit.trackers.manager import tracker_factory
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import DB, active_tracker, micronutrient_goals
-from PIL import Image
 
 
-def get_daily_overview(date: str = None):
+def get_daily_overview(session, date: str = None):
     """Return the nutritional overview page content"""
+    print(f"session: {session}")
+    tracker = tracker_factory(session["tracker"], session["access_token"])
     if date is None:
         date = datetime.today().date()
     else:
@@ -27,15 +33,16 @@ def get_daily_overview(date: str = None):
         except ValueError:
             date = datetime.today().date()
     
-    data = get_daily_nutrition_data(date)
+    data = get_daily_nutrition_data(date, tracker)
     return overview_page_content(data, "daily", date)
 
     
 
-def get_weekly_overview():
+def get_weekly_overview(session):
     """Return the weekly nutritional overview page content"""
+    tracker = tracker_factory(session["tracker"], session["access_token"])
     week = get_current_week_dates()
-    data = get_weekly_nutrition_data(week)
+    data = get_weekly_nutrition_data(week, tracker)
     date = datetime.today().date()
     return overview_page_content(data, "weekly", date)
 
@@ -64,7 +71,7 @@ def overview_page_content(data: list[dict], current_view: str, date: datetime.da
     )
     return common.page_outline(1, "Nutritional Overview", True, True, content)
 
-def get_weekly_nutrition_data(week: list[datetime]):
+def get_weekly_nutrition_data(week: list[datetime], tracker: FitnessTracker):
     """Get the current nutrition data for display"""
     data = {
         "calories": {"consumed": [], "goal": [], "burned": []},
@@ -87,16 +94,16 @@ def get_weekly_nutrition_data(week: list[datetime]):
                 for key in data[metric]:
                     data[metric][key].extend([0])
         else:
-            daily_data = get_daily_nutrition_data(date)
+            daily_data = get_daily_nutrition_data(date, tracker)
             for metric, values in daily_data.items():
                 for key, value in values.items():
                     data[metric][key].extend(value)
     
     return data
 
-def get_daily_nutrition_data(date: datetime):
+def get_daily_nutrition_data(date: datetime, tracker: FitnessTracker):
     """Get the current nutrition data for display"""
-    calories_burned = active_tracker.get_daily_calories_burned(date)
+    calories_burned = tracker.get_daily_calories_burned(date)
     goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     daily_consumption = databases.get_daily_cumulative_nutrition(DB, date)
     water_consumed = databases.get_daily_water_consumption(DB, date)
