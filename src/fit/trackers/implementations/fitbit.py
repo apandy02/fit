@@ -124,7 +124,7 @@ class FitbitAppClient(WebApplicationClient):
         return profile["user"]["encodedId"]  # Or whichever field is your 'id'
 
 
-class FitbitTracker(FitnessTracker):
+class Fitbit(FitnessTracker):
     SCOPE = ["activity", "heartrate", "profile", "sleep", "oxygen_saturation", "respiratory_rate"]
     BASE_URL = "https://api.fitbit.com/1/user/-"
     INFO_URL = "https://api.fitbit.com/1/user/-/profile.json"
@@ -223,6 +223,23 @@ class FitbitTracker(FitnessTracker):
         except Exception as e:
             logging.error(f"Error fetching workout data: {e}")
             return []
+
+    def get_daily_hrv(self, day: datetime.date) -> float:
+        """Fetch HRV data for a specific day."""
+        date_str = day.strftime("%Y-%m-%d")
+        endpoint = f"/hrv/date/{date_str}.json"
+        
+        try:
+            data = self._make_request(endpoint)
+            hrv_data = data.get('hrv', [])
+            if hrv_data:
+                # Get the daily rmssd value
+                rmssd = hrv_data[0].get('value', {}).get('dailyRmssd', 0)
+                return float(rmssd)
+            return 0.0
+        except Exception as e:
+            logging.error(f"Error fetching HRV data: {e}")
+            return 0.0
 
     def get_intraday_heart_rate(self, day: datetime.date) -> list[dict[str, Any]]:
         """Fetch intraday heart rate data with 1-minute detail."""

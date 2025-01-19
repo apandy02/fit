@@ -1,14 +1,13 @@
 import json
 from pathlib import Path
 
-from fit.trackers.fitbit.fitbit_tracker import FitbitAppClient
+from fit.trackers.implementations.fitbit import FitbitAppClient
 
 fitbit_config_path = Path(__file__).parent / 'config' / 'fitbit_config.json'
 
 with open(fitbit_config_path, 'r') as f:
     config = json.load(f)
 
-print(config)
 fitbit_client_oauth = FitbitAppClient(
     client_id=config['web']['client_id'],
     client_secret=config['web']['client_secret'],

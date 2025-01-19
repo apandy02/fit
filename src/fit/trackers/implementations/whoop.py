@@ -9,7 +9,7 @@ from authlib.integrations.requests_client import OAuth2Session
 from fit.trackers.base import FitnessTracker
 from fit.utils.conversions import kj_to_kcal
 
-json_path = os.path.join(os.path.dirname(__file__), "whoop_sports.json")
+json_path = os.path.join(os.path.dirname(__file__), "config/whoop_sports.json")
 
 with open(json_path, "r") as f:
     SPORTS_MAP = json.load(f)["sports"]

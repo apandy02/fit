@@ -4,15 +4,15 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from fit.trackers.base import FitnessTracker
-from fit.trackers.fitbit.fitbit_tracker import FitbitTracker
-from fit.trackers.implementations.whoop.whoop import Whoop
+from fit.trackers.implementations.fitbit import Fitbit
+from fit.trackers.implementations.whoop import Whoop
 
 SECRETS_PATH = "data/secrets.json" # TODO move to db 
 CONFIG_PATH = "data/config.json"
 
 def tracker_factory(tracker_type: str, access_token: str) -> FitnessTracker:
     if tracker_type == "fitbit":
-        return FitbitTracker(access_token)
+        return Fitbit(access_token)
     # Add other tracker types here
     raise ValueError(f"Invalid tracker type: {tracker_type}")
 

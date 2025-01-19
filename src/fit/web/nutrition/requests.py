@@ -9,8 +9,7 @@ import fit.web.common as common
 import fit.web.databases as databases
 import fit.web.nutrition.ui as ui
 from fit.trackers.manager import tracker_factory
-from fit.trackers.fitbit.fitbit_tracker import FitbitTracker
-from fit.trackers.fitbit.fitbit_tracker import FitnessTracker
+from fit.trackers.base import FitnessTracker
 from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
                                        Fats, Goals, Macronutrients,
                                        MealBreakdown, Micronutrients,

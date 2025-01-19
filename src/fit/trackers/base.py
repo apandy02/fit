@@ -36,6 +36,10 @@ class FitnessTracker(ABC):
     @abstractmethod
     def get_daily_workouts(self, day: datetime.date) -> list[dict[str, Any]]:
         """Fetch workouts for a given day."""
+
+    @abstractmethod
+    def get_daily_hrv(self, day: datetime.date) -> float:
+        """Fetch hrv for a given day."""
     
     @abstractmethod
     def _authenticate(self):

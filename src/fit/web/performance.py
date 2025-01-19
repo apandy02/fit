@@ -3,10 +3,10 @@ import datetime
 import fasthtml.common as fh
 
 from fit.trackers.manager import tracker_factory
-from fit.trackers.implementations.whoop.whoop import Whoop
-from fit.trackers.fitbit.fitbit_tracker import FitnessTracker
+from fit.trackers.implementations.whoop import Whoop
+from fit.trackers.base import FitnessTracker
 from fit.utils.conversions import kj_to_kcal
-from fit.web.common import (active_tracker, create_fab_menu,
+from fit.web.common import (create_fab_menu,
                             create_overview_card, create_time_filter,
                             page_outline)
 
