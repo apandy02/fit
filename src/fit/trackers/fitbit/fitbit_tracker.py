@@ -125,33 +125,135 @@ class FitbitAppClient(WebApplicationClient):
 
 
 class FitbitTracker(FitnessTracker):
-    SCOPE = ["activity", "heartrate", "profile"]
-    def __init__(self, client: FitbitAppClient):
-        self.client = client
+    SCOPE = ["activity", "heartrate", "profile", "sleep", "oxygen_saturation", "respiratory_rate"]
+    BASE_URL = "https://api.fitbit.com/1/user/-"
+    INFO_URL = "https://api.fitbit.com/1/user/-/profile.json"
+
+    def __init__(self, access_token: str):
+        self.access_token = access_token
         super().__init__()
 
     def _authenticate(self) -> None:
-        self.client.is_token_valid()
-    
+        if not self.is_token_valid():
+            raise Exception("Fitbit authentication failed")
+
+    def is_token_valid(self) -> bool:
+        """Check if the access token is valid."""
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        try:
+            resp = httpx.get(self.INFO_URL, headers=headers)
+            resp.raise_for_status()
+            return True
+        except httpx.HTTPStatusError as e:
+            print(f"Token validation failed: {e}")
+            return False
+
+    def _make_request(self, endpoint: str) -> dict:
+        """Helper method to make authenticated requests to Fitbit API"""
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        response = httpx.get(f"{self.BASE_URL}{endpoint}", headers=headers)
+        response.raise_for_status()
+        return response.json()
+
     def get_daily_resting_heart_rate(self, day: datetime.date) -> float:
-        """Fetch the most recent resting heart rate data."""
-        return 65.0  # Dummy value
-    
-    def get_daily_calories_burned(self, day: datetime.date) -> float:
-        """Fetch calories burned for the most recent day."""
-        return 2000.0  # Dummy value
-    
-    def get_daily_sleep(self, day: datetime.date) -> float:
-        """Fetch sleep for a given day."""
-        return 7.5  # Dummy value in hours
+        """Fetch the resting heart rate data for a specific day."""
+        date_str = day.strftime("%Y-%m-%d")
+        endpoint = f"/activities/heart/date/{date_str}/1d/1min.json"
         
+        try:
+            data = self._make_request(endpoint)
+            print(f"data: {data}")
+            activities_heart = data.get('activities-heart', [])
+            if activities_heart:
+                return float(activities_heart[0].get('value', {}).get('restingHeartRate', 0))
+            return 0.0
+        except Exception as e:
+            print(f"Error fetching resting heart rate: {e}")
+            return 0.0
+
+    def get_daily_calories_burned(self, day: datetime.date) -> float:
+        """Fetch calories burned for a specific day."""
+        date_str = day.strftime("%Y-%m-%d")
+        endpoint = f"/activities/date/{date_str}.json"
+        
+        try:
+            data = self._make_request(endpoint)
+            summary = data.get('summary', {})
+            return float(summary.get('caloriesOut', 0))
+        except Exception as e:
+            print(f"Error fetching calories burned: {e}")
+            return 0.0
+
+    def get_daily_sleep(self, day: datetime.date) -> float:
+        """Fetch sleep data for a specific day in hours."""
+        date_str = day.strftime("%Y-%m-%d")
+        endpoint = f"/sleep/date/{date_str}.json"
+        
+        try:
+            data = self._make_request(endpoint)
+            sleep_data = data.get('sleep', [])
+            total_minutes = sum(
+                sleep.get('minutesAsleep', 0) 
+                for sleep in sleep_data
+            )
+            return round(total_minutes / 60.0, 2)  # Convert to hours
+        except Exception as e:
+            print(f"Error fetching sleep data: {e}")
+            return 0.0
+
     def get_daily_workouts(self, day: datetime.date) -> list[dict[str, Any]]:
-        """Fetch workouts for a given day."""
-        return [  # Dummy workout data
-            {
-                "type": "Running",
-                "duration": 30,  # minutes
-                "calories": 300,
-                "distance": 5.0  # km
-            }
-        ]
+        """Fetch workouts for a specific day."""
+        date_str = day.strftime("%Y-%m-%d")
+        endpoint = f"/activities/date/{date_str}.json"
+        
+        try:
+            data = self._make_request(endpoint)
+            activities = data.get('activities', [])
+            
+            workouts = []
+            for activity in activities:
+                workout = {
+                    "type": activity.get('activityName', 'Unknown'),
+                    "duration": round(activity.get('duration', 0) / 60000, 2),  # Convert from milliseconds to minutes
+                    "calories": activity.get('calories', 0),
+                    "distance": round(activity.get('distance', 0) * 1.60934, 2)  # Convert miles to km
+                }
+                workouts.append(workout)
+            return workouts
+        except Exception as e:
+            print(f"Error fetching workout data: {e}")
+            return []
+
+    def get_intraday_heart_rate(self, day: datetime.date) -> list[dict[str, Any]]:
+        """Fetch intraday heart rate data with 1-minute detail."""
+        date_str = day.strftime("%Y-%m-%d")
+        endpoint = f"/activities/heart/date/{date_str}/1d/1min.json"
+        
+        try:
+            data = self._make_request(endpoint)
+            intraday_data = data.get('activities-heart-intraday', {}).get('dataset', [])
+            return [
+                {
+                    "time": entry.get('time'),
+                    "value": entry.get('value')
+                }
+                for entry in intraday_data
+            ]
+        except Exception as e:
+            print(f"Error fetching intraday heart rate data: {e}")
+            return []
+
+    def get_breathing_rate(self, day: datetime.date) -> float:
+        """Fetch breathing rate data for a specific day."""
+        date_str = day.strftime("%Y-%m-%d")
+        endpoint = f"/br/date/{date_str}.json"
+        
+        try:
+            data = self._make_request(endpoint)
+            br_data = data.get('br', [])
+            if br_data:
+                return float(br_data[0].get('value', {}).get('breathingRate', 0))
+            return 0.0
+        except Exception as e:
+            print(f"Error fetching breathing rate data: {e}")
+            return 0.0
