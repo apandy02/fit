@@ -103,13 +103,17 @@ def login(req):
 
 
 @app.get(auth_callback_path)
-def auth_redirect(code:str, request):
+def auth_redirect(code:str, request, session):
     redir = redir_url(request, auth_callback_path)
     print(fitbit_client.__dir__())
     print(f"fitbit_client.token: {fitbit_client.token}")
-    user_info = fitbit_client.fetch_access_token(code, redir)
-    print(f"user_info: {user_info}")
-    #print(user_info)
+    access_token_dict = fitbit_client.fetch_access_token(code, redir)
+    session['access_token'] = access_token_dict['access_token']
+    session['access_token_expiry'] = access_token_dict['expires_at']
+    session['refresh_token'] = access_token_dict['refresh_token']
+    print(f"session: {session}")
+    # user_info = fitbit_client.get_info(access_token)
+    # print(f"user_info: {user_info}")
 
 
 scope = ["activity", "heartrate", "profile"]
