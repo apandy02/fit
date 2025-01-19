@@ -32,8 +32,10 @@ class FitbitAppClient(WebApplicationClient):
     
     def login_link(self, redirect_uri, scope=None, state=None):
         """Create the Fitbit login link with PKCE parameters."""
-        if scope is None: scope = self.scope
-        if state is None: state = self.state
+        if scope is None: 
+            scope = self.SCOPE
+        if state is None: 
+            state = self.state
 
         # Build up the extra PKCE query params
         extra_params = {

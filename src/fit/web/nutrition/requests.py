@@ -8,14 +8,15 @@ import fit.nutrition.assistants as assistants
 import fit.web.common as common
 import fit.web.databases as databases
 import fit.web.nutrition.ui as ui
-from fit.trackers.manager import tracker_factory
-from fit.trackers.base import FitnessTracker
+from fit.nutrition.data_models import \
+    NutritionalInformation  # TODO: cleanup this horrible import mess
 from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
                                        Fats, Goals, Macronutrients,
-                                       MealBreakdown, Micronutrients,
-                                       NutritionalInformation) # TODO: cleanup this horrible import mess
+                                       MealBreakdown, Micronutrients)
 from fit.nutrition.targets import (calculate_macro_targets,
                                    estimate_daily_water_intake)
+from fit.trackers.base import FitnessTracker
+from fit.trackers.manager import tracker_factory
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import DB, active_tracker, micronutrient_goals
 

@@ -1,12 +1,12 @@
 import datetime
 
 import fasthtml.common as fh
-from fit.trackers.implementations.whoop import Whoop
+
 from fit.trackers.base import FitnessTracker
+from fit.trackers.implementations.whoop import Whoop
 from fit.trackers.manager import tracker_factory
-from fit.web.common import (create_fab_menu,
-                            create_overview_card, create_time_filter,
-                            page_outline)
+from fit.web.common import (create_fab_menu, create_overview_card,
+                            create_time_filter, page_outline)
 
 
 def get(session):
