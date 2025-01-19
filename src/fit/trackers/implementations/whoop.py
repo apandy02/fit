@@ -47,7 +47,6 @@ class WhoopAppClient(WebApplicationClient):
         extra_params = {
             "code_challenge": self.code_challenge,
             "code_challenge_method": "S256",
-            "response_type": "code"
         }
 
         # Use the built-in method, but pass extra_auth_params for PKCE

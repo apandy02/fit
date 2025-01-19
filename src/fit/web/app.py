@@ -10,7 +10,7 @@ import fit.web.performance as performance
 import fit.web.progress as progress
 import fit.web.rest as rest
 import fit.web.user_profile as user_profile
-from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
+from fit.web.auth.clients import fitbit_client_oauth as fitbit_client, whoop_client_oauth as whoop_client
 from fit.web.auth.login_page import get_login_page
 
 tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
@@ -41,6 +41,9 @@ auth_callback_path = "/auth_redirect"
 
 fitbit_auth_callback_path = auth_callback_path + '/fitbit'
 whoop_auth_callback_path = auth_callback_path + '/whoop'
+
+fitbit_scope = ["activity", "heartrate", "profile"]
+whoop_scope = ["offline", "read:recovery", "read:cycles", "read:workout", "read:sleep", "read:profile"]
 
 bware = fh.Beforeware(before, skip=['/login', auth_callback_path, fitbit_auth_callback_path, whoop_auth_callback_path])
 app = fh.FastHTML(before=bware, hdrs=(tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
@@ -109,13 +112,16 @@ def home(auth): return fh.P('Logged in!'), fh.A('Log out', href='/logout')
 
 @app.get('/login')
 def login(req):
-    redir = redir_url(req, f"{auth_callback_path}/fitbit")
-    login_link = fitbit_client.login_link(redir, scope=fitbit_scope)
-    return get_login_page(req, fitbit_login_link=login_link)
+    fitbit_redir = redir_url(req, f"{auth_callback_path}/fitbit")
+    whoop_redir = redir_url(req, f"{auth_callback_path}/whoop")
+    fitbit_login_link = fitbit_client.login_link(fitbit_redir, scope=fitbit_scope)
+    whoop_login_link = whoop_client.login_link(whoop_redir, scope=whoop_scope)
+    print(f"{whoop_login_link=}")
+    return get_login_page(req, fitbit_login_link=fitbit_login_link, whoop_login_link=whoop_login_link)
 
 
 
-@app.get(f"{auth_callback_path}/fitbit")
+@app.get(fitbit_auth_callback_path)
 def fitbit_auth_redirect(code:str, request, session):
     redir = redir_url(request, f"{auth_callback_path}/fitbit")
     access_token_dict = fitbit_client.fetch_access_token(code, redir)
@@ -129,10 +135,18 @@ def fitbit_auth_redirect(code:str, request, session):
     # print(f"user_info: {user_info}")
 
 
+@app.get(whoop_auth_callback_path)
+def whoop_auth_redirect(code:str, request, session):
+    redir = redir_url(request, whoop_auth_callback_path)
+    print(f"{redir=}")
+    access_token_dict = whoop_client.fetch_access_token(code, redir)
+    session['access_token'] = access_token_dict['access_token']
+    session['access_token_expiry'] = access_token_dict['expires_at']
+    session['refresh_token'] = access_token_dict['refresh_token']
+    session["tracker"] = "whoop"
+    return RedirectResponse('/nutrition', status_code=303)
 
-fitbit_scope = ["activity", "heartrate", "profile"]
-whoop_scope = ["offline", "read:recovery", "read:cycles", "read:workout", "read:sleep", "read:profile"]
-
+print(f"whoop_client redirect_url: {whoop_client.redirect_url}")
 
 fh.serve() 
 
