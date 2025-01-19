@@ -39,7 +39,10 @@ def before(req, session):
 
 auth_callback_path = "/auth_redirect"
 
-bware = fh.Beforeware(before, skip=['/login', auth_callback_path, auth_callback_path + '/fitbit'])
+fitbit_auth_callback_path = auth_callback_path + '/fitbit'
+whoop_auth_callback_path = auth_callback_path + '/whoop'
+
+bware = fh.Beforeware(before, skip=['/login', auth_callback_path, fitbit_auth_callback_path, whoop_auth_callback_path])
 app = fh.FastHTML(before=bware, hdrs=(tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
 
 # Food routes
@@ -104,12 +107,10 @@ def get(path: str):
 @app.get('/')
 def home(auth): return fh.P('Logged in!'), fh.A('Log out', href='/logout')
 
-
-
 @app.get('/login')
 def login(req):
     redir = redir_url(req, f"{auth_callback_path}/fitbit")
-    login_link = fitbit_client.login_link(redir, scope=scope)
+    login_link = fitbit_client.login_link(redir, scope=fitbit_scope)
     return get_login_page(req, fitbit_login_link=login_link)
 
 
@@ -128,7 +129,9 @@ def fitbit_auth_redirect(code:str, request, session):
     # print(f"user_info: {user_info}")
 
 
-scope = ["activity", "heartrate", "profile"]
+
+fitbit_scope = ["activity", "heartrate", "profile"]
+whoop_scope = ["offline", "read:recovery", "read:cycles", "read:workout", "read:sleep", "read:profile"]
 
 
 fh.serve() 
