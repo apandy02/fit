@@ -51,7 +51,7 @@ class Whoop(FitnessTracker):
 
         super().__init__()
 
-        def _authenticate(self) -> None:
+    def _authenticate(self) -> None:
             """Authenticate OAuth2Session by fetching token.
         
             If `user_id` is `None`, it will be set according to the `user_id` returned with

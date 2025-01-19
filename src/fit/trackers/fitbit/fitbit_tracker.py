@@ -80,7 +80,7 @@ class FitbitAppClient(WebApplicationClient):
             "code_verifier": self.code_verifier,
         }
         # If your Fitbit app is a confidential client, include client_secret:
-        data["client_secret"] = self.client_secret
+        # 
 
         r = httpx.post(self.token_url, data=data)
         r.raise_for_status()
