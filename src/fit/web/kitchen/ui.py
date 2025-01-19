@@ -1,7 +1,7 @@
 import fasthtml.common as fh
-from fit.nutrition.data_models import KitchenItem, KitchenInventory
+from fit.nutrition.data_models import KitchenInventory, KitchenItem
 from fit.web.common import create_text_form_input
-from fit.web.kitchen.constants import INVENTORY_UNITS, INVENTORY_CATEGORIES
+from fit.web.kitchen.constants import INVENTORY_CATEGORIES, INVENTORY_UNITS
 
 
 def kitchen_page_content(inventory: dict):
