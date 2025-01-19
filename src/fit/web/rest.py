@@ -1,6 +1,7 @@
 import datetime
 
 import fasthtml.common as fh
+
 from fit.web.common import (active_tracker, create_fab_menu,
                             create_overview_card, create_time_filter,
                             page_outline)
@@ -46,7 +47,6 @@ def rest_card(title: str, value: str):
 def get_rest_metrics_section():
     """Return the rest tracking metrics section"""
     recovery, sleep = get_rest_info()
-    print(recovery)
     
     return fh.Div(
         fh.Div(
@@ -103,8 +103,6 @@ def get_rest_info():
         recovery_scores = None
     
     sleep = active_tracker.get_daily_sleep(today)
-    print(f"sleep: {sleep}")
-    print(f"recovery: {recovery}")
 
     
     return recovery_scores, sleep  

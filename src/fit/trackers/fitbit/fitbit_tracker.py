@@ -1,6 +1,7 @@
 import base64
 import datetime
 import hashlib
+import logging
 import os
 from typing import Any
 
@@ -92,7 +93,6 @@ class FitbitAppClient(WebApplicationClient):
         if token is None:
             token = self.token["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
-        print(f"headers: {headers}")
         resp = httpx.get(self.info_url, headers=headers)
         resp.raise_for_status()
         return resp.json()
@@ -107,20 +107,20 @@ class FitbitAppClient(WebApplicationClient):
             resp.raise_for_status()
             return True
         except httpx.HTTPStatusError as e:
-            print(f"Token validation failed: {e}")
+            logging.error(f"Token validation failed: {e}")
             return False
 
     def retr_info(self, code, redirect_uri):
         """Convenience method to parse token response then fetch user info."""
         self.parse_response(code, redirect_uri)
         info = self.get_info()
-        print(f"info: {info}")
+        logging.info(f"info: {info}")
         return info
 
     def retr_id(self, code, redirect_uri):
         """Fitbit's user_id is in the profile."""
         profile = self.retr_info(code, redirect_uri)
-        print(f"profile: {profile}")
+        logging.info(f"profile: {profile}")
         return profile["user"]["encodedId"]  # Or whichever field is your 'id'
 
 
@@ -145,7 +145,7 @@ class FitbitTracker(FitnessTracker):
             resp.raise_for_status()
             return True
         except httpx.HTTPStatusError as e:
-            print(f"Token validation failed: {e}")
+            logging.error(f"Token validation failed: {e}")
             return False
 
     def _make_request(self, endpoint: str) -> dict:
@@ -162,13 +162,13 @@ class FitbitTracker(FitnessTracker):
         
         try:
             data = self._make_request(endpoint)
-            print(f"data: {data}")
+            logging.info(f"data: {data}")
             activities_heart = data.get('activities-heart', [])
             if activities_heart:
                 return float(activities_heart[0].get('value', {}).get('restingHeartRate', 0))
             return 0.0
         except Exception as e:
-            print(f"Error fetching resting heart rate: {e}")
+            logging.error(f"Error fetching resting heart rate: {e}")
             return 0.0
 
     def get_daily_calories_burned(self, day: datetime.date) -> float:
@@ -181,7 +181,7 @@ class FitbitTracker(FitnessTracker):
             summary = data.get('summary', {})
             return float(summary.get('caloriesOut', 0))
         except Exception as e:
-            print(f"Error fetching calories burned: {e}")
+            logging.error(f"Error fetching calories burned: {e}")
             return 0.0
 
     def get_daily_sleep(self, day: datetime.date) -> float:
@@ -198,7 +198,7 @@ class FitbitTracker(FitnessTracker):
             )
             return round(total_minutes / 60.0, 2)  # Convert to hours
         except Exception as e:
-            print(f"Error fetching sleep data: {e}")
+            logging.error(f"Error fetching sleep data: {e}")
             return 0.0
 
     def get_daily_workouts(self, day: datetime.date) -> list[dict[str, Any]]:
@@ -221,7 +221,7 @@ class FitbitTracker(FitnessTracker):
                 workouts.append(workout)
             return workouts
         except Exception as e:
-            print(f"Error fetching workout data: {e}")
+            logging.error(f"Error fetching workout data: {e}")
             return []
 
     def get_intraday_heart_rate(self, day: datetime.date) -> list[dict[str, Any]]:
@@ -240,7 +240,7 @@ class FitbitTracker(FitnessTracker):
                 for entry in intraday_data
             ]
         except Exception as e:
-            print(f"Error fetching intraday heart rate data: {e}")
+            logging.error(f"Error fetching intraday heart rate data: {e}")
             return []
 
     def get_breathing_rate(self, day: datetime.date) -> float:
@@ -255,5 +255,5 @@ class FitbitTracker(FitnessTracker):
                 return float(br_data[0].get('value', {}).get('breathingRate', 0))
             return 0.0
         except Exception as e:
-            print(f"Error fetching breathing rate data: {e}")
+            logging.error(f"Error fetching breathing rate data: {e}")
             return 0.0
