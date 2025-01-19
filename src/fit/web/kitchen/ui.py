@@ -2,7 +2,6 @@
 import fasthtml.common as fh
 
 
-
 def create_expandable_section(title: str, content=None):
     """Create an expandable section with a title and optional content"""
     if content is None:
