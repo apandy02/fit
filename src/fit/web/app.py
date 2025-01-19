@@ -24,7 +24,18 @@ dlink = fh.Link(
     href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.css",
 )
 modal_css = fh.Link(rel="stylesheet", href="/static/public/modal.css")
-app = fh.FastHTML(hdrs=(tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
+
+def before(req, session):
+    print("running beforeware")
+    print(f"session: {session}")
+    auth = req.scope['auth'] = session.get('user_id', None)
+    if not auth: return RedirectResponse('/login', status_code=303)
+    fh.counts.xtra(name=auth)
+
+auth_callback_path = "/auth_redirect"
+
+bware = fh.Beforeware(before, skip=['/login', auth_callback_path, auth_callback_path + '/fitbit'])
+app = fh.FastHTML(before=bware, hdrs=(tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
 
 # Food routes
 app.get("/nutrition/weekly")(nutrition.get_weekly_overview)
@@ -86,32 +97,26 @@ def get(path: str):
 @app.get('/')
 def home(auth): return fh.P('Logged in!'), fh.A('Log out', href='/logout')
 
-auth_callback_path = "/auth_redirect"
-def before(req, session):
-    auth = req.scope['auth' ] = session.get('user_id', None)
-    if not auth: return RedirectResponse('/login', status_code=303)
-    fh.counts.xtra(name=auth)
-bware = fh.Beforeware(before, skip=['/login', auth_callback_path])
+
 
 @app.get('/login')
 def login(req):
-    redir = redir_url(req, auth_callback_path)
+    redir = redir_url(req, f"{auth_callback_path}/fitbit")
     login_link = fitbit_client.login_link(redir, scope=scope)
-    print(login_link)
     return get_login_page(req, fitbit_login_link=login_link)
 
 
 
-@app.get(auth_callback_path)
-def auth_redirect(code:str, request, session):
-    redir = redir_url(request, auth_callback_path)
-    print(fitbit_client.__dir__())
-    print(f"fitbit_client.token: {fitbit_client.token}")
+@app.get(f"{auth_callback_path}/fitbit")
+def fitbit_auth_redirect(code:str, request, session):
+    redir = redir_url(request, f"{auth_callback_path}/fitbit")
+    print(f"redir: {redir}")
     access_token_dict = fitbit_client.fetch_access_token(code, redir)
     session['access_token'] = access_token_dict['access_token']
     session['access_token_expiry'] = access_token_dict['expires_at']
     session['refresh_token'] = access_token_dict['refresh_token']
     print(f"session: {session}")
+
     # user_info = fitbit_client.get_info(access_token)
     # print(f"user_info: {user_info}")
 
