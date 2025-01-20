@@ -1,7 +1,7 @@
 import time
 from datetime import datetime
 from functools import wraps
-from typing import Type
+from typing import Type, List
 
 import ell
 from PIL import Image
