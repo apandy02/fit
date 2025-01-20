@@ -8,6 +8,7 @@ from PIL import Image
 from pydantic import BaseModel, ValidationError
 
 import fit.nutrition.data_models as dm
+from fit.nutrition.errors import NoMealsLoggedError
 
 STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
 DEFAULT_LARGE_MODEL = "gpt-4o-2024-08-06"
