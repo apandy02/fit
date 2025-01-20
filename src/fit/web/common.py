@@ -184,21 +184,16 @@ def Markdown(s, exts=md_exts, **kw):
 
 # TODO: make it so that more parameters can be passed in to the function so it can be used to generate 
 # more than just nutrition overviews
-def create_overview_card(view_type: str, date: datetime.date = None):
-    """Create the overview card with analysis button"""
-    print(f"date: {date}")
-    if date is not None:
-        endpoint = f"/generate_daily_overview/{date.strftime('%Y-%m-%d')}"
-    else:
-        endpoint = "/generate_daily_overview"
+def create_text_generation_card(endpoint: str, button_text: str = "Generate Analysis"):
+    """Create the text generation card with analysis button"""
     
     return fh.Card(
         fh.Div(
             fh.Div(
                 fh.Button(
-                    "Generate Daily Analysis" if view_type == "daily" else "Generate Weekly Analysis",
+                    button_text,
                     cls="btn btn-primary outline outline-1 outline-primary-content",
-                    hx_post=endpoint if view_type == "daily" else "/generate_weekly_overview",
+                    hx_post=endpoint,
                     hx_target="#analysis-content"
                 ),
                 cls="flex justify-center mb-4"
