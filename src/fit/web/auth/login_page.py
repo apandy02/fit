@@ -22,3 +22,5 @@ def get_login_page(req, fitbit_login_link: str, whoop_login_link: str):
         )
     )
     return page_outline(7, "Login", False, False, page_content)
+
+
