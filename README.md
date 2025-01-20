@@ -57,7 +57,7 @@ The application consists of several core modules:
 
 3. Clone the repository:
    ```bash
-   git clone git@github.com:aryamanpandya99/fit.git
+   git clone git@github.com:apandy02/fit.git
    cd fit
    ```
 
