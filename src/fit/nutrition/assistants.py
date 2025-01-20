@@ -8,6 +8,7 @@ from PIL import Image
 from pydantic import BaseModel, ValidationError
 
 import fit.nutrition.data_models as dm
+from fit.nutrition.errors import NoMealsLoggedError
 
 STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
 DEFAULT_MODEL = "gpt-4o-2024-08-06"
@@ -343,10 +344,3 @@ def inventory_from_image(image: Image.Image, additional_context: str = "") -> dm
         ell.system(system_message),
         ell.user([additional_context, image]),
     ]
-
-
-class NoMealsLoggedError(Exception):
-    """Exception raised for when no meals are logged for a day."""
-    def __init__(self, message="No meals logged for today, please log your meals and try again."):
-        self.message = message
-        super().__init__(self.message)
