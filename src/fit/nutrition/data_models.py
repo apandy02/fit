@@ -4,6 +4,13 @@ from typing import List
 from pydantic import BaseModel, Field
 
 
+class MealType(Enum):
+    """An enum that contains the different types of meals."""
+    BREAKFAST = "breakfast"
+    LUNCH = "lunch"
+    DINNER = "dinner"
+    SNACK = "snack"
+
 class Goals(Enum):
     """An enum that contains the user's nutrition and fitness goals."""
     LOSE_WEIGHT = "lose weight"
@@ -84,7 +91,7 @@ class NutritionalInformation(BaseModel):
     macronutrients: Macronutrients = Field(description="the macronutrients in the food", default=MACRO_DEFAULT)
     micronutrients: Micronutrients = Field(description="the micronutrients in the food", default=MICRO_DEFAULT)
     conditional_nutrients: ConditionalNutrients = Field(description="the conditional nutrients in the food", default=COND_DEFAULT)
-    
+
 class MealRecommendation(BaseModel):
     """A dataclass that contains the meal recommendation for a food."""
     #TODO: Maybe I want an explanation of why this meal is being recommended?
@@ -99,6 +106,11 @@ class MealRecommendation(BaseModel):
 class Recommendations(BaseModel):
     """A dataclass that contains the meal recommendations for a food."""
     meals: List[MealRecommendation] = Field(description="A list of 5 meals to be recommended to the user")
+
+class MealTypeRecommendations(BaseModel):
+    """A dataclass that contains meal recommendations for a specific meal type."""
+    meal_type: MealType = Field(description="the type of meal these recommendations are for")
+    meals: List[MealRecommendation] = Field(description="list of 5 recommended meals of this type")
 
 KITCHEN_ITEM_CATEGORIES = [
     "Produce",
@@ -121,3 +133,30 @@ class KitchenItem(BaseModel):
 class KitchenInventory(BaseModel):
     """A dataclass that contains the kitchen inventory for a food."""
     items: List[KitchenItem] = Field(description="the items in the kitchen inventory")
+
+
+class GroceryListItem(BaseModel):
+    """A dataclass that contains the grocery item for a food."""
+    name: str = Field(description="the name of the kitchen item")
+    quantity: float = Field(description="the quantity of the kitchen item")
+    unit: str = Field(description="the unit of the quantity of the kitchen item")
+    category: str = Field(
+        description=f"the category of the kitchen item, choose from: {KITCHEN_ITEM_CATEGORIES}"
+    )
+    value: str = Field(description="one sentence about why this item is good for the user")
+
+class GroceryList(BaseModel):
+    """A dataclass that contains the grocery list for a food."""
+    items: List[GroceryListItem] = Field(description="a list of 5 - 15 items on a grocery list recommended to a user")
+
+class NutrientPerformance(BaseModel):
+    """A dataclass that contains the user's performance for a nutrient."""
+    nutrient: str = Field(description="name of the nutrient")
+    average_intake: float = Field(description="average daily intake")
+    target: float = Field(description="daily target")
+    performance_ratio: float = Field(description="ratio of intake to target")
+
+class UserPerformance(BaseModel):
+    """A dataclass that contains the user's overall nutritional performance."""
+    period_days: int = Field(description="number of days this performance data covers")
+    nutrients: List[NutrientPerformance] = Field(description="performance data for each tracked nutrient")

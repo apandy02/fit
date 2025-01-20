@@ -5,8 +5,8 @@ import fasthtml.common as fh
 import fit.nutrition.assistants as assistants
 import fit.web.nutrition.food_plots as food_plots
 from fit.nutrition.data_models import MealBreakdown
-from fit.web.common import (DB, create_overview_card, create_text_form_input,
-                            create_time_filter)
+from fit.web.common import (DB, create_text_form_input,
+                            create_text_generation_card, create_time_filter)
 from fit.web.databases import get_daily_meals
 
 
@@ -608,8 +608,14 @@ def create_conditional_section(data, visible_metrics, view_type: str):
 
 def create_metrics_grid(data, visible_metrics, water_metrics, view_type: str, date: datetime.date = None):
     """Create the grid of metric cards"""
+    if view_type == "daily":
+        text_generation_endpoint = "/generate_daily_nutrition_overview"
+        if date is not None:
+            text_generation_endpoint += f"/{date.strftime('%Y-%m-%d')}"
+    else:
+        text_generation_endpoint = "/generate_weekly_nutrition_overview"
     sections = [
-        create_overview_card(view_type, date),
+        create_text_generation_card(text_generation_endpoint, "Generate Nutrition Overview"),
         create_meals_list(date) if view_type == "daily" else None,
         create_macro_section(data, visible_metrics, view_type),
         create_micro_section(data, visible_metrics, view_type),

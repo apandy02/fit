@@ -135,3 +135,38 @@ async def delete_inventory_item(rowid: int):
     except Exception as e:
         print(e)
         return fh.Response(status=500)
+
+async def generate_inventory_additions(request: fh.Request):
+    """Generate inventory additions"""
+    try:
+        current_inventory = get_inventory()
+        user_meals = db.get_all_meal_summaries(common.DB)
+        user_preferences = assistants.summarize_user_preferences(user_meals)
+        dietary_restrictions = db.get_dietary_restrictions(common.DB, "default")
+        grocery_list = assistants.generate_grocery_list(
+            current_inventory, user_preferences, dietary_restrictions
+        ).content[0].parsed
+        
+        # Create cards for each grocery item
+        grocery_cards = []
+        for item in grocery_list.items:
+            grocery_cards.append(
+                fh.Card(
+                    fh.Div(
+                        fh.H2(item.name.capitalize(), cls="card-title justify-center text-lg mb-2 text-primary-content"),
+                        fh.P(f"Category: {item.category}", cls="text-center text-primary-content text-sm"),
+                        fh.P(f"Quantity: {item.quantity} {item.unit}", cls="text-center text-primary-content text-sm"),
+                        fh.P(f"{item.value}", cls="text-center text-primary-content text-sm mt-2"),
+                        cls="card-body items-center text-center py-4 px-4"
+                    ),
+                    cls="card bg-base-200 shadow-xl rounded-xl outline outline-1 outline-primary-content mt-4 max-w-[250px]"
+                )
+            )
+        
+        return fh.Div(
+            *grocery_cards,
+            cls="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+        )
+    except Exception as e:
+        print(e)
+        return fh.Response(status=500)

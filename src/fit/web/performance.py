@@ -6,7 +6,7 @@ from fit.trackers.base import FitnessTracker
 from fit.trackers.implementations.whoop import Whoop
 from fit.trackers.manager import tracker_factory
 from fit.utils.conversions import kj_to_kcal
-from fit.web.common import (create_fab_menu, create_overview_card,
+from fit.web.common import (create_fab_menu, create_text_generation_card,
                             create_time_filter, page_outline)
 
 
@@ -18,6 +18,7 @@ def get(session):
         ("Workout", "💪", None),  
         ("Stats", "📊", None)      
     ]
+    text_generation_endpoint = "/generate_performance_overview"
 
     content = fh.Div(
             fh.Card(
@@ -27,7 +28,7 @@ def get(session):
                     cls="text-slate-400 text-center"
                 ),
                 create_time_filter("daily"),
-                create_overview_card("daily"),
+                create_text_generation_card(text_generation_endpoint, "Generate Performance Overview"),
                 fh.Div(
                     get_performance_metrics_section(tracker)
                 ),
