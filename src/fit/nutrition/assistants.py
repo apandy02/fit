@@ -47,9 +47,6 @@ def retry(
     return decorator 
 
 
-def natural_language_macros(food: str):
-
-
 @ell.complex(model=DEFAULT_MODEL, response_format=dm.MealBreakdown)
 def natural_language_macros(food: str) -> dm.MealBreakdown:
     """given what the user ate, return the macro nutrients in grams.
