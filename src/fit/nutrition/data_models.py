@@ -3,6 +3,12 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
+class MealType(Enum):
+    """An enum that contains the different types of meals."""
+    BREAKFAST = "breakfast"
+    LUNCH = "lunch"
+    DINNER = "dinner"
+    SNACK = "snack"
 
 class Goals(Enum):
     """An enum that contains the user's nutrition and fitness goals."""
@@ -84,7 +90,7 @@ class NutritionalInformation(BaseModel):
     macronutrients: Macronutrients = Field(description="the macronutrients in the food", default=MACRO_DEFAULT)
     micronutrients: Micronutrients = Field(description="the micronutrients in the food", default=MICRO_DEFAULT)
     conditional_nutrients: ConditionalNutrients = Field(description="the conditional nutrients in the food", default=COND_DEFAULT)
-    
+
 class MealRecommendation(BaseModel):
     """A dataclass that contains the meal recommendation for a food."""
     #TODO: Maybe I want an explanation of why this meal is being recommended?
@@ -99,6 +105,11 @@ class MealRecommendation(BaseModel):
 class Recommendations(BaseModel):
     """A dataclass that contains the meal recommendations for a food."""
     meals: List[MealRecommendation] = Field(description="A list of 5 meals to be recommended to the user")
+
+class MealTypeRecommendations(BaseModel):
+    """A dataclass that contains meal recommendations for a specific meal type."""
+    meal_type: MealType = Field(description="the type of meal these recommendations are for")
+    meals: List[MealRecommendation] = Field(description="list of 5 recommended meals of this type")
 
 KITCHEN_ITEM_CATEGORIES = [
     "Produce",
@@ -125,9 +136,7 @@ class KitchenInventory(BaseModel):
 
 class GroceryItem(BaseModel):
     """A dataclass that contains the grocery item for a food."""
-    name: str = Field(description="the name of the grocery item")
-    quantity: float = Field(description="the quantity of the grocery item")
-    unit: str = Field(description="the unit of the quantity of the grocery item")
+    kitchen_item: KitchenItem = Field(description="the kitchen item to be purchased")
     value: str = Field(description="one sentence about why this item is good for the user")
 
 class GroceryList(BaseModel):

@@ -1,7 +1,7 @@
 import time
 from datetime import datetime
 from functools import wraps
-from typing import Type
+from typing import Type, List
 
 import ell
 from PIL import Image
@@ -343,3 +343,128 @@ def inventory_from_image(image: Image.Image, additional_context: str = "") -> dm
         ell.system(system_message),
         ell.user([additional_context, image]),
     ]
+
+@ell.complex(model=DEFAULT_MODEL, response_format=dm.MealTypeRecommendations)
+def generate_meal_type_recommendations(
+    meal_type: dm.MealType,
+    user_performance: dm.UserPerformance,
+    restrictions: list[str],
+) -> dm.MealTypeRecommendations:
+    """Generate meal recommendations for a specific meal type based on user's nutritional performance.
+    
+    This function takes into account:
+    1. The specific meal type (breakfast, lunch, dinner, snack)
+    2. User's nutritional performance over time
+    3. Dietary restrictions
+    
+    It generates meals that:
+    1. Are appropriate for the meal type
+    2. Help address nutritional deficiencies shown in performance data
+    3. Avoid excess in nutrients where user is already meeting/exceeding targets
+    4. Respect dietary restrictions
+    5. Vary in difficulty and prep time
+    """
+    system_message = """
+    You are a meal planning expert. Your task is to recommend 5 meals for a specific meal type
+    that help optimize the user's nutrition based on their performance data.
+    
+    Consider the following:
+    - Breakfast meals should be relatively quick to prepare and energizing
+    - Lunch meals should be balanced and moderate in size
+    - Dinner meals can be more elaborate but not too heavy
+    - Snacks should be light, nutritious, and easy to prepare
+    
+    Ensure meals help address nutritional deficiencies while avoiding excess in nutrients
+    where the user is already meeting targets. All meals must strictly respect dietary restrictions.
+    """
+    
+    user_input = f"""
+    Meal Type: {meal_type.value}
+    
+    User's Nutritional Performance:
+    Period: {user_performance.period_days} days
+    Performance by nutrient:
+    {[f"{p.nutrient}: {p.performance_ratio:.2f}x target" for p in user_performance.nutrients]}
+    
+    Dietary Restrictions: {restrictions}
+    """
+    
+    return [
+        ell.system(system_message),
+        ell.user(user_input)
+    ]
+
+
+@ell.complex(model=DEFAULT_MODEL, response_format=dm.GroceryList)
+def get_grocery_recommendations(
+    meal_recommendations: list[dm.MealTypeRecommendations],
+    inventory: dm.KitchenInventory,
+    target_days: int = 10,
+) -> dm.GroceryList:
+    """Generate a grocery list based on meal recommendations and current inventory.
+    
+    This function:
+    1. Analyzes all meal recommendations across types
+    2. Checks current inventory
+    3. Creates an optimized grocery list that:
+       - Enables cooking a good selection of recommended meals
+       - Minimizes waste by considering ingredient overlap
+       - Takes into account current inventory
+       - Provides enough food for the target number of days
+    """
+    system_message = """
+    You are a meal planning and grocery expert. Your task is to create an optimized grocery list that:
+    1. Enables cooking a selection of the recommended meals
+    2. Takes into account current inventory to avoid buying what's already available
+    3. Minimizes waste by identifying ingredients that can be used across multiple meals
+    4. Provides enough food for the specified number of days
+    5. Is organized by category and includes quantity estimates
+    6. Includes cost estimates for budgeting
+    
+    The list should be practical and efficient, focusing on ingredients that:
+    - Are essential for multiple recipes
+    - Have good shelf life
+    - Provide good value for money
+    - Enable cooking a variety of the recommended meals
+    """
+    
+    user_input = f"""
+    Target Days of Meals: {target_days}
+    
+    Current Kitchen Inventory:
+    {inventory.items}
+    
+    Available Meal Recommendations:
+    {[f"{rec.meal_type.value}: {[meal.title for meal in rec.meals]}" for rec in meal_recommendations]}
+    
+    For each meal, detailed ingredients are:
+    {[f"{meal.title}: {meal.ingredients}" for rec in meal_recommendations for meal in rec.meals]}
+    """
+    
+    return [
+        ell.system(system_message),
+        ell.user(user_input)
+    ]
+
+
+@ell.complex(model=DEFAULT_MODEL, response_format=List[str])
+def analyze_ingredient_overlap(meals: list[dm.MealRecommendation]) -> list[str]:
+    """Analyze a list of meals to find common ingredients that could be used efficiently across multiple recipes."""
+    system_message = """
+    Analyze the ingredients across all meals and identify ingredients that:
+    1. Appear in multiple recipes
+    2. Could be bought in bulk
+    3. Have good shelf life
+    4. Would be cost-effective to buy for multiple meals
+    """
+    
+    user_input = f"""
+    Meals and their ingredients:
+    {[(meal.title, meal.ingredients) for meal in meals]}
+    """
+    
+    return [
+        ell.system(system_message),
+        ell.user(user_input)
+    ]
+
