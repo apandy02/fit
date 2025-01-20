@@ -1,15 +1,13 @@
+import time
 from datetime import datetime
+from functools import wraps
+from typing import Type
 
 import ell
 from PIL import Image
+from pydantic import BaseModel, ValidationError
 
 import fit.nutrition.data_models as dm
-
-
-from functools import wraps
-import time
-from typing import Type
-from pydantic import BaseModel, ValidationError
 
 STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
 DEFAULT_MODEL = "gpt-4o-2024-08-06"
@@ -172,6 +170,14 @@ def daily_io_analysis(meals: list[dm.MealBreakdown], target: dict[str, float], r
         return dm.NutritionFeedback.model_validate_json(
             _daily_io_analysis_simple(sys_message, user_data)
         )
+    
+@ell.simple(model=DEFAULT_MODEL, max_tokens=2048)
+def _daily_io_analysis_simple(sys_message: str, user_data: str) -> str:
+    sys_message += f"You must absolutely respond in this format as a json string with no exceptions: {dm.NutritionFeedback.model_json_schema()}"
+    return [
+        ell.system(sys_message),
+        ell.user(user_data)
+    ]
 
 @ell.complex(model=DEFAULT_MODEL, response_format=dm.NutritionFeedback, max_tokens=2048)
 def _daily_io_analysis_pydantic(sys_message: str, user_data: str) -> dm.NutritionFeedback:
