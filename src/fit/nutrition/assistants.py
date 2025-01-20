@@ -133,7 +133,7 @@ def daily_io_analysis(meals: list[dm.MealBreakdown], target: dict[str, float], r
         target: The user's target for the day.
     """
     if len(meals) == 0:
-        return "No meals logged for today, please log your meals and try again." # TODO: Error message format is different type than expected output (raise instead)
+        raise NoMealsLoggedError("No meals logged for today, please log your meals and try again.")
     
     sys_message = """
     Analyze the user's daily nutritional intake versus their targets and provide a detailed assessment. 
@@ -343,3 +343,10 @@ def inventory_from_image(image: Image.Image, additional_context: str = "") -> dm
         ell.system(system_message),
         ell.user([additional_context, image]),
     ]
+
+
+class NoMealsLoggedError(Exception):
+    """Exception raised for when no meals are logged for a day."""
+    def __init__(self, message="No meals logged for today, please log your meals and try again."):
+        self.message = message
+        super().__init__(self.message)

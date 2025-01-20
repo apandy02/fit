@@ -18,7 +18,7 @@ from fit.nutrition.targets import (calculate_macro_targets,
 from fit.trackers.base import FitnessTracker
 from fit.trackers.manager import tracker_factory
 from fit.utils.calendar import get_current_week_dates
-from fit.web.common import DB, active_tracker, micronutrient_goals
+from fit.web.common import DB, micronutrient_goals
 
 
 def get_daily_overview(session, date: str = None):
@@ -379,7 +379,7 @@ async def show_metric(plot_id: str, view_type: str):
 
 
 # TODO: the next two functions are doing a lot of the same work, find a way to refactor
-async def generate_weekly_overview():
+async def generate_weekly_overview(session):
     """
     Generate the weekly overview analysis by getting the user's meals for the week,
     their dietary restrictions, their calories burned for the week, and calculating their targets for the week.
@@ -387,9 +387,10 @@ async def generate_weekly_overview():
     """
     week = get_current_week_dates()
     meals = databases.get_weekly_meals(DB, week)
-    
+    print(f"session: {session}")
+    tracker = tracker_factory(session["tracker"], session["access_token"])
     dietary_restrictions = databases.get_dietary_restrictions(DB, "default")
-    calories_burned = [active_tracker.get_daily_calories_burned(day) for day in week]
+    calories_burned = [tracker.get_daily_calories_burned(day) for day in week]
     targets = [calculate_macro_targets(calories_burned, Goals.MAINTAIN) for calories_burned in calories_burned]
     [target.update(micronutrient_goals) for target in targets]
  
@@ -413,12 +414,13 @@ async def generate_weekly_overview():
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
     )
 
-async def generate_daily_overview(date: str | None = None):
+async def generate_daily_overview(session, date: str | None = None):
     """
     Generate the daily overview analysis by getting the user's meals for the day,
     their dietary restrictions, their calories burned for the day, and calculating their targets for the day.
     Then, passing these to the daily_io_analysis LMP.
     """
+    tracker = tracker_factory(session["tracker"], session["access_token"])
     if date is None:
         date_obj = datetime.today().date()
     else:
@@ -431,13 +433,13 @@ async def generate_daily_overview(date: str | None = None):
     
     dietary_restrictions = databases.get_dietary_restrictions(DB, "default")
 
-    calories_burned = active_tracker.get_daily_calories_burned(date_obj)
+    calories_burned = tracker.get_daily_calories_burned(date_obj)
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
-    analysis = assistants.daily_io_analysis(meals, targets, dietary_restrictions).content[0].parsed
-
-    if isinstance(analysis, str):
-        return fh.P(analysis, cls="text-primary-content mt-2")
+    try:
+        analysis = assistants.daily_io_analysis(meals, targets, dietary_restrictions).content[0].parsed
+    except assistants.NoMealsLoggedError as e:
+        return fh.P(str(e), cls="text-primary-content mt-2")
         
     return fh.Card(
         fh.Div(
@@ -463,12 +465,12 @@ async def nutrition_redirect(request: fh.Request):
     elif current_view == "weekly":
         return fh.Response(headers={"HX-Redirect": "/nutrition/weekly"}, status_code=200)
 
-async def get_nutrient_suggestions(nutrient: str):
+async def get_nutrient_suggestions(session, nutrient: str):
     """Generate meal suggestions based on a specific nutrient"""
     today = datetime.today().date()
     daily_nutrition = databases.get_daily_cumulative_nutrition(DB, today)
-    
-    calories_burned = active_tracker.get_daily_calories_burned(today)
+    tracker = tracker_factory(session["tracker"], session["access_token"])
+    calories_burned = tracker.get_daily_calories_burned(today)
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
     restrictions = databases.get_dietary_restrictions(DB, "default")

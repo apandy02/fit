@@ -5,7 +5,6 @@ import fh_bootstrap as fhb
 from markdown import markdown
 
 from fit.nutrition.targets import MICRO_GOALS
-from fit.trackers.manager import get_active_tracker
 from fit.web.databases import init_db
 
 DB_PATH = "data/nutrition.db"
@@ -30,7 +29,6 @@ ALL_METRICS = [
 
 
 DB = init_db(DB_PATH, ALL_METRICS, "default")
-active_tracker = get_active_tracker()
 micronutrient_goals = MICRO_GOALS["male"]
 
 
