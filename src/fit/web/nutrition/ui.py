@@ -5,8 +5,8 @@ import fasthtml.common as fh
 import fit.nutrition.assistants as assistants
 import fit.web.nutrition.food_plots as food_plots
 from fit.nutrition.data_models import MealBreakdown
-from fit.web.common import (DB, create_text_generation_card, create_text_form_input,
-                            create_time_filter)
+from fit.web.common import (DB, create_text_form_input,
+                            create_text_generation_card, create_time_filter)
 from fit.web.databases import get_daily_meals
 
 

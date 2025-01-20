@@ -1,4 +1,3 @@
-import datetime
 
 import fasthtml.common as fh
 import fh_bootstrap as fhb
