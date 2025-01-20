@@ -36,34 +36,38 @@ The application consists of several core modules:
 - Python 3.10 or higher
 - [UV](https://docs.astral.sh/uv/getting-started/installation/) for package management
 
-### Installation
+### Setup
 
-1. Clone the repository:
-```bash
-git clone git@github.com:aryamanpandya99/fit.git
-cd fit
-```
+1. Get OpenAI API access. Follow instructions [here](https://platform.openai.com/docs/quickstart)
 
-2. Create and activate virtual environment:
-```bash
-uv venv
-source .venv/bin/activate  # On Unix
-.venv\Scripts\activate     # On Windows
-```
+2. Install UV by following instructions [here](https://docs.astral.sh/uv/getting-started/installation/)
 
-3. Install dependencies:
-```bash
-uv pip install -e .
-```
+3. Clone the repository:
+   ```bash
+   git clone git@github.com:aryamanpandya99/fit.git
+   cd fit
+   ```
+
+4. Create and activate virtual environment:
+   ```bash
+   uv venv
+   source .venv/bin/activate  # On Unix
+   .venv\Scripts\activate     # On Windows
+   ```
+
+5. Install dependencies:
+   ```bash
+   uv pip install -e .
+   ```
 
 ### Running the Application
 
 Start the web interface:
 ```bash
-python -m fit.web.app
+uv run src/fit/web/app.py
 ```
 
-The application will be available at `http://localhost:8000`
+The application will be available at `http://localhost:5001`
 
 ### Testing
 
