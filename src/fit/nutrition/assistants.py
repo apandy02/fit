@@ -354,7 +354,6 @@ def inventory_from_image(image: Image.Image, additional_context: str = "") -> dm
     return [
         ell.system(system_message),
         ell.user([additional_context, image]),
-    ]
 
 @ell.complex(model=DEFAULT_LARGE_MODEL, max_tokens=2048, response_format=dm.GroceryList)
 def generate_grocery_list(
