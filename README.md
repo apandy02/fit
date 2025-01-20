@@ -2,6 +2,20 @@
 
 A comprehensive fitness assistant that combines LLM-powered nutrition analysis with fitness tracking. Leverage data from your fitness trackers along with LMP (language model programs) grounded in scientific literature to help you get (or stay) fit.
 
+## Table of Contents
+- [Overview](#overview)
+- [Technology Stack](#technology-stack)
+  - [Core](#core)
+  - [Frontend Plugins](#frontend-plugins)
+  - [Development](#development)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Setup](#setup)
+- [Running the Application](#running-the-application)
+- [Testing](#testing)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+
 ## Overview
 
 The application consists of several core modules:
