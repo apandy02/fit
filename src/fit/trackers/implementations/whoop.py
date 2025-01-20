@@ -32,10 +32,11 @@ class WhoopAppClient(WebApplicationClient):
     token_url = "https://api.prod.whoop.com/oauth/oauth2/token"
     info_url = "https://api.prod.whoop.com/developer/v1/user/profile/basic"
     
-    def __init__(self, client_id, code=None, scope=None, **kwargs):
+    def __init__(self, client_id, client_secret, code=None, scope=None, **kwargs):
         super().__init__(client_id, code=code, scope=scope, **kwargs)
         # Generate or store the PKCE code_verifier/challenge
         self.code_verifier, self.code_challenge = make_code_verifier_and_challenge()
+        self.client_secret = client_secret
     
     def login_link(self, redirect_uri, scope=None, state=None):
         """Create the WHOOP login link with PKCE parameters."""
@@ -64,15 +65,24 @@ class WhoopAppClient(WebApplicationClient):
 
     def fetch_access_token(self, code, redirect_uri):
         """Exchange the code for an access token, including the PKCE code_verifier."""
+        # Include client credentials in the form data (client_secret_post method)
         data = {
             "client_id": self.client_id,
+            "client_secret": self.client_secret,
             "grant_type": "authorization_code",
             "redirect_uri": redirect_uri,
             "code": code,
             "code_verifier": self.code_verifier,
         }
+        
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json"
+        }
 
-        r = httpx.post(self.token_url, data=data)
+        print(f"{data=}, {headers=}, {self.token_url=}")
+        r = httpx.post(self.token_url, data=data, headers=headers)
+        print(f"Response: {r.status_code} {r.text}")
         r.raise_for_status()
         self.parse_request_body_response(r.text)
         return self.token
@@ -151,6 +161,18 @@ class Whoop(FitnessTracker):
         )
         response.raise_for_status()
         return response.json()
+    
+    def get_cycle_for_day(self, day: datetime.date) -> dict[str, Any]:
+        """
+        Get the cycle for a given day.
+        
+        Args:
+            day (datetime.date): The date to get the cycle for.
+        
+        Returns:
+            dict[str, Any]: A dictionary of cycle data.
+        """
+        return self._max_overlap_cycle(day=day, cycles=self._get_cycles_for_day(day))
 
     def get_daily_resting_heart_rate(self, day: datetime.date) -> float:
         """Fetch the resting heart rate data for a specific day."""
