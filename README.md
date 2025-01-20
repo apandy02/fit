@@ -47,7 +47,6 @@ The application consists of several core modules:
 ## Getting Started
 
 ### Prerequisites
-- Python 3.10 or higher
 - [UV](https://docs.astral.sh/uv/getting-started/installation/) for package management
 
 ### Setup
