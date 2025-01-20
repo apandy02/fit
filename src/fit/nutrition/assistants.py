@@ -1,7 +1,7 @@
 import time
 from datetime import datetime
 from functools import wraps
-from typing import Type, List
+from typing import Type
 
 import ell
 from PIL import Image
@@ -77,7 +77,7 @@ def image_macros(image: Image.Image, additional_context: str) -> dm.MealBreakdow
         ell.user([additional_context, image]),
     ]
         
-@ell.complex(model=DEFAULT_MODEL, max_tokens=200)
+@ell.complex(model="gpt-4o-mini-2024-07-18", max_tokens=200)
 def summarize_user_preferences(meals: list[dm.MealBreakdown]) -> str:
     """Given a list of meals the user has eaten, analyze their dietary preferences and patterns.
     For example: "The user frequently eats Indian food, and seems to consume chicken as their 
@@ -347,6 +347,7 @@ def inventory_from_image(image: Image.Image, additional_context: str = "") -> dm
 @ell.complex(model=DEFAULT_MODEL, response_format=dm.MealTypeRecommendations)
 def generate_meal_type_recommendations(
     meal_type: dm.MealType,
+    user_preferences: str,
     user_performance: dm.UserPerformance,
     restrictions: list[str],
 ) -> dm.MealTypeRecommendations:
@@ -373,6 +374,8 @@ def generate_meal_type_recommendations(
     - Lunch meals should be balanced and moderate in size
     - Dinner meals can be more elaborate but not too heavy
     - Snacks should be light, nutritious, and easy to prepare
+    - The user's eating preferences. It is important to ensure that some of the meals recommended
+    are aligned with the user's preferences.
     
     Ensure meals help address nutritional deficiencies while avoiding excess in nutrients
     where the user is already meeting targets. All meals must strictly respect dietary restrictions.
@@ -387,6 +390,8 @@ def generate_meal_type_recommendations(
     {[f"{p.nutrient}: {p.performance_ratio:.2f}x target" for p in user_performance.nutrients]}
     
     Dietary Restrictions: {restrictions}
+
+    User's Preferences: {user_preferences}
     """
     
     return [
@@ -414,7 +419,7 @@ def get_grocery_recommendations(
     """
     system_message = """
     You are a meal planning and grocery expert. Your task is to create an optimized grocery list that:
-    1. Enables cooking a selection of the recommended meals
+    1. Enables cooking a selection of the recommended meals (does not need to be all of them)
     2. Takes into account current inventory to avoid buying what's already available
     3. Minimizes waste by identifying ingredients that can be used across multiple meals
     4. Provides enough food for the specified number of days
@@ -445,26 +450,3 @@ def get_grocery_recommendations(
         ell.system(system_message),
         ell.user(user_input)
     ]
-
-
-@ell.complex(model=DEFAULT_MODEL, response_format=List[str])
-def analyze_ingredient_overlap(meals: list[dm.MealRecommendation]) -> list[str]:
-    """Analyze a list of meals to find common ingredients that could be used efficiently across multiple recipes."""
-    system_message = """
-    Analyze the ingredients across all meals and identify ingredients that:
-    1. Appear in multiple recipes
-    2. Could be bought in bulk
-    3. Have good shelf life
-    4. Would be cost-effective to buy for multiple meals
-    """
-    
-    user_input = f"""
-    Meals and their ingredients:
-    {[(meal.title, meal.ingredients) for meal in meals]}
-    """
-    
-    return [
-        ell.system(system_message),
-        ell.user(user_input)
-    ]
-

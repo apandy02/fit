@@ -3,6 +3,7 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
+
 class MealType(Enum):
     """An enum that contains the different types of meals."""
     BREAKFAST = "breakfast"
@@ -134,11 +135,28 @@ class KitchenInventory(BaseModel):
     items: List[KitchenItem] = Field(description="the items in the kitchen inventory")
 
 
-class GroceryItem(BaseModel):
+class GroceryListItem(BaseModel):
     """A dataclass that contains the grocery item for a food."""
-    kitchen_item: KitchenItem = Field(description="the kitchen item to be purchased")
+    name: str = Field(description="the name of the kitchen item")
+    quantity: float = Field(description="the quantity of the kitchen item")
+    unit: str = Field(description="the unit of the quantity of the kitchen item")
+    category: str = Field(
+        description=f"the category of the kitchen item, choose from: {KITCHEN_ITEM_CATEGORIES}"
+    )
     value: str = Field(description="one sentence about why this item is good for the user")
 
 class GroceryList(BaseModel):
     """A dataclass that contains the grocery list for a food."""
-    items: List[GroceryItem] = Field(description="a list of 5 - 15 items on a grocery list recommended to a user")
+    items: List[GroceryListItem] = Field(description="a list of 5 - 15 items on a grocery list recommended to a user")
+
+class NutrientPerformance(BaseModel):
+    """A dataclass that contains the user's performance for a nutrient."""
+    nutrient: str = Field(description="name of the nutrient")
+    average_intake: float = Field(description="average daily intake")
+    target: float = Field(description="daily target")
+    performance_ratio: float = Field(description="ratio of intake to target")
+
+class UserPerformance(BaseModel):
+    """A dataclass that contains the user's overall nutritional performance."""
+    period_days: int = Field(description="number of days this performance data covers")
+    nutrients: List[NutrientPerformance] = Field(description="performance data for each tracked nutrient")
