@@ -4,6 +4,7 @@ import hashlib
 import json
 import logging
 import os
+import secrets
 from typing import Any
 
 import httpx
@@ -40,13 +41,16 @@ class WhoopAppClient(WebApplicationClient):
         """Create the WHOOP login link with PKCE parameters."""
         if scope is None: 
             scope = self.SCOPE
-        if state is None: 
-            state = self.state
+        if state is None:
+            # Generate a secure random state with at least 8 characters
+            state = secrets.token_urlsafe(16)
+            self.state = state
 
         # Build up the extra PKCE query params
         extra_params = {
             "code_challenge": self.code_challenge,
             "code_challenge_method": "S256",
+            "state": state
         }
 
         # Use the built-in method, but pass extra_auth_params for PKCE
@@ -54,7 +58,6 @@ class WhoopAppClient(WebApplicationClient):
             self.base_url,
             redirect_uri=redirect_uri,
             scope=scope,
-            state=state,
             **extra_params
         )
         return auth_url
