@@ -121,3 +121,15 @@ class KitchenItem(BaseModel):
 class KitchenInventory(BaseModel):
     """A dataclass that contains the kitchen inventory for a food."""
     items: List[KitchenItem] = Field(description="the items in the kitchen inventory")
+
+
+class GroceryItem(BaseModel):
+    """A dataclass that contains the grocery item for a food."""
+    name: str = Field(description="the name of the grocery item")
+    quantity: float = Field(description="the quantity of the grocery item")
+    unit: str = Field(description="the unit of the quantity of the grocery item")
+    value: str = Field(description="one sentence about why this item is good for the user")
+
+class GroceryList(BaseModel):
+    """A dataclass that contains the grocery list for a food."""
+    items: List[GroceryItem] = Field(description="a list of 5 - 15 items on a grocery list recommended to a user")
