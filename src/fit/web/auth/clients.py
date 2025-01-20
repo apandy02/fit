@@ -2,17 +2,29 @@ import json
 from pathlib import Path
 
 from fit.trackers.implementations.fitbit import FitbitAppClient
+from fit.trackers.implementations.whoop import WhoopAppClient
 
 fitbit_config_path = Path(__file__).parent / 'config' / 'fitbit_config.json'
 
 with open(fitbit_config_path, 'r') as f:
-    config = json.load(f)
+    fitbit_config = json.load(f)
 
 fitbit_client_oauth = FitbitAppClient(
-    client_id=config['web']['client_id'],
-    client_secret=config['web']['client_secret'],
+    client_id=fitbit_config['client_id'],
+    client_secret=fitbit_config['client_secret'],
     scope=["activity", "heartrate", "profile"], 
 )
 
-print(f"fitbit_client_oauth.__dir__(): {fitbit_client_oauth.__dir__()}")
-print(f"{fitbit_client_oauth.redirect_url=}")
+
+whoop_config_path = Path(__file__).parent / 'config' / 'whoop_config.json'
+
+with open(whoop_config_path, 'r') as f:
+    whoop_config = json.load(f)
+
+whoop_client_oauth = WhoopAppClient(
+    client_id=whoop_config['client_id'],
+    client_secret=whoop_config['client_secret'],
+    scope=["offline", "read:recovery", "read:cycles", "read:workout", "read:sleep", "read:profile"], 
+)
+
+print(f"{whoop_client_oauth.redirect_url=}")

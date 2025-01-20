@@ -1,0 +1,6 @@
+{
+    "client_id": "8cff9415-aa54-493d-a3d1-be2ba202f911",
+    "client_secret": "426c768f6a7642190503d85f55f15265376aa37b40522c23e6f6604373de37df",
+    "refresh_token_uri": "https://api.prod.whoop.com/oauth/oauth2/token",
+    "redirect_uri": "http://localhost:5001/auth_redirect/whoop"
+} 

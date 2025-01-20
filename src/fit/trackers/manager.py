@@ -11,9 +11,11 @@ SECRETS_PATH = "data/secrets.json" # TODO move to db
 CONFIG_PATH = "data/config.json"
 
 def tracker_factory(tracker_type: str, access_token: str) -> FitnessTracker:
+    """Create a tracker instance using an access token."""
     if tracker_type == "fitbit":
         return Fitbit(access_token)
-    # Add other tracker types here
+    elif tracker_type == "whoop":
+        return Whoop(access_token)
     raise ValueError(f"Invalid tracker type: {tracker_type}")
 
 def create_tracker(tracker_type: str, username: str, password: str) -> FitnessTracker:
@@ -30,14 +32,13 @@ def load_secrets() -> Dict[str, Any]:
             return json.load(f)
     return {}
 
-def save_secrets(tracker_type: str, username: str, password: str) -> None:
-    """Save tracker credentials to secrets file."""
+def save_token(tracker_type: str, access_token: str) -> None:
+    """Save OAuth2 access token to secrets file."""
     secrets = load_secrets()
     Path("data").mkdir(exist_ok=True)
     
     secrets[tracker_type] = {
-        "username": username,
-        "password": password
+        "access_token": access_token
     }
     
     with open(SECRETS_PATH, 'w') as f:
