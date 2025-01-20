@@ -10,49 +10,60 @@ from pydantic import BaseModel, ValidationError
 import fit.nutrition.data_models as dm
 
 STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
-DEFAULT_MODEL = "gpt-4o-2024-08-06"
+DEFAULT_LARGE_MODEL = "gpt-4o-2024-08-06"
+DEFAULT_SMALL_MODEL = "gpt-4o-mini-2024-07-18"
 
 
 def retry(
     model_class: Type[BaseModel],
     retries: int = 3,
-    delay: float = 1.0
+    delay: float = 0.5
 ):
     """
-    A decorator that retries the wrapped function up to 'retries' times
-    if Pydantic validation of the output fails against 'model_class'.
-
-    :param model_class: The Pydantic model class used to validate the function output.
-    :param retries: Maximum number of retries before giving up.
-    :param delay: Delay in seconds between retries.
+    A basic decorator that retries the function if Pydantic validation fails.
+    Must be applied AFTER the ell.simple or ell.complex decorator.
+    
+    :param model_class: The Pydantic model class used to validate the function output
+    :param retries: Maximum number of retries before giving up
+    :param delay: Delay in seconds between retries
     """
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             last_exception = None
+            if 'error_context' not in func.__code__.co_varnames:
+                raise TypeError(
+                    "In order to use the retry decorator, the function must have a placeholder for error context defined as error_context: str | None = None"
+                )
             for attempt in range(retries):
                 try:
-                    result = func(*args, **kwargs)
-                    model_class.model_validate(result)  # Validate the output
+                    result = func(*args, **kwargs, error_context=str(last_exception))
+                    if isinstance(result, tuple) and len(result) == 3:
+                        model_class.model_validate(result[0])
+                    else:
+                        model_class.model_validate(result)
                     return result
+                    
                 except ValidationError as validation_error:
                     last_exception = validation_error
-                    time.sleep(delay)
-            # If all retries failed, re-raise the last validation error
+                    if attempt < retries - 1:  # Don't sleep on the last attempt
+                        time.sleep(delay)
+            
             if last_exception is not None:
                 raise last_exception
+                
         return wrapper
-    return decorator 
+    return decorator
 
 
-@ell.complex(model=DEFAULT_MODEL, response_format=dm.MealBreakdown)
+@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.MealBreakdown)
 def natural_language_macros(food: str) -> dm.MealBreakdown:
     """given what the user ate, return the macro nutrients in grams.
     If the user query is not food, return 0 for all macros.
     """
     return food
 
-@ell.complex(model=DEFAULT_MODEL, response_format=dm.MealBreakdown)
+@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.MealBreakdown)
 def improve_breakdown(breakdown: dm.MealBreakdown, user_feedback: str) -> dm.MealBreakdown:
     """
     Given the user's feedback on your prediction of the breakdown of their meal,
@@ -64,7 +75,7 @@ def improve_breakdown(breakdown: dm.MealBreakdown, user_feedback: str) -> dm.Mea
     """
     return prompt
 
-@ell.complex(model=DEFAULT_MODEL, response_format=dm.MealBreakdown)
+@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.MealBreakdown)
 def image_macros(image: Image.Image, additional_context: str) -> dm.MealBreakdown:
     system_message = """
     given an image of what the user ate, return the macro nutrients in grams.
@@ -77,7 +88,7 @@ def image_macros(image: Image.Image, additional_context: str) -> dm.MealBreakdow
         ell.user([additional_context, image]),
     ]
         
-@ell.complex(model="gpt-4o-mini-2024-07-18", max_tokens=200)
+@ell.complex(model=DEFAULT_SMALL_MODEL, max_tokens=200)
 def summarize_user_preferences(meals: list[dm.MealBreakdown]) -> str:
     """Given a list of meals the user has eaten, analyze their dietary preferences and patterns.
     For example: "The user frequently eats Indian food, and seems to consume chicken as their 
@@ -91,7 +102,7 @@ def summarize_user_preferences(meals: list[dm.MealBreakdown]) -> str:
     prompt = f"Here are the meals I have eaten: {meals}"
     return prompt
 
-@ell.complex(model=DEFAULT_MODEL, response_format=dm.Recommendations)
+@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.Recommendations)
 def make_recommendations(
         consumption: dm.NutritionalInformation,
         targets: dict[str, float],
@@ -164,22 +175,22 @@ def daily_io_analysis(meals: list[dm.MealBreakdown], target: dict[str, float], r
     meals_str, targets_str = summarize_daily_meals_and_targets(meals, target)
     restrictions_str = f"The user's dietary restrictions are: {restrictions}"
     user_data = meals_str_prefix + meals_str + targets_str_prefix + targets_str + restrictions_str
-    if DEFAULT_MODEL in STRUCTURED_MODELS:
+    if DEFAULT_LARGE_MODEL in STRUCTURED_MODELS:
         return _daily_io_analysis_pydantic(sys_message, user_data)
     else:
         return dm.NutritionFeedback.model_validate_json(
             _daily_io_analysis_simple(sys_message, user_data)
         )
     
-@ell.simple(model=DEFAULT_MODEL, max_tokens=2048)
-def _daily_io_analysis_simple(sys_message: str, user_data: str) -> str:
+@ell.simple(model=DEFAULT_LARGE_MODEL, max_tokens=2048)
+def _daily_io_analysis_simple(sys_message: str, user_data: str, error_context: str | None = None) -> str:
     sys_message += f"You must absolutely respond in this format as a json string with no exceptions: {dm.NutritionFeedback.model_json_schema()}"
     return [
         ell.system(sys_message),
         ell.user(user_data)
     ]
 
-@ell.complex(model=DEFAULT_MODEL, response_format=dm.NutritionFeedback, max_tokens=2048)
+@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.NutritionFeedback, max_tokens=2048)
 def _daily_io_analysis_pydantic(sys_message: str, user_data: str) -> dm.NutritionFeedback:
     return [
         ell.system(sys_message),
@@ -187,7 +198,7 @@ def _daily_io_analysis_pydantic(sys_message: str, user_data: str) -> dm.Nutritio
     ]
 
 @retry(dm.NutritionFeedback)
-@ell.simple(model=DEFAULT_MODEL, max_tokens=2048)
+@ell.simple(model=DEFAULT_LARGE_MODEL, max_tokens=2048)
 def daily_io_analysis_simple(sys_message: str, user_data: str) -> str:
     sys_message += f"You must absolutely respond in this format as a json string with no exceptions: {dm.NutritionFeedback.model_json_schema()}"
     return [
@@ -240,7 +251,7 @@ def weekly_io_analysis(
         user_data += day_meals_prefix + day_meals_str + day_targets_prefix + day_targets_str
     
     user_data += f"The user's dietary restrictions are: {restrictions}"
-    if DEFAULT_MODEL in STRUCTURED_MODELS:
+    if DEFAULT_LARGE_MODEL in STRUCTURED_MODELS:
         analysis = _weekly_io_analysis_pydantic(
             sys_message, user_data
         )
@@ -250,7 +261,7 @@ def weekly_io_analysis(
     
     return analysis
 
-@ell.complex(model=DEFAULT_MODEL, response_format=dm.NutritionFeedback)
+@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.NutritionFeedback)
 def _weekly_io_analysis_pydantic(
         sys_message: str,
         user_data: str
@@ -260,7 +271,7 @@ def _weekly_io_analysis_pydantic(
         ell.user(user_data)
     ]
     
-@ell.simple(model=DEFAULT_MODEL, max_tokens=2048)
+@ell.simple(model=DEFAULT_LARGE_MODEL, max_tokens=2048)
 def _weekly_io_analysis_simple(
         sys_message: str,
         user_data: str
@@ -326,14 +337,14 @@ def nutrient_analysis(
     return f"{prefix} {analysis}"
 
 
-@ell.complex(model=DEFAULT_MODEL, response_format=dm.KitchenInventory)
+@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.KitchenInventory)
 def decipher_inventory(inventory_str: str) -> dm.KitchenInventory:
     """The user is going to, in natural language, describe their kitchen inventory.
     You are going to take this description and return a list of the items in the inventory.
     """
     return inventory_str
 
-@ell.complex(model=DEFAULT_MODEL, response_format=dm.KitchenInventory)
+@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.KitchenInventory)
 def inventory_from_image(image: Image.Image, additional_context: str = "") -> dm.KitchenInventory:
     system_message = """
     given an image of what the user's kitchen looks like, return a list of the items in the kitchen.
@@ -344,109 +355,40 @@ def inventory_from_image(image: Image.Image, additional_context: str = "") -> dm
         ell.user([additional_context, image]),
     ]
 
-@ell.complex(model=DEFAULT_MODEL, response_format=dm.MealTypeRecommendations)
-def generate_meal_type_recommendations(
-    meal_type: dm.MealType,
+@ell.complex(model=DEFAULT_LARGE_MODEL, max_tokens=2048, response_format=dm.GroceryList)
+def generate_grocery_list(
     user_preferences: str,
-    user_performance: dm.UserPerformance,
-    restrictions: list[str],
-) -> dm.MealTypeRecommendations:
-    """Generate meal recommendations for a specific meal type based on user's nutritional performance.
-    
-    This function takes into account:
-    1. The specific meal type (breakfast, lunch, dinner, snack)
-    2. User's nutritional performance over time
-    3. Dietary restrictions
-    
-    It generates meals that:
-    1. Are appropriate for the meal type
-    2. Help address nutritional deficiencies shown in performance data
-    3. Avoid excess in nutrients where user is already meeting/exceeding targets
-    4. Respect dietary restrictions
-    5. Vary in difficulty and prep time
-    """
-    system_message = """
-    You are a meal planning expert. Your task is to recommend 5 meals for a specific meal type
-    that help optimize the user's nutrition based on their performance data.
-    
-    Consider the following:
-    - Breakfast meals should be relatively quick to prepare and energizing
-    - Lunch meals should be balanced and moderate in size
-    - Dinner meals can be more elaborate but not too heavy
-    - Snacks should be light, nutritious, and easy to prepare
-    - The user's eating preferences. It is important to ensure that some of the meals recommended
-    are aligned with the user's preferences.
-    
-    Ensure meals help address nutritional deficiencies while avoiding excess in nutrients
-    where the user is already meeting targets. All meals must strictly respect dietary restrictions.
-    """
-    
-    user_input = f"""
-    Meal Type: {meal_type.value}
-    
-    User's Nutritional Performance:
-    Period: {user_performance.period_days} days
-    Performance by nutrient:
-    {[f"{p.nutrient}: {p.performance_ratio:.2f}x target" for p in user_performance.nutrients]}
-    
-    Dietary Restrictions: {restrictions}
-
-    User's Preferences: {user_preferences}
-    """
-    
-    return [
-        ell.system(system_message),
-        ell.user(user_input)
-    ]
-
-
-@ell.complex(model=DEFAULT_MODEL, response_format=dm.GroceryList)
-def get_grocery_recommendations(
-    meal_recommendations: list[dm.MealTypeRecommendations],
-    inventory: dm.KitchenInventory,
-    target_days: int = 10,
+    user_performance: str,
+    current_inventory: dm.KitchenInventory,
 ) -> dm.GroceryList:
-    """Generate a grocery list based on meal recommendations and current inventory.
-    
-    This function:
-    1. Analyzes all meal recommendations across types
-    2. Checks current inventory
-    3. Creates an optimized grocery list that:
-       - Enables cooking a good selection of recommended meals
-       - Minimizes waste by considering ingredient overlap
-       - Takes into account current inventory
-       - Provides enough food for the target number of days
+    """You are a meal planning and nutrition expert. Your task is to create a comprehensive weekly grocery list
+    that optimizes the user's nutrition while respecting their preferences and current habits.
+
+    Consider the following when planning meals across different types:
+    - Breakfast: Quick to prepare, energizing meals to start the day
+    - Lunch: Balanced, moderate portions suitable for midday
+    - Dinner: Can be more elaborate but should remain digestible
+    - Snacks: Light, nutritious, and convenient options
+
+    The grocery list should:
+    1. Enable preparation of meals that:
+       - Help address nutritional deficiencies shown in performance data
+       - Avoid excess in nutrients where targets are already met
+       - Gradually introduce healthier alternatives while staying familiar
+       - Are appropriate for their respective meal types
+
+    2. Be practical and efficient by:
+       - Taking into account ingredients already available in the kitchen
+       - Only including items not present in current inventory
+       - Identifying ingredients used across multiple meals
+       - Prioritizing items with good shelf life
+       - Including reasonable quantities for a week
+       - Organizing items by category
+
+    3. Consider the user's relationship with food by:
+       - Making incremental rather than dramatic changes
+       - Maintaining some familiar comfort foods
+       - Introducing new healthy items gradually
+       - Ensuring the shopping list feels achievable
     """
-    system_message = """
-    You are a meal planning and grocery expert. Your task is to create an optimized grocery list that:
-    1. Enables cooking a selection of the recommended meals (does not need to be all of them)
-    2. Takes into account current inventory to avoid buying what's already available
-    3. Minimizes waste by identifying ingredients that can be used across multiple meals
-    4. Provides enough food for the specified number of days
-    5. Is organized by category and includes quantity estimates
-    6. Includes cost estimates for budgeting
-    
-    The list should be practical and efficient, focusing on ingredients that:
-    - Are essential for multiple recipes
-    - Have good shelf life
-    - Provide good value for money
-    - Enable cooking a variety of the recommended meals
-    """
-    
-    user_input = f"""
-    Target Days of Meals: {target_days}
-    
-    Current Kitchen Inventory:
-    {inventory.items}
-    
-    Available Meal Recommendations:
-    {[f"{rec.meal_type.value}: {[meal.title for meal in rec.meals]}" for rec in meal_recommendations]}
-    
-    For each meal, detailed ingredients are:
-    {[f"{meal.title}: {meal.ingredients}" for rec in meal_recommendations for meal in rec.meals]}
-    """
-    
-    return [
-        ell.system(system_message),
-        ell.user(user_input)
-    ]
+    return f"user_preferences: {user_preferences}\nuser_performance: {user_performance}\ncurrent_inventory: {current_inventory}"
