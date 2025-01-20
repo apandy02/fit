@@ -144,7 +144,7 @@ def daily_io_analysis(meals: list[dm.MealBreakdown], target: dict[str, float], r
         target: The user's target for the day.
     """
     if len(meals) == 0:
-        return "No meals logged for today, please log your meals and try again." # TODO: Error message format is different type than expected output (raise instead)
+        raise NoMealsLoggedError("No meals logged for today, please log your meals and try again.")
     
     sys_message = """
     Analyze the user's daily nutritional intake versus their targets and provide a detailed assessment. 
