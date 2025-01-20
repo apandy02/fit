@@ -234,6 +234,14 @@ class Whoop(FitnessTracker):
         recovery_dict = self.get_recovery(cycle_id)
         return float(recovery_dict["score"].get("hrv_rmssd", 0))
 
+    def get_daily_recovery(self, day: datetime.date) -> float:
+        """Fetch recovery data for a specific day."""
+        cycle_dict = self._max_overlap_cycle(day=day, cycles=self._get_cycles_for_day(day))
+        if cycle_dict is None:
+            return 0.0
+        cycle_id = cycle_dict["id"]
+        return self.get_recovery(cycle_id)
+
     def get_recovery(self, cycle_id: str) -> dict[str, Any]:
         """Get recovery data for a specific cycle."""
         return self._make_request(
@@ -346,6 +354,7 @@ class Whoop(FitnessTracker):
                     cycle_dict = cycle
         
         return cycle_dict
+
 
     def adjust_datetime_by_offset(self, dt: datetime.datetime, offset_str: str) -> datetime.datetime:
         """Adjusts a datetime object by a timezone offset string (e.g., '-5:00')."""

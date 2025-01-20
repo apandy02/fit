@@ -102,12 +102,14 @@ def get_rest_info(tracker: FitnessTracker):
     if isinstance(tracker, Whoop):
         recovery = tracker.get_daily_recovery(today)
         if recovery is not None and len(recovery) > 0:
-            recovery_scores = recovery[0]["score"]
-            recovery_score = recovery_scores["score"]
-            resting_hr = recovery_scores["resting_hr"]
-            hrv = recovery_scores["hrv"]
+            scores = recovery["score"]
+            recovery_score = scores["recovery_score"]
+            resting_hr = scores["resting_heart_rate"]
+            hrv = scores["hrv_rmssd_milli"]
         else:
-            recovery_scores = None
+            recovery_score = None
+            resting_hr = None
+            hrv = None
         sleep = tracker.get_daily_sleep(today)
     else:
         resting_hr = tracker.get_daily_resting_heart_rate(today) #TODO: same as performance, make this code better at being device invariant
