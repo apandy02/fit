@@ -84,6 +84,7 @@ app.post("/decipher_text_inventory_addition")(kitchen.add_inventory_from_text)
 app.post("/save_inventory")(kitchen.save_inventory)
 app.get("/get_inventory")(kitchen.get_inventory)
 app.route("/delete_inventory_item/{rowid:int}", methods=["POST"])(kitchen.delete_inventory_item)
+app.post("/generate_inventory_additions")(kitchen.generate_inventory_additions)
 # Progress routes
 app.get("/progress")(progress.get)
 app.post("/update_measurements")(progress.update_measurements)

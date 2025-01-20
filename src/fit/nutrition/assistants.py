@@ -354,15 +354,18 @@ def inventory_from_image(image: Image.Image, additional_context: str = "") -> dm
     return [
         ell.system(system_message),
         ell.user([additional_context, image]),
+    ]
 
 @ell.complex(model=DEFAULT_LARGE_MODEL, max_tokens=2048, response_format=dm.GroceryList)
 def generate_grocery_list(
     user_preferences: str,
-    user_performance: str,
     current_inventory: dm.KitchenInventory,
+    dietary_restrictions: list[str]
 ) -> dm.GroceryList:
     """You are a meal planning and nutrition expert. Your task is to create a comprehensive weekly grocery list
     that optimizes the user's nutrition while respecting their preferences and current habits.
+
+    You absolutely must not violate the user's dietary restrictions. This is a health and safety issue.
 
     Consider the following when planning meals across different types:
     - Breakfast: Quick to prepare, energizing meals to start the day
@@ -372,8 +375,6 @@ def generate_grocery_list(
 
     The grocery list should:
     1. Enable preparation of meals that:
-       - Help address nutritional deficiencies shown in performance data
-       - Avoid excess in nutrients where targets are already met
        - Gradually introduce healthier alternatives while staying familiar
        - Are appropriate for their respective meal types
 
@@ -391,4 +392,4 @@ def generate_grocery_list(
        - Introducing new healthy items gradually
        - Ensuring the shopping list feels achievable
     """
-    return f"user_preferences: {user_preferences}\nuser_performance: {user_performance}\ncurrent_inventory: {current_inventory}"
+    return f"user_preferences: {user_preferences}\ncurrent_inventory: {current_inventory}\ndietary_restrictions: {dietary_restrictions}"

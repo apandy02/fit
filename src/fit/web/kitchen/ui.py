@@ -1,7 +1,7 @@
 import fasthtml.common as fh
 
 from fit.nutrition.data_models import KitchenInventory, KitchenItem
-from fit.web.common import create_text_form_input
+from fit.web.common import create_text_form_input, create_text_generation_card
 from fit.web.kitchen.constants import INVENTORY_CATEGORIES, INVENTORY_UNITS
 
 
@@ -10,6 +10,7 @@ def kitchen_page_content(inventory: dict):
     content = fh.Article(
         fh.Div(
             fh.H2("My Kitchen", cls="text-3xl font-bold text-primary-content mb-8 text-center"),
+            create_text_generation_card("/generate_inventory_additions", "Grocery Recommendations"),
             create_kitchen_sections(inventory),
             create_add_items_modal(),
             create_fab(),
