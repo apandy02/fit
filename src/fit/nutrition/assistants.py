@@ -5,8 +5,50 @@ from PIL import Image
 
 import fit.nutrition.data_models as dm
 
+
+from functools import wraps
+import time
+from typing import Type
+from pydantic import BaseModel, ValidationError
+
 STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
 DEFAULT_MODEL = "gpt-4o-2024-08-06"
+
+
+def retry(
+    model_class: Type[BaseModel],
+    retries: int = 3,
+    delay: float = 1.0
+):
+    """
+    A decorator that retries the wrapped function up to 'retries' times
+    if Pydantic validation of the output fails against 'model_class'.
+
+    :param model_class: The Pydantic model class used to validate the function output.
+    :param retries: Maximum number of retries before giving up.
+    :param delay: Delay in seconds between retries.
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            last_exception = None
+            for attempt in range(retries):
+                try:
+                    result = func(*args, **kwargs)
+                    model_class.model_validate(result)  # Validate the output
+                    return result
+                except ValidationError as validation_error:
+                    last_exception = validation_error
+                    time.sleep(delay)
+            # If all retries failed, re-raise the last validation error
+            if last_exception is not None:
+                raise last_exception
+        return wrapper
+    return decorator 
+
+
+def natural_language_macros(food: str):
+
 
 @ell.complex(model=DEFAULT_MODEL, response_format=dm.MealBreakdown)
 def natural_language_macros(food: str) -> dm.MealBreakdown:
@@ -141,8 +183,9 @@ def _daily_io_analysis_pydantic(sys_message: str, user_data: str) -> dm.Nutritio
         ell.user(user_data)
     ]
 
+@retry(dm.NutritionFeedback)
 @ell.simple(model=DEFAULT_MODEL, max_tokens=2048)
-def _daily_io_analysis_simple(sys_message: str, user_data: str) -> str:
+def daily_io_analysis_simple(sys_message: str, user_data: str) -> str:
     sys_message += f"You must absolutely respond in this format as a json string with no exceptions: {dm.NutritionFeedback.model_json_schema()}"
     return [
         ell.system(sys_message),
