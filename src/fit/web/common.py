@@ -1,10 +1,8 @@
-
 import fasthtml.common as fh
 import fh_bootstrap as fhb
-from markdown import markdown
-
 from fit.nutrition.targets import MICRO_GOALS
 from fit.web.databases import init_db
+from markdown import markdown
 
 DB_PATH = "data/nutrition.db"
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
@@ -48,12 +46,13 @@ def create_fab_menu(buttons):
                         cls="btn btn-primary btn-circle shadow-lg ml-3",
                         onclick=onclick
                     ),
-                    cls="flex items-center justify-end mb-2 opacity-0 transition-all duration-200 translate-y-[30px]",
-                    id=f"{label.lower()}-button"
+                    cls="flex items-center justify-end mb-2",
+                    id=f"{label.lower()}-button",
+                    _hidden=True
                 )
                 for label, emoji, onclick in buttons
             ],
-            cls="absolute bottom-16 right-0 transition-all duration-200"
+            cls="absolute bottom-16 right-0"
         ),
         # Main FAB
         fh.Button(
@@ -72,10 +71,10 @@ def create_fab_animation_script(button_ids):
         button_animations.append(f"""
             const {btn_id}Btn = document.getElementById('{btn_id}-button');
             if (this.classList.contains('btn-active')) {{
-                {btn_id}Btn.style.opacity = '1';
+                {btn_id}Btn.hidden = false;
                 {btn_id}Btn.style.transform = 'translate(0, -{offset}px)';
             }} else {{
-                {btn_id}Btn.style.opacity = '0';
+                {btn_id}Btn.hidden = true;
                 {btn_id}Btn.style.transform = 'translate(0, 15px)';
             }}
         """)
