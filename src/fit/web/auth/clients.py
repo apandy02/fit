@@ -26,5 +26,3 @@ whoop_client_oauth = WhoopAppClient(
     client_secret=whoop_config['client_secret'],
     scope=["offline", "read:recovery", "read:cycles", "read:workout", "read:sleep", "read:profile"], 
 )
-
-print(f"{whoop_client_oauth.redirect_url=}")

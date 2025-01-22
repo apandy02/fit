@@ -118,10 +118,7 @@ def login(req):
     whoop_redir = redir_url(req, f"{auth_callback_path}/whoop")
     fitbit_login_link = fitbit_client.login_link(fitbit_redir, scope=fitbit_scope)
     whoop_login_link = whoop_client.login_link(whoop_redir, scope=whoop_scope)
-    print(f"{whoop_login_link=}")
     return get_login_page(req, fitbit_login_link=fitbit_login_link, whoop_login_link=whoop_login_link)
-
-
 
 @app.get(fitbit_auth_callback_path)
 def fitbit_auth_redirect(code:str, request, session):
@@ -133,14 +130,9 @@ def fitbit_auth_redirect(code:str, request, session):
     session["tracker"] = "fitbit"
     return RedirectResponse('/nutrition', status_code=303)
 
-    # user_info = fitbit_client.get_info(access_token)
-    # print(f"user_info: {user_info}")
-
-
 @app.get(whoop_auth_callback_path)
 def whoop_auth_redirect(code:str, request, session):
     redir = redir_url(request, whoop_auth_callback_path)
-    print(f"{redir=}")
     access_token_dict = whoop_client.fetch_access_token(code, redir)
     session['access_token'] = access_token_dict['access_token']
     session['access_token_expiry'] = access_token_dict['expires_at']
@@ -148,7 +140,6 @@ def whoop_auth_redirect(code:str, request, session):
     session["tracker"] = "whoop"
     return RedirectResponse('/nutrition', status_code=303)
 
-print(f"whoop_client redirect_url: {whoop_client.redirect_url}")
 
 fh.serve() 
 

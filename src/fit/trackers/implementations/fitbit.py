@@ -37,9 +37,6 @@ class FitbitAppClient(WebApplicationClient):
         if state is None: 
             state = self.state
 
-        # Build up the extra PKCE query params
-        print(f"code_verifier: {self.code_verifier}")
-        print(f"code_challenge: {self.code_challenge}")
         extra_params = {
             "code": self.code_challenge,
             "code_challenge_method": "S256"

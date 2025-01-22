@@ -23,7 +23,6 @@ from fit.web.common import DB, micronutrient_goals
 
 def get_daily_overview(session, date: str = None):
     """Return the nutritional overview page content"""
-    print(f"session: {session}")
     tracker = tracker_factory(session["tracker"], session["access_token"])
     if date is None:
         date = datetime.today().date()
@@ -224,9 +223,7 @@ async def save_meal(request: fh.Request, date: str | None = None):
             micronutrients=micronutrients,
             conditional_nutrients=conditional_nutrients
         )    
-        print(f"Inserting meal: {form['title']} at {meal_time} on {date}")
         databases.insert_meal(DB, form["title"], nutrition_info, date, meal_time)
-        print("Meal inserted successfully")
         return fh.Response(headers={"HX-Redirect": "/nutrition"}, status_code=200)
     
     except Exception as e:
@@ -387,7 +384,6 @@ async def generate_weekly_overview(session):
     """
     week = get_current_week_dates()
     meals = databases.get_weekly_meals(DB, week)
-    print(f"session: {session}")
     tracker = tracker_factory(session["tracker"], session["access_token"])
     dietary_restrictions = databases.get_dietary_restrictions(DB, "default")
     calories_burned = [tracker.get_daily_calories_burned(day) for day in week]
