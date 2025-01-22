@@ -23,7 +23,6 @@ def kitchen_page_content(inventory: dict):
 
 def create_kitchen_sections(inventory: dict):
     """Create all kitchen inventory sections"""
-    print(f"{inventory=}")
     sections = [
         ("Produce", inventory.get("Produce", [])),
         ("Meats & Fish", inventory.get("Meats & Fish", [])),
@@ -71,7 +70,6 @@ def create_expandable_section(title: str, items: list):
 def create_item_card(item: tuple):
     """Create a card for an item"""
     item['title'] = item['title'].capitalize()
-    print(item)
     return fh.Card(
         fh.Button(
             "×",

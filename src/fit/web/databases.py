@@ -568,7 +568,6 @@ def get_inventory(database: fh.Database) -> list[tuple[str, float, str, str]]:
     }
 
     for row in result:
-        print(f"{row=}")
         results[row[4]].append({
             "rowid": row[0],
             "title": row[1],

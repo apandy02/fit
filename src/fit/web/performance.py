@@ -54,7 +54,6 @@ def performance_card(title: str, value: str):
 def get_performance_metrics_section(tracker: FitnessTracker):
     """Return the performance tracking card content"""
     daily_stats, workouts = get_performance_info(tracker)
-    print(f"daily_stats: {daily_stats}")
     return fh.Div(
         # Cycle Metrics Grid
         fh.Div(

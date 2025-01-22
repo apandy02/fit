@@ -12,7 +12,6 @@ from fit.nutrition import assistants as assistants
 def get():
     """Return the kitchen inventory page content"""
     inventory = get_inventory()
-    print(inventory)
     content = ui.kitchen_page_content(inventory)
     return common.page_outline(1, "Kitchen Inventory", True, True, content) 
 

@@ -1,3 +1,4 @@
+import json
 import time
 from datetime import datetime
 from functools import wraps
@@ -32,22 +33,14 @@ def retry(
         @wraps(func)
         def wrapper(*args, **kwargs):
             last_exception = None
-            if 'error_context' not in func.__code__.co_varnames:
-                raise TypeError(
-                    "In order to use the retry decorator, the function must have a placeholder for error context defined as error_context: str | None = None"
-                )
             for attempt in range(retries):
                 try:
                     result = func(*args, **kwargs, error_context=str(last_exception))
-                    if isinstance(result, tuple) and len(result) == 3:
-                        model_class.model_validate(result[0])
-                    else:
-                        model_class.model_validate(result)
+                    model_class.model_validate(json.loads(result)) 
                     return result
-                    
                 except ValidationError as validation_error:
                     last_exception = validation_error
-                    if attempt < retries - 1:  # Don't sleep on the last attempt
+                    if attempt < retries - 1:
                         time.sleep(delay)
             
             if last_exception is not None:

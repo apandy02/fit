@@ -80,9 +80,7 @@ class WhoopAppClient(WebApplicationClient):
             "Accept": "application/json"
         }
 
-        print(f"{data=}, {headers=}, {self.token_url=}")
         r = httpx.post(self.token_url, data=data, headers=headers)
-        print(f"Response: {r.status_code} {r.text}")
         r.raise_for_status()
         self.parse_request_body_response(r.text)
         return self.token
