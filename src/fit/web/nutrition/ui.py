@@ -248,8 +248,7 @@ def create_image_upload_form():
                     "Upload & Analyze",
                     type="submit",
                     cls="btn btn-primary"
-                ),
-                fh.Div(id="image-result", cls="mt-4")
+                )
             ),
             cls="p-6"
         ),
@@ -994,5 +993,5 @@ def feedback_form(meal_description: str, meal_time, nutrition_info: MealBreakdow
             create_meal_breakdown(nutrition_info, meal_time=meal_time, date=date),
             cls="space-y-4 w-[90%] mx-auto"
         ),
-        id="text-input"
+        id="text-input" if meal_description != "" else "image-input"  # Use image-input ID if description is empty (image case)
     )
