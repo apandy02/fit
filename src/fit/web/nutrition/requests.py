@@ -165,7 +165,7 @@ async def analyze_text(request: fh.Request, date: str | None = None):
     form = await request.form()
     meal_description = form["meal_description"]
     meal_time = form["meal_time"]
-    nutrition_info = assistants.natural_language_macros(meal_description).content[0].parsed
+    nutrition_info = assistants.natural_language_nutritional_breakdown(meal_description).content[0].parsed
     meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
     
     return ui.feedback_form(meal_description, meal_time_obj, nutrition_info, date)
@@ -175,7 +175,7 @@ async def analyze_image(food_image: fh.UploadFile, additional_context: str, meal
     
     contents = await food_image.read()
     image = Image.open(io.BytesIO(contents))
-    nutrition_info = assistants.image_macros(image, additional_context).content[0].parsed
+    nutrition_info = assistants.vision_nutritional_breakdown(image, additional_context).content[0].parsed
     meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
 
     return ui.feedback_form(additional_context, meal_time_obj, nutrition_info, date)
@@ -344,7 +344,7 @@ async def reset_text_form():
 
 async def regenerate_analysis(feedback: str, original_description: str):
     """Regenerate analysis based on feedback"""
-    original_info = assistants.natural_language_macros(original_description).content[0].parsed #TODO: why are we re-running this?
+    original_info = assistants.natural_language_nutritional_breakdown(original_description).content[0].parsed #TODO: why are we re-running this?
     improved_info = assistants.improve_breakdown(original_info, feedback).content[0].parsed # todo: maybe the parsing should be done in the assistant
     
     # Create ISO format datetime for meal time

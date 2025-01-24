@@ -6,7 +6,7 @@ import ell
 from pydantic import BaseModel, Field
 
 from fit.nutrition.assistants import (make_recommendations,
-                                      natural_language_macros)
+                                      natural_language_nutritional_breakdown)
 from fit.nutrition.data_models import (MealRecommendation,
                                        NutritionalInformation)
 
@@ -53,7 +53,7 @@ def calculate_recommendation_averages(output: MealRecommendation) -> Tuple[Dict[
     
     for meal in output.content[0].parsed.meals:
         meal_desc = f"{meal.title}: {meal.ingredients}"
-        meal_breakdown = natural_language_macros(meal_desc).content[0].parsed
+        meal_breakdown = natural_language_nutritional_breakdown(meal_desc).content[0].parsed
         recommendation_info[meal_breakdown.title] = {}
         recommendation_averages['calories'] += meal_breakdown.calories
         

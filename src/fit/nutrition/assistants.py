@@ -51,7 +51,7 @@ def retry(
 
 
 @ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.MealBreakdown)
-def natural_language_macros(food: str) -> dm.MealBreakdown:
+def natural_language_nutritional_breakdown(food: str) -> dm.MealBreakdown:
     """given what the user ate, return the macro nutrients in grams.
     If the user query is not food, return 0 for all macros.
     """
@@ -70,7 +70,7 @@ def improve_breakdown(breakdown: dm.MealBreakdown, user_feedback: str) -> dm.Mea
     return prompt
 
 @ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.MealBreakdown)
-def image_macros(image: Image.Image, additional_context: str) -> dm.MealBreakdown:
+def vision_nutritional_breakdown(image: Image.Image, additional_context: str) -> dm.MealBreakdown:
     system_message = """
     given an image of what the user ate, return the macro nutrients in grams.
     If the image is not food, return 0 for all macros. The user may or may not
