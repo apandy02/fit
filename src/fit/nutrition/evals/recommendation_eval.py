@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from typing import Any, Dict, Tuple
 
@@ -165,5 +166,7 @@ if __name__ == "__main__":
     )
 
     result = eval.run(make_recommendations)
-    print("Average recommendation score:", result.results.metrics["recommendation_score"].mean())
-    print("Average semantic similarity score:", result.results.metrics["semantic_similarity_score"].mean())
+
+    logging.info("Average target nutrient accuracy:", result.results.metrics["target_nutrient_accuracy"].mean())
+    logging.info("Average non-target nutrient accuracy:", result.results.metrics["non_target_nutrient_accuracy"].mean())
+    logging.info("Average semantic similarity score:", result.results.metrics["semantic_similarity_score"].mean())
