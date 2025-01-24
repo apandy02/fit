@@ -38,7 +38,7 @@ class FitbitAppClient(WebApplicationClient):
             state = self.state
 
         extra_params = {
-            "code": self.code_challenge,
+            "code_challenge": self.code_challenge,
             "code_challenge_method": "S256"
         }
 
@@ -67,7 +67,7 @@ class FitbitAppClient(WebApplicationClient):
         # If your Fitbit app is registered as a confidential client,
         # you may also have a client_secret – then you'd pass it here:
         #     data["client_secret"] = self.client_secret
-
+        print(f"data: {data}")
         r = httpx.post(self.token_url, data=data)
         r.raise_for_status()
         self.parse_request_body_response(r.text)
@@ -83,7 +83,7 @@ class FitbitAppClient(WebApplicationClient):
         }
         # If your Fitbit app is a confidential client, include client_secret:
         # 
-
+        print(f"data: {data}")
         r = httpx.post(self.token_url, data=data)
         r.raise_for_status()
         self.parse_request_body_response(r.text)
