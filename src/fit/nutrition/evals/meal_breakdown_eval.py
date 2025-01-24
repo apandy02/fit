@@ -1,19 +1,15 @@
-import json
-import os
-from typing import Any, Dict, Tuple
-
 import ell
+import numpy as np
 from pydantic import BaseModel, Field
 
-from fit.nutrition.assistants import (natural_language_nutritional_breakdown)
-from fit.nutrition.data_models import (MealRecommendation,
-                                       NutritionalInformation)
+from fit.nutrition.assistants import natural_language_nutritional_breakdown
+from fit.nutrition.data_models import MealBreakdown
 
-ell.init(store="./logdir") 
+ell.init(store="./logdir")
 
 MACRONUTRIENTS = ["protein", "carbohydrates", "fat"]
 MICRONUTRIENTS = ["vitamin_a", "vitamin_c", "vitamin_d", "calcium", "iron", "potassium", "sodium"]
-DEFAULT_MODEL = "gpt-4o-mini-2024-07-18" # TODO: change to a cheaper model 
+DEFAULT_MODEL = "gpt-4o-mini-2024-07-18"
 
 class MealSemanticSimilarity(BaseModel):
     """A dataclass that contains the semantic similarity for a meal."""
@@ -21,12 +17,56 @@ class MealSemanticSimilarity(BaseModel):
 
 def prepare_eval_data():
     """
-    Define what the data 
-    
+    Define the data to be evaluated.
     """
+    data = []
     return data
 
+def macro_calorie_consistency_metric(prediction: MealBreakdown, reference: MealBreakdown) -> float:
+    """
+    Checks how closely the predicted macros' total caloric value matches
+    the predicted or reference calories. Returns a score between 0 and 1,
+    where 1 indicates perfect consistency.
+    """
+    predicted_cals_from_macros = (
+        prediction.protein * 4
+        + prediction.carbohydrates * 4
+        + prediction.fat * 9
+    )
+    difference = abs(predicted_cals_from_macros - prediction.calories)
+    if prediction.calories == 0:
+        return 1.0 if predicted_cals_from_macros == 0 else 0.0 # avoid division by 0
 
+    normalized_diff = difference / (abs(prediction.calories) + 1e-5)
+    score = 1.0 - normalized_diff
+    return max(0.0, min(score, 1.0))
+    
+
+def ingredients_score_metric(prediction: MealBreakdown, reference: MealBreakdown) -> float:
+    """
+    Compares predicted ingredients vs. reference ingredients, returning
+    a precision/recall-based score or another measure of overlap.
+    For demonstration, this is a placeholder returning 0.0.
+    
+    """
+    # For actual usage, implement the logic to compute precision, recall, F1, etc.
+    return 0.0
+
+def basic_accuracy_metric(prediction: MealBreakdown, reference: MealBreakdown) -> float:
+    """
+    Checks how close macros/micros are compared to reference using relative error.
+    Returns a score between 0 and 1, where 1 means perfect match.
+    Score = 1 - |predicted - reference| / reference
+    """
+    pred = np.array([prediction.calories, prediction.protein, 
+                    prediction.carbohydrates, prediction.fat])
+    ref = np.array([reference.calories, reference.protein,
+                   reference.carbohydrates, reference.fat])
+    
+    ref = np.where(ref == 0, 1e-10, ref)
+    accuracy = 1 - np.abs(pred - ref) / ref
+    
+    return float(np.mean(accuracy))
 
 if __name__ == "__main__":
     data = prepare_eval_data()
@@ -34,14 +74,17 @@ if __name__ == "__main__":
     dataset = [{"input": data_point} for data_point in data]
 
     eval = ell.evaluation.Evaluation(
-        name="recommendation_eval",
+        name="meal_breakdown_eval",
         dataset=dataset,
         metrics={
-            "recommendation_score": recommendation_metric,
-            "semantic_similarity_score": semantic_similarity_metric
+            "macro_calorie_consistency": macro_calorie_consistency_metric,
+            "ingredients_score": ingredients_score_metric,
+            "basic_accuracy_score": basic_accuracy_metric
         }
     )
+    result = eval.run(natural_language_nutritional_breakdown)
 
-    result = eval.run(make_recommendations)
-    print("Average recommendation score:", result.results.metrics["recommendation_score"].mean())
-    print("Average semantic similarity score:", result.results.metrics["semantic_similarity_score"].mean())
+    # Print the results of the metrics
+    print("Average Macro Calorie Consistency:", result.results.metrics["macro_calorie_consistency"].mean())
+    print("Average Ingredients Score:", result.results.metrics["ingredients_score"].mean())
+    print("Average Basic Accuracy Score:", result.results.metrics["basic_accuracy_score"].mean())
