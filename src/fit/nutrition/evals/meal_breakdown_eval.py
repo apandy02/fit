@@ -1,9 +1,8 @@
 import ell
 import numpy as np
-from pydantic import BaseModel, Field
-
 from fit.nutrition.assistants import natural_language_nutritional_breakdown
 from fit.nutrition.data_models import MealBreakdown
+from pydantic import BaseModel, Field
 
 ell.init(store="./logdir")
 
