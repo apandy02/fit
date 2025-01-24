@@ -92,7 +92,7 @@ class NutritionalInformation(BaseModel):
     micronutrients: Micronutrients = Field(description="the micronutrients in the food", default=MICRO_DEFAULT)
     conditional_nutrients: ConditionalNutrients = Field(description="the conditional nutrients in the food", default=COND_DEFAULT)
 
-class MealRecommendation(BaseModel):
+class MealRecommendation(BaseModel):    
     """A dataclass that contains the meal recommendation for a food."""
     #TODO: Maybe I want an explanation of why this meal is being recommended?
     title: str = Field(description="a title for the food. this would be the dish's name if it were on a menu")

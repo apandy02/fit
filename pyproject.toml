@@ -19,6 +19,7 @@ dependencies = [
     "requests>=2.32.3",
     "ruff>=0.7.3",
     "cherrypy>=18.10.0",
+    "pandas>=2.2.3",
 ]
 
 [build-system]

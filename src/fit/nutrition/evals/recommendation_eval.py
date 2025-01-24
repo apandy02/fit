@@ -1,20 +1,21 @@
 import json
+import logging
 import os
 from typing import Any, Dict, Tuple
 
 import ell
-from pydantic import BaseModel, Field
-
+import numpy as np
 from fit.nutrition.assistants import (make_recommendations,
-                                      natural_language_macros)
+                                      natural_language_nutritional_breakdown)
 from fit.nutrition.data_models import (MealRecommendation,
                                        NutritionalInformation)
+from pydantic import BaseModel, Field
 
 ell.init(store="./logdir") 
 
 MACRONUTRIENTS = ["protein", "carbohydrates", "fat"]
 MICRONUTRIENTS = ["vitamin_a", "vitamin_c", "vitamin_d", "calcium", "iron", "potassium", "sodium"]
-DEFAULT_MODEL = "gpt-4o-mini-2024-07-18" # TODO: change to a cheaper model 
+DEFAULT_MODEL = "gpt-4o-mini-2024-07-18"
 
 class MealSemanticSimilarity(BaseModel):
     """A dataclass that contains the semantic similarity for a meal."""
@@ -43,6 +44,46 @@ def prepare_eval_data():
         data.append(typed_item)
     return data
 
+def semantic_similarity_metric(datapoint: Dict[str, Any], output: MealRecommendation) -> float:
+    """Calculate semantic similarity score for non-explorative recommendations."""
+    user_preferences = datapoint["input"]["user_preferences"]
+    returned_recommendations = output.content[0].parsed.meals
+    similarities = []
+    for meal in returned_recommendations:
+        if not meal.is_explorative:
+            similarity = semantic_similarity(meal, user_preferences)
+            similarities.append(similarity.content[0].parsed.similarity)
+    
+    return sum(similarities) / len(similarities)
+
+def target_nutrient_accuracy_metric(datapoint: Dict[str, Any], output: MealRecommendation) -> float:
+    """
+    Evaluates recommendations based on how well they optimize the target nutrient.
+    """
+    current = datapoint["input"]["consumption"]
+    targets = datapoint["input"]["targets"]
+    target_nutrient = datapoint["input"]["target_nutrient"]
+    
+    recommendation_averages, _ = calculate_recommendation_averages(output)
+    final_totals = calculate_final_totals(current, recommendation_averages)
+    target_score = calculate_target_score(final_totals, target_nutrient, targets[target_nutrient])
+    return target_score
+
+def non_target_nutrient_accuracy_metric(datapoint: Dict[str, Any], output: MealRecommendation) -> float:
+    current = datapoint["input"]["consumption"]
+    targets = datapoint["input"]["targets"]    
+    recommendation_averages, _ = calculate_recommendation_averages(output)
+    final_totals = calculate_final_totals(current, recommendation_averages)
+
+    all_nutrients = MACRONUTRIENTS + MICRONUTRIENTS
+    final_vals = np.array([final_totals[nutrient] for nutrient in all_nutrients])
+    target_vals = np.array([targets[nutrient] for nutrient in all_nutrients])
+    target_vals = np.where(target_vals == 0, 1e-10, target_vals)
+    scores = np.abs(final_vals - target_vals) / target_vals
+    
+    return float(np.mean(scores))
+
+    
 def calculate_recommendation_averages(output: MealRecommendation) -> Tuple[Dict[str, float], Dict[str, Dict[str, str]]]:
     """Calculate average nutritional values across recommended meals."""
     recommendation_averages = {nutrient: 0 for nutrient in MACRONUTRIENTS + MICRONUTRIENTS}
@@ -53,7 +94,7 @@ def calculate_recommendation_averages(output: MealRecommendation) -> Tuple[Dict[
     
     for meal in output.content[0].parsed.meals:
         meal_desc = f"{meal.title}: {meal.ingredients}"
-        meal_breakdown = natural_language_macros(meal_desc).content[0].parsed
+        meal_breakdown = natural_language_nutritional_breakdown(meal_desc).content[0].parsed
         recommendation_info[meal_breakdown.title] = {}
         recommendation_averages['calories'] += meal_breakdown.calories
         
@@ -75,37 +116,25 @@ def calculate_recommendation_averages(output: MealRecommendation) -> Tuple[Dict[
             
     return recommendation_averages, recommendation_info
 
-def calculate_final_totals(current: NutritionalInformation, recommendation_averages: Dict[str, float]) -> Dict[str, float]:
+def calculate_final_totals(current: NutritionalInformation, recommended: Dict[str, float]) -> Dict[str, float]:
     """Calculate final nutrient totals combining current and recommended values."""
     final_totals = {}
     for nutrient in MACRONUTRIENTS:
         nutrient_value = getattr(current.macronutrients, nutrient)
         if isinstance(nutrient_value, float):
-            final_totals[nutrient] = recommendation_averages[nutrient] + nutrient_value
+            final_totals[nutrient] = recommended[nutrient] + nutrient_value
         else:
-            final_totals[nutrient] = recommendation_averages[nutrient] + nutrient_value.total
+            final_totals[nutrient] = recommended[nutrient] + nutrient_value.total
         
     for nutrient in MICRONUTRIENTS:
-        final_totals[nutrient] = recommendation_averages[nutrient] + getattr(current.micronutrients, nutrient)
+        final_totals[nutrient] = recommended[nutrient] + getattr(current.micronutrients, nutrient)
     
-    final_totals['calories'] = recommendation_averages['calories'] + current.calories
+    final_totals['calories'] = recommended['calories'] + current.calories
     return final_totals
 
 def calculate_target_score(final_totals: Dict[str, float], target_nutrient: str, target_value: float) -> float:
     """Calculate how close we get to target nutrient (0 to 1, 1 being perfect)."""
     return 1.0 - abs(final_totals[target_nutrient] - target_value) / target_value
-
-def calculate_penalty(final_totals: Dict[str, float], targets: Dict[str, float]) -> float:
-    """Calculate penalty for overshooting other nutrients (-1 to 0, 0 being perfect)."""
-    penalty = 0
-    for nutrient in MACRONUTRIENTS + MICRONUTRIENTS:
-        final_val = final_totals[nutrient]
-        target_val = targets[nutrient]
-            
-        if final_val > target_val:
-            penalty += (final_val - target_val) / target_val
-            
-    return -min(penalty, 1.0)  # Cap penalty at -1
 
 @ell.complex(model=DEFAULT_MODEL, response_format=MealSemanticSimilarity)
 def semantic_similarity(meal: MealRecommendation, user_preferences: str):
@@ -114,39 +143,11 @@ def semantic_similarity(meal: MealRecommendation, user_preferences: str):
     and the user's preferences on a 0 to 1 scale. if the meal sounds 
     like a perfect match for our user, give it 1, if it is completely 
     out of distribution, give it a 0
-    """
+    """ #TODO: the construction of this eval metric is subjective, edit prompt to make
+    # it more consistent 
     user_str = f"Meal title: {meal.title}, meal ingredients: {meal.ingredients}"
     user_str = f"{user_str} User preferences: {user_preferences}"
     return user_str
-
-def semantic_similarity_metric(datapoint: Dict[str, Any], output: MealRecommendation) -> float:
-    """Calculate semantic similarity score for non-explorative recommendations."""
-    user_preferences = datapoint["input"]["user_preferences"]
-    returned_recommendations = output.content[0].parsed.meals
-    similarities = []
-    for meal in returned_recommendations:
-        if not meal.is_explorative:
-            similarity = semantic_similarity(meal, user_preferences)
-            similarities.append(similarity.content[0].parsed.similarity)
-    
-    return sum(similarities) / len(similarities)
-
-def recommendation_metric(datapoint: Dict[str, Any], output: MealRecommendation) -> float:
-    """
-    Evaluates recommendations based on how well they optimize the target nutrient
-    while avoiding overshooting other nutrient targets.
-    """
-    current = datapoint["input"]["consumption"]
-    targets = datapoint["input"]["targets"]
-    target_nutrient = datapoint["input"]["target_nutrient"]
-    
-    recommendation_averages, _ = calculate_recommendation_averages(output)
-    final_totals = calculate_final_totals(current, recommendation_averages)
-    target_score = calculate_target_score(final_totals, target_nutrient, targets[target_nutrient])
-    penalty = calculate_penalty(final_totals, targets)
-    
-    final_score = (0.7 * target_score) + (0.3 * (1 + penalty))
-    return final_score
 
 
 if __name__ == "__main__":
@@ -158,11 +159,14 @@ if __name__ == "__main__":
         name="recommendation_eval",
         dataset=dataset,
         metrics={
-            "recommendation_score": recommendation_metric,
+            "target_nutrient_accuracy": target_nutrient_accuracy_metric,
+            "non_target_nutrient_accuracy": non_target_nutrient_accuracy_metric,
             "semantic_similarity_score": semantic_similarity_metric
         }
     )
 
     result = eval.run(make_recommendations)
-    print("Average recommendation score:", result.results.metrics["recommendation_score"].mean())
-    print("Average semantic similarity score:", result.results.metrics["semantic_similarity_score"].mean())
+
+    logging.info("Average target nutrient accuracy:", result.results.metrics["target_nutrient_accuracy"].mean())
+    logging.info("Average non-target nutrient accuracy:", result.results.metrics["non_target_nutrient_accuracy"].mean())
+    logging.info("Average semantic similarity score:", result.results.metrics["semantic_similarity_score"].mean())

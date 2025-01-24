@@ -1,0 +1,47 @@
+{
+    "data": [
+        {
+            "input": "2 lbs of chicken, 1 bag of rice, broccoli, shrimp, pasta, red sauce ",
+            "output": {
+                "items": [
+                    {
+                        "category": "Meats & Fish",
+                        "name": "chicken",
+                        "quantity": 2,
+                        "unit": "lbs"
+                    },
+                    {
+                        "category": "Bread & Grains",
+                        "name": "rice",
+                        "quantity": 1,
+                        "unit": "bag"
+                    },
+                    {
+                        "category": "Produce",
+                        "name": "broccoli",
+                        "quantity": 1,
+                        "unit": "bundle"
+                    },
+                    {
+                        "category": "Meats & Fish",
+                        "name": "shrimp",
+                        "quantity": 1,
+                        "unit": "package"
+                    },
+                    {
+                        "category": "Bread & Grains",
+                        "name": "pasta",
+                        "quantity": 1,
+                        "unit": "box"
+                    },
+                    {
+                        "category": "Snacks & Misc",
+                        "name": "red sauce",
+                        "quantity": 1,
+                        "unit": "jar"
+                    }
+                ]
+            }
+        }
+    ]
+}
