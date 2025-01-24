@@ -4,12 +4,11 @@ import os
 import ell
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, Field
-
 from fit.nutrition.assistants import natural_language_nutritional_breakdown
 from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
                                        Fats, Macronutrients, MealBreakdown,
                                        Micronutrients)
+from pydantic import BaseModel, Field
 
 ell.init(store="./logdir")
 
@@ -28,10 +27,10 @@ def prepare_eval_data():
     path = os.path.join(os.path.dirname(__file__), "data", "meal_breakdowns.csv")
     data = pd.read_csv(path)
     
-    meal_breakdowns = []
+    datapoints = []
     for _, row in data.iterrows():
         meal_breakdown = MealBreakdown(
-            title=row["description"],
+            title=row["title"],
             ingredients=row["ingredients"],
             calories=row["calories"],
             macronutrients=Macronutrients(
@@ -61,9 +60,10 @@ def prepare_eval_data():
                 creatine=row["creatine"]
             )
         )
-        meal_breakdowns.append(meal_breakdown)
+        user_input = row["description"]
+        datapoints.append({"input": user_input, "reference": meal_breakdown})
     
-    return meal_breakdowns
+    return datapoints
 
 def macro_calorie_consistency_metric(prediction: MealBreakdown, reference: MealBreakdown) -> float:
     """
@@ -112,10 +112,7 @@ def basic_accuracy_metric(prediction: MealBreakdown, reference: MealBreakdown) -
     return float(np.mean(accuracy))
 
 if __name__ == "__main__":
-    data = prepare_eval_data()
-    
-
-    dataset = [{"input": data_point} for data_point in data]
+    dataset = prepare_eval_data()
 
     eval = ell.evaluation.Evaluation(
         name="meal_breakdown_eval",

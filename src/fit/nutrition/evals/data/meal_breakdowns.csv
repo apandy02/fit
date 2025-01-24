@@ -1,2 +1,2 @@
-description,protein,carbohydrates,fat,calories
-42g protein fairlife milkshake,,42,10,0,230
+description,title,ingredients,calories,protein,carbohydrates,fiber,total_sugar,added_sugar,fat,saturated,trans,vitamin_a,vitamin_c,vitamin_d,calcium,iron,potassium,sodium,creatine
+"42g protein Fairlife Protein Milkshake","Fairlife Protein Milkshake","Filtered milk, sugar, cocoa (for chocolate flavor), natural flavors, lactase enzyme, salt, acesulfame potassium, aspartame, vitamin A palmitate, vitamin D3.",150,42,6,0,5,2,2.5,1.5,0,500,0,100,600,0.4,300,190,0
