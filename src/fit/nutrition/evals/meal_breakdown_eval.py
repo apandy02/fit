@@ -4,12 +4,11 @@ import os
 import ell
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, Field
-
 from fit.nutrition.assistants import natural_language_nutritional_breakdown
 from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
                                        Fats, Macronutrients, MealBreakdown,
                                        Micronutrients)
+from pydantic import BaseModel, Field
 
 ell.init(store="./logdir")
 

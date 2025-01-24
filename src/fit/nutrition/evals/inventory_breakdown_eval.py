@@ -5,9 +5,8 @@ from typing import Dict, List
 
 import ell
 import numpy as np
-
 from fit.nutrition.assistants import decipher_inventory
-from fit.nutrition.data_models import KitchenItem, KitchenInventory
+from fit.nutrition.data_models import KitchenInventory, KitchenItem
 
 ell.init(store="./logdir")
 
