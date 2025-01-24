@@ -3,6 +3,7 @@ import numpy as np
 from fit.nutrition.assistants import natural_language_nutritional_breakdown
 from fit.nutrition.data_models import MealBreakdown
 from pydantic import BaseModel, Field
+import logging
 
 ell.init(store="./logdir")
 
@@ -48,7 +49,7 @@ def ingredients_score_metric(prediction: MealBreakdown, reference: MealBreakdown
     For demonstration, this is a placeholder returning 0.0.
     
     """
-    # For actual usage, implement the logic to compute precision, recall, F1, etc.
+    # TODO: figure out if it is feasible to build a dataset with good ingredient info
     return 0.0
 
 def basic_accuracy_metric(prediction: MealBreakdown, reference: MealBreakdown) -> float:
@@ -83,7 +84,6 @@ if __name__ == "__main__":
     )
     result = eval.run(natural_language_nutritional_breakdown)
 
-    # Print the results of the metrics
-    print("Average Macro Calorie Consistency:", result.results.metrics["macro_calorie_consistency"].mean())
-    print("Average Ingredients Score:", result.results.metrics["ingredients_score"].mean())
-    print("Average Basic Accuracy Score:", result.results.metrics["basic_accuracy_score"].mean())
+    logging.info("Average Macro Calorie Consistency:", result.results.metrics["macro_calorie_consistency"].mean())
+    logging.info("Average Ingredients Score:", result.results.metrics["ingredients_score"].mean())
+    logging.info("Average Basic Accuracy Score:", result.results.metrics["basic_accuracy_score"].mean())
