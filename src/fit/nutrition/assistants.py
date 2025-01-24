@@ -102,7 +102,8 @@ def make_recommendations(
         targets: dict[str, float],
         target_nutrient: str,
         user_preferences: str,
-        restrictions: list[str]
+        restrictions: list[str],
+        kitchen_inventory: list[dict[str, float]]
     ) -> dm.Recommendations:
     """You will be given the user's consumed nutritional information, their nutritional targets,
     their dietary restrictions, and a specific nutrient they are asking you for food recommendations to 
@@ -111,6 +112,10 @@ def make_recommendations(
     You will also be given a summary of the user's dietary preferences and patterns. The list of meals
     you return should contain 3 meals that take this information into account. 
     The others should be exploratory in that they attempt to get the user to try new things.
+
+    Additionally, you will be given a list of items available in the user's kitchen. You don't have to
+    build meals strictly from these items, but try to make sure that at least a few of the meals
+    are heavily influenced by the items in the user's kitchen.
 
     Considering all the other nutrient info, try and provide the user with suggestions that 
     minimize risk of over/under consumption of other.
@@ -121,9 +126,12 @@ def make_recommendations(
 
     Make sure that the suggestions are serving aware. if the user is 30g of protein under their target,
     it does not make sense to suggest a meal with 100g of chicken, this would be excessive.
+
+    You absolutely must not violate the user's dietary restrictions. This is a health and safety issue.
     """
     user_input = f"""User Preferences: {user_preferences} \n Consumption: {str(consumption)}
-    Targets: {str(targets)} \n Dietary Restrictions: {restrictions}
+    Targets: {str(targets)} \n Dietary Restrictions: {restrictions}.
+    Kitchen Inventory: {kitchen_inventory}
     They want trying to improve their {target_nutrient} intake.
     """
     return user_input

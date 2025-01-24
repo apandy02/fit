@@ -57,11 +57,25 @@ def metric_card(
     # Create suggestions button separately to place at bottom
     suggestions_button = None
     if title.lower() != "water":
-        suggestions_button = fh.Button(
-            "Get Suggestions",
-            cls="btn btn-sm btn-primary mt-4",
-            hx_post=f"/get_nutrient_suggestions/{title.lower()}",
-            hx_target=f"#{plot_id}-suggestions"
+        suggestions_button = fh.Div(
+            fh.Div(
+                fh.Button(
+                    "Get Suggestions",
+                    cls="btn btn-sm btn-primary mt-4",
+                    hx_post=f"/get_nutrient_suggestions/{title.lower()}",
+                    hx_target=f"#{plot_id}-suggestions",
+                    hx_indicator=f"#{plot_id}-suggestions-loading-indicator"
+                ),
+                fh.Div(
+                    fh.Span(
+                        cls="loading loading-dots loading-md mt-2"
+                    ),
+                    id=f"{plot_id}-suggestions-loading-indicator",
+                    cls="htmx-indicator"
+                ),
+                cls="flex flex-col items-center"
+            ),
+            cls="flex justify-center"
         )
     
     return fh.Card(
@@ -88,7 +102,7 @@ def metric_card(
                 suggestions_button,
                 cls="flex justify-center"
             ) if suggestions_button else None,
-            fh.Div(id=f"{plot_id}-suggestions", cls="mt-4"),
+            fh.Div(id=f"{plot_id}-suggestions"),
             cls="p-4 relative"
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg h-full text-primary-content",

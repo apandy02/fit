@@ -188,13 +188,23 @@ def create_text_generation_card(endpoint: str, button_text: str = "Generate Anal
     return fh.Card(
         fh.Div(
             fh.Div(
-                fh.Button(
-                    button_text,
-                    cls="btn btn-primary outline outline-1 outline-primary-content",
-                    hx_post=endpoint,
-                    hx_target="#analysis-content"
+                fh.Div(
+                    fh.Button(
+                        button_text,
+                        cls="btn btn-primary outline outline-1 outline-primary-content mt-4",
+                        hx_post=endpoint,
+                        hx_target="#analysis-content",
+                        hx_indicator="#loading-indicator"
+                    ),
+                    cls="flex justify-center"
                 ),
-                cls="flex justify-center mb-4"
+                fh.Div(
+                    fh.Span(
+                        cls="loading loading-dots loading-md mt-4"
+                    ),
+                    id="loading-indicator",
+                    cls="htmx-indicator flex justify-center"
+                ),
             ),
             fh.Div(
                 id="analysis-content",

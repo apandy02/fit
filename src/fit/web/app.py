@@ -13,6 +13,14 @@ from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
 from fit.web.auth.clients import whoop_client_oauth as whoop_client
 from fit.web.auth.login_page import get_login_page
 
+# Add htmx-indicator style before other CSS
+htmx_indicator_style = fh.Style("""
+.htmx-indicator {
+    opacity: 0;
+    transition: opacity 200ms ease-in;
+}
+""")
+
 tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
 amcharts = [
     fh.Script(src="https://cdn.amcharts.com/lib/5/index.js"),
@@ -46,7 +54,7 @@ fitbit_scope = ["activity", "heartrate", "profile"]
 whoop_scope = ["offline", "read:recovery", "read:cycles", "read:workout", "read:sleep", "read:profile"]
 
 bware = fh.Beforeware(before, skip=['/login', auth_callback_path, fitbit_auth_callback_path, whoop_auth_callback_path])
-app = fh.FastHTML(before=bware, hdrs=(tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
+app = fh.FastHTML(before=bware, hdrs=(htmx_indicator_style, tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
 
 # Food routes
 app.get("/nutrition/weekly")(nutrition.get_weekly_overview)
