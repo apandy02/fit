@@ -1,7 +1,6 @@
 import datetime
 
 import fasthtml.common as fh
-
 from fit.trackers.base import FitnessTracker
 from fit.trackers.implementations.whoop import Whoop
 from fit.trackers.manager import tracker_factory
