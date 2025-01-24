@@ -1,9 +1,15 @@
+import logging
+import os
+
 import ell
 import numpy as np
-from fit.nutrition.assistants import natural_language_nutritional_breakdown
-from fit.nutrition.data_models import MealBreakdown
+import pandas as pd
 from pydantic import BaseModel, Field
-import logging
+
+from fit.nutrition.assistants import natural_language_nutritional_breakdown
+from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
+                                       Fats, Macronutrients, MealBreakdown,
+                                       Micronutrients)
 
 ell.init(store="./logdir")
 
@@ -17,10 +23,47 @@ class MealSemanticSimilarity(BaseModel):
 
 def prepare_eval_data():
     """
-    Define the data to be evaluated.
+    Define the data to be evaluated by loading meal breakdowns from CSV and converting to MealBreakdown objects.
     """
-    data = []
-    return data
+    path = os.path.join(os.path.dirname(__file__), "data", "meal_breakdowns.csv")
+    data = pd.read_csv(path)
+    
+    meal_breakdowns = []
+    for _, row in data.iterrows():
+        meal_breakdown = MealBreakdown(
+            title=row["description"],
+            ingredients=row["ingredients"],
+            calories=row["calories"],
+            macronutrients=Macronutrients(
+                protein=row["protein"],
+                carbohydrates=Carbohydrates(
+                    total=row["carbohydrates"],
+                    fiber=row["fiber"],
+                    total_sugar=row["total_sugar"],
+                    added_sugar=row["added_sugar"]
+                ),
+                fat=Fats(
+                    total=row["fat"],
+                    saturated=row["saturated"],
+                    trans=row["trans"]
+                )
+            ),
+            micronutrients=Micronutrients(
+                vitamin_a=row["vitamin_a"],
+                vitamin_c=row["vitamin_c"],
+                vitamin_d=row["vitamin_d"],
+                calcium=row["calcium"],
+                iron=row["iron"],
+                potassium=row["potassium"],
+                sodium=row["sodium"]
+            ),
+            conditional_nutrients=ConditionalNutrients(
+                creatine=row["creatine"]
+            )
+        )
+        meal_breakdowns.append(meal_breakdown)
+    
+    return meal_breakdowns
 
 def macro_calorie_consistency_metric(prediction: MealBreakdown, reference: MealBreakdown) -> float:
     """
@@ -70,6 +113,7 @@ def basic_accuracy_metric(prediction: MealBreakdown, reference: MealBreakdown) -
 
 if __name__ == "__main__":
     data = prepare_eval_data()
+    
 
     dataset = [{"input": data_point} for data_point in data]
 
