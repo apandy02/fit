@@ -5,11 +5,12 @@ from typing import Any, Dict, Tuple
 
 import ell
 import numpy as np
+from pydantic import BaseModel, Field
+
 from fit.nutrition.assistants import (make_recommendations,
                                       natural_language_nutritional_breakdown)
 from fit.nutrition.data_models import (MealRecommendation,
                                        NutritionalInformation)
-from pydantic import BaseModel, Field
 
 ell.init(store="./logdir") 
 
