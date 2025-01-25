@@ -23,14 +23,13 @@ class FitbitAppClient(WebApplicationClient):
     """
     base_url = "https://www.fitbit.com/oauth2/authorize"
     token_url = "https://api.fitbit.com/oauth2/token"
-    info_url  = "https://api.fitbit.com/1/user/-/profile.json"  # or whichever userinfo you want
+    info_url  = "https://api.fitbit.com/1/user/-/profile.json"
     
     def __init__(self, client_id, code=None, scope=None, **kwargs):
         super().__init__(client_id, code=code, scope=scope, **kwargs)
-        # Generate or store the PKCE code_verifier/challenge
         self.code_verifier, self.code_challenge = make_code_verifier_and_challenge()
     
-    def login_link(self, redirect_uri, scope=None, state=None):
+    def login_link(self, redirect_uri: str, scope: list[str] = None, state: str = None) -> str:
         """Create the Fitbit login link with PKCE parameters."""
         if scope is None: 
             scope = self.SCOPE
@@ -42,7 +41,6 @@ class FitbitAppClient(WebApplicationClient):
             "code_challenge_method": "S256"
         }
 
-        # Use the built-in method, but pass extra_auth_params for PKCE
         auth_url = self.prepare_request_uri(
             self.base_url,
             redirect_uri=redirect_uri,
@@ -52,7 +50,7 @@ class FitbitAppClient(WebApplicationClient):
         )
         return auth_url
 
-    def parse_response(self, code, redirect_uri):
+    def parse_response(self, code: str, redirect_uri: str) -> None:
         """
         Exchange the code for an access token, including the code_verifier.
         """
@@ -61,19 +59,14 @@ class FitbitAppClient(WebApplicationClient):
             "redirect_uri": redirect_uri,
             "client_id": self.client_id,
             "grant_type": "authorization_code",
-            # PKCE: pass the code_verifier
             "code_verifier": self.code_verifier,
         }
-        # If your Fitbit app is registered as a confidential client,
-        # you may also have a client_secret – then you'd pass it here:
-        #     data["client_secret"] = self.client_secret
         print(f"data: {data}")
         r = httpx.post(self.token_url, data=data)
         r.raise_for_status()
         self.parse_request_body_response(r.text)
 
-    def fetch_access_token(self, code, redirect_uri):
-        # Exchange the code for an access token, including the PKCE code_verifier
+    def fetch_access_token(self, code: str, redirect_uri: str) -> None:
         data = {
             "client_id": self.client_id,
             "grant_type": "authorization_code",
@@ -81,15 +74,12 @@ class FitbitAppClient(WebApplicationClient):
             "code": code,
             "code_verifier": self.code_verifier,
         }
-        # If your Fitbit app is a confidential client, include client_secret:
-        # 
-        print(f"data: {data}")
         r = httpx.post(self.token_url, data=data)
         r.raise_for_status()
         self.parse_request_body_response(r.text)
         return self.token 
 
-    def get_info(self, token=None):
+    def get_info(self, token: str = None) -> dict:
         """Fetch user profile info from Fitbit's API."""
         if token is None:
             token = self.token["access_token"]
@@ -98,7 +88,7 @@ class FitbitAppClient(WebApplicationClient):
         resp.raise_for_status()
         return resp.json()
 
-    def is_token_valid(self, token=None):
+    def is_token_valid(self, token: str = None) -> bool:
         """Check if the access token is valid."""
         if token is None:
             token = self.token["access_token"]
@@ -111,18 +101,18 @@ class FitbitAppClient(WebApplicationClient):
             logging.error(f"Token validation failed: {e}")
             return False
 
-    def retr_info(self, code, redirect_uri):
+    def retr_info(self, code: str, redirect_uri: str) -> dict:
         """Convenience method to parse token response then fetch user info."""
         self.parse_response(code, redirect_uri)
         info = self.get_info()
         logging.info(f"info: {info}")
         return info
 
-    def retr_id(self, code, redirect_uri):
+    def retr_id(self, code: str, redirect_uri: str) -> str:
         """Fitbit's user_id is in the profile."""
         profile = self.retr_info(code, redirect_uri)
         logging.info(f"profile: {profile}")
-        return profile["user"]["encodedId"]  # Or whichever field is your 'id'
+        return profile["user"]["encodedId"]
 
 
 class Fitbit(FitnessTracker):
@@ -197,7 +187,8 @@ class Fitbit(FitnessTracker):
                 sleep.get('minutesAsleep', 0) 
                 for sleep in sleep_data
             )
-            return round(total_minutes / 60.0, 2)  # Convert to hours
+            return round(total_minutes / 60.0, 2)
+
         except Exception as e:
             logging.error(f"Error fetching sleep data: {e}")
             return 0.0
@@ -234,7 +225,6 @@ class Fitbit(FitnessTracker):
             data = self._make_request(endpoint)
             hrv_data = data.get('hrv', [])
             if hrv_data:
-                # Get the daily rmssd value
                 rmssd = hrv_data[0].get('value', {}).get('dailyRmssd', 0)
                 return float(rmssd)
             return 0.0
