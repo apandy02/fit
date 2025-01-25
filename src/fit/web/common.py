@@ -181,8 +181,7 @@ def Markdown(s, exts=md_exts, **kw):
     """
     return fh.Div(fhb.NotStr(markdown(s, extensions=exts)), **kw)
 
-# TODO: make it so that more parameters can be passed in to the function so it can be used to generate 
-# more than just nutrition overviews
+
 def create_text_generation_card(endpoint: str, button_text: str = "Generate Analysis"):
     """Create the text generation card with analysis button"""
     

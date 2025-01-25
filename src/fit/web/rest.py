@@ -84,7 +84,7 @@ def create_sleep_cards(sleep_entries: list[dict]) -> fh.Div:
                     cls="collapse-title"
                 ),
                 fh.Div(
-                    # Sleep details will go here
+                    # TODO: Sleep details will go here
                     fh.P("hello"),
                     cls="collapse-content bg-base-300"
                 ),
@@ -101,6 +101,7 @@ def get_rest_info(tracker: FitnessTracker):
     """
     today = datetime.date.today()
     if isinstance(tracker, Whoop):
+        # TODO: make most of this code device invariant
         recovery = tracker.get_daily_recovery(today)
         if recovery is not None and len(recovery) > 0:
             scores = recovery["score"]
