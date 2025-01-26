@@ -8,11 +8,10 @@ import fit.nutrition.assistants as assistants
 import fit.web.common as common
 import fit.web.databases as databases
 import fit.web.nutrition.ui as ui
-from fit.nutrition.data_models import \
-    NutritionalInformation  # TODO: cleanup this horrible import mess
 from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
                                        Fats, Goals, Macronutrients,
-                                       MealBreakdown, Micronutrients)
+                                       MealBreakdown, Micronutrients,
+                                       NutritionalInformation)
 from fit.nutrition.targets import (calculate_macro_targets,
                                    estimate_daily_water_intake)
 from fit.trackers.base import FitnessTracker
@@ -463,10 +462,9 @@ async def nutrition_redirect(request: fh.Request):
 
 async def get_nutrient_suggestions(session, nutrient: str):
     """Generate meal suggestions based on a specific nutrient"""
-    today = datetime.today().date()
-    daily_nutrition = databases.get_daily_cumulative_nutrition(DB, today)
+    daily_nutrition = databases.get_daily_cumulative_nutrition(DB, datetime.today().date())
     tracker = tracker_factory(session["tracker"], session["access_token"])
-    calories_burned = tracker.get_daily_calories_burned(today)
+    calories_burned = tracker.get_daily_calories_burned(datetime.today().date())
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
     restrictions = databases.get_dietary_restrictions(DB, "default")

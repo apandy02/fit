@@ -215,17 +215,13 @@ async def update_profile(request: fh.Request):
     try:
         form = await request.form()
         
-        # Get all dietary restrictions and combine them into a comma-separated string
         restrictions = form.getlist("existing_restrictions[]")
         form_data = dict(form)
         form_data["dietary_restrictions"] = ",".join(restrictions) if restrictions else ""
-        
-        # Add user_id and remove the array field
         form_data["user_id"] = "default"
         if "existing_restrictions[]" in form_data:
             form_data.pop("existing_restrictions[]")
         
-        # Update the database
         DB.t.user_data.update(form_data)
         
         return fh.P(
@@ -244,13 +240,10 @@ async def add_restriction(request: fh.Request):
     try:
         form = await request.form()
         restriction = form.get("dietary_restrictions")
-        
-        # Get existing restrictions from the form
         existing_restrictions = form.getlist("existing_restrictions[]")
         if restriction not in existing_restrictions:
             existing_restrictions.append(restriction)
         
-        # Create a div for each restriction
         restriction_divs = [
             fh.Div(
                 fh.Div(
@@ -271,7 +264,6 @@ async def add_restriction(request: fh.Request):
         
         return fh.Div(
             *restriction_divs,
-            # Hidden inputs to maintain state
             *[
                 fh.Input(
                     type="hidden",
@@ -297,11 +289,9 @@ async def remove_restriction(request: fh.Request):
         restriction_to_remove = form.get("restriction")
         existing_restrictions = form.getlist("existing_restrictions[]")
         
-        # Remove the restriction
         if restriction_to_remove in existing_restrictions:
             existing_restrictions.remove(restriction_to_remove)
         
-        # Create a div for each remaining restriction
         restriction_divs = [
             fh.Div(
                 fh.Div(
@@ -322,7 +312,6 @@ async def remove_restriction(request: fh.Request):
         
         return fh.Div(
             *restriction_divs,
-            # Hidden inputs to maintain state
             *[
                 fh.Input(
                     type="hidden",
