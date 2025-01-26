@@ -142,6 +142,7 @@ class Fitbit(FitnessTracker):
     def _make_request(self, endpoint: str) -> dict:
         """Helper method to make authenticated requests to Fitbit API"""
         headers = {"Authorization": f"Bearer {self.access_token}"}
+        {self.BASE_URL}{endpoint}
         response = httpx.get(f"{self.BASE_URL}{endpoint}", headers=headers)
         response.raise_for_status()
         return response.json()
@@ -239,7 +240,9 @@ class Fitbit(FitnessTracker):
         
         try:
             data = self._make_request(endpoint)
+            print(f"data: {data}")
             intraday_data = data.get('activities-heart-intraday', {}).get('dataset', [])
+            print(f"intraday_data: {intraday_data}")
             return [
                 {
                     "time": entry.get('time'),

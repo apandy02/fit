@@ -101,7 +101,6 @@ def get_rest_info(tracker: FitnessTracker):
     """
     today = datetime.date.today()
     if isinstance(tracker, Whoop):
-        # TODO: make most of this code device invariant
         recovery = tracker.get_daily_recovery(today)
         if recovery is not None and len(recovery) > 0:
             scores = recovery["score"]
@@ -112,12 +111,12 @@ def get_rest_info(tracker: FitnessTracker):
             recovery_score = None
             resting_hr = None
             hrv = None
-        sleep = tracker.get_daily_sleep(today)
     else:
-        resting_hr = tracker.get_daily_resting_heart_rate(today) #TODO: same as performance, make this code better at being device invariant
+        resting_hr = tracker.get_daily_resting_heart_rate(today)
         hrv = tracker.get_daily_hrv(today)
         recovery_score = None
-        sleep = None # TODO: add sleep data for non-whoop trackers
+    
+    sleep = tracker.get_daily_sleep(today)
     
     recovery_data = {
         "score": recovery_score,
