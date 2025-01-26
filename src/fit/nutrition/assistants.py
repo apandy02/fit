@@ -5,6 +5,7 @@ from PIL import Image
 
 import fit.nutrition.data_models as dm
 from fit.nutrition.errors import NoMealsLoggedError
+from fit.utils.lmp_utils import retry
 
 STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
 DEFAULT_LARGE_MODEL = "gpt-4o-2024-08-06"

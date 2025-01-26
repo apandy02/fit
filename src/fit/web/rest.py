@@ -84,7 +84,7 @@ def create_sleep_cards(sleep_entries: list[dict]) -> fh.Div:
                     cls="collapse-title"
                 ),
                 fh.Div(
-                    # Sleep details will go here
+                    # TODO: Sleep details will go here
                     fh.P("hello"),
                     cls="collapse-content bg-base-300"
                 ),
@@ -111,12 +111,12 @@ def get_rest_info(tracker: FitnessTracker):
             recovery_score = None
             resting_hr = None
             hrv = None
-        sleep = tracker.get_daily_sleep(today)
     else:
-        resting_hr = tracker.get_daily_resting_heart_rate(today) #TODO: same as performance, make this code better at being device invariant
+        resting_hr = tracker.get_daily_resting_heart_rate(today)
         hrv = tracker.get_daily_hrv(today)
         recovery_score = None
-        sleep = None # TODO: add sleep data for non-whoop trackers
+    
+    sleep = tracker.get_daily_sleep(today)
     
     recovery_data = {
         "score": recovery_score,

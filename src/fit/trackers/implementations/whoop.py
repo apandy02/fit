@@ -34,7 +34,6 @@ class WhoopAppClient(WebApplicationClient):
     
     def __init__(self, client_id, client_secret, code=None, scope=None, **kwargs):
         super().__init__(client_id, code=code, scope=scope, **kwargs)
-        # Generate or store the PKCE code_verifier/challenge
         self.code_verifier, self.code_challenge = make_code_verifier_and_challenge()
         self.client_secret = client_secret
     
@@ -43,18 +42,15 @@ class WhoopAppClient(WebApplicationClient):
         if scope is None: 
             scope = self.SCOPE
         if state is None:
-            # Generate a secure random state with at least 8 characters
             state = secrets.token_urlsafe(16)
             self.state = state
 
-        # Build up the extra PKCE query params
         extra_params = {
             "code_challenge": self.code_challenge,
             "code_challenge_method": "S256",
             "state": state
         }
 
-        # Use the built-in method, but pass extra_auth_params for PKCE
         auth_url = self.prepare_request_uri(
             self.base_url,
             redirect_uri=redirect_uri,
@@ -65,7 +61,6 @@ class WhoopAppClient(WebApplicationClient):
 
     def fetch_access_token(self, code, redirect_uri):
         """Exchange the code for an access token, including the PKCE code_verifier."""
-        # Include client credentials in the form data (client_secret_post method)
         data = {
             "client_id": self.client_id,
             "client_secret": self.client_secret,
@@ -74,7 +69,6 @@ class WhoopAppClient(WebApplicationClient):
             "code": code,
             "code_verifier": self.code_verifier,
         }
-        
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
             "Accept": "application/json"
@@ -106,6 +100,7 @@ class WhoopAppClient(WebApplicationClient):
         except httpx.HTTPStatusError as e:
             logging.error(f"Token validation failed: {e}")
             return False
+
 
 class Whoop(FitnessTracker):
     """Fitness tracker subclass for WHOOP devices.

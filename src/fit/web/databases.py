@@ -8,7 +8,6 @@ from fit.nutrition.data_models import (KITCHEN_ITEM_CATEGORIES, Carbohydrates,
                                        Macronutrients, MealBreakdown,
                                        Micronutrients, NutritionalInformation)
 
-# TODO: consider creating a class for the database
 
 def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
     """

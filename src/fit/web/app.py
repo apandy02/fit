@@ -14,7 +14,6 @@ from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
 from fit.web.auth.clients import whoop_client_oauth as whoop_client
 from fit.web.auth.login_page import get_login_page
 
-# Add htmx-indicator style before other CSS
 htmx_indicator_style = fh.Style("""
 .htmx-indicator {
     opacity: 0;
@@ -109,9 +108,7 @@ app.get("/rest")(rest.get)
 # performance routes
 app.get("/performance")(performance.get)
 
-
 fh.reg_re_param("imgext", "png")
-
 
 @app.get(r"/static/{path:path}")
 def get(path: str):

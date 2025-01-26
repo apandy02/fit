@@ -8,11 +8,10 @@ import fit.nutrition.assistants as assistants
 import fit.web.common as common
 import fit.web.databases as databases
 import fit.web.nutrition.ui as ui
-from fit.nutrition.data_models import \
-    NutritionalInformation  # TODO: cleanup this horrible import mess
 from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
                                        Fats, Goals, Macronutrients,
-                                       MealBreakdown, Micronutrients)
+                                       MealBreakdown, Micronutrients,
+                                       NutritionalInformation)
 from fit.nutrition.targets import (calculate_macro_targets,
                                    estimate_daily_water_intake)
 from fit.trackers.base import FitnessTracker
@@ -155,7 +154,7 @@ async def toggle_dropdown(dropdown_id: str):
             )
             for metric in hidden
         ],
-        cls="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-base-200 outline  ring-1 ring-black ring-opacity-5 z-10 block",  # Removed hidden class
+        cls="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-base-200 outline  ring-1 ring-black ring-opacity-5 z-10 block",
         id=dropdown_id
     )
 
@@ -347,10 +346,9 @@ async def regenerate_analysis(feedback: str, original_description: str):
     original_info = assistants.natural_language_nutritional_breakdown(original_description).content[0].parsed #TODO: why are we re-running this?
     improved_info = assistants.improve_breakdown(original_info, feedback).content[0].parsed # todo: maybe the parsing should be done in the assistant
     
-    # Create ISO format datetime for meal time
-    today = datetime.today().date()
+
     meal_time_obj = datetime.now().time()
-    meal_datetime = datetime.combine(today, meal_time_obj).isoformat()
+    meal_datetime = datetime.combine(datetime.today().date(), meal_time_obj).isoformat()
     
     return ui.feedback_form(original_description, meal_datetime, improved_info)
 
@@ -426,12 +424,11 @@ async def generate_daily_overview(session, date: str | None = None):
             date_obj = datetime.today().date()
             
     meals = databases.get_daily_meals(DB, date_obj)
-    
     dietary_restrictions = databases.get_dietary_restrictions(DB, "default")
-
     calories_burned = tracker.get_daily_calories_burned(date_obj)
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
+    
     try:
         analysis = assistants.daily_io_analysis(meals, targets, dietary_restrictions).content[0].parsed
     except assistants.NoMealsLoggedError as e:
@@ -463,10 +460,9 @@ async def nutrition_redirect(request: fh.Request):
 
 async def get_nutrient_suggestions(session, nutrient: str):
     """Generate meal suggestions based on a specific nutrient"""
-    today = datetime.today().date()
-    daily_nutrition = databases.get_daily_cumulative_nutrition(DB, today)
+    daily_nutrition = databases.get_daily_cumulative_nutrition(DB, datetime.today().date())
     tracker = tracker_factory(session["tracker"], session["access_token"])
-    calories_burned = tracker.get_daily_calories_burned(today)
+    calories_burned = tracker.get_daily_calories_burned(datetime.today().date())
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
     restrictions = databases.get_dietary_restrictions(DB, "default")
