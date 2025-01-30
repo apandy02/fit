@@ -14,7 +14,7 @@ def analyze_rest_patterns(
       sleep_data: list[dict],
       meals: list[tuple[datetime, MealBreakdown]],
       activities: list[tuple[datetime, str, float]],
-      sleep_targets: dict[str, float],
+      sleep_targets: float,
       recovery_metrics: dict[str, float]
    ) -> str:
    system_message = """

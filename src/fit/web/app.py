@@ -104,6 +104,7 @@ app.post("/remove_restriction")(user_profile.remove_restriction)
 
 # rest routes
 app.get("/rest")(rest.get)
+app.post("/generate_rest_overview")(rest.generate_overview)
 
 # performance routes
 app.get("/performance")(performance.get)
