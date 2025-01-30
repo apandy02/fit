@@ -20,13 +20,6 @@ def analyze_rest_patterns(
     """
     Analyze the user's rest and recovery patterns in relation to their daily activities and habits.
 
-    Args:
-        sleep_data: List of sleep sessions with timing and quality metrics
-        meals: List of meals with timestamps and nutritional breakdowns
-        activities: List of workouts/activities with timestamps, type, and intensity
-        sleep_targets: Target sleep metrics (e.g. hours, quality score)
-        recovery_metrics: Current recovery metrics (e.g. HRV, resting heart rate)
-
     Provide a comprehensive analysis that covers:
     1. Sleep Target Assessment
        - Compare actual sleep metrics against targets
