@@ -1,9 +1,9 @@
 import datetime
 
 import fasthtml.common as fh
-
 import fit.performance.assistants as assistants
 import fit.web.databases as db
+from fit.nutrition.targets import Goals, calculate_caloric_target
 from fit.trackers.base import FitnessTracker
 from fit.trackers.implementations.whoop import Whoop
 from fit.trackers.manager import tracker_factory
@@ -128,12 +128,7 @@ async def generate_overview(session):
         daily_stats, workouts = get_performance_info(tracker)
         daily_nutrition = db.get_daily_cumulative_nutrition(DB, today)
         caloric_consumption = daily_nutrition.calories
-        
-        # TODO: swap caloric target with targets function
-        if isinstance(tracker, Whoop):
-            caloric_target = kj_to_kcal(daily_stats["kilojoule"])
-        else:
-            caloric_target = daily_stats["calories"]
+        caloric_target = calculate_caloric_target(daily_nutrition, Goals.MAINTAIN)
         
         workout_trend_summary = assistants.summarize_workout_trends(workouts)
         
@@ -149,7 +144,7 @@ async def generate_overview(session):
             time=current_time,
             time_cutoff=time_cutoff
         )
-        
+        print(f"analysis: {analysis}")
         return fh.Card(
             fh.Div(
                 fh.P(analysis, cls="text-primary-content"),
