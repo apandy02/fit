@@ -1,12 +1,14 @@
 import datetime
 
 import fasthtml.common as fh
-
+import fit.performance.assistants as assistants
+import fit.web.databases as db
+from fit.nutrition.targets import Goals, calculate_caloric_target
 from fit.trackers.base import FitnessTracker
 from fit.trackers.implementations.whoop import Whoop
 from fit.trackers.manager import tracker_factory
 from fit.utils.conversions import kj_to_kcal
-from fit.web.common import (create_fab_menu, create_text_generation_card,
+from fit.web.common import (DB, create_fab_menu, create_text_generation_card,
                             create_time_filter, page_outline)
 
 
@@ -116,3 +118,43 @@ def create_workout_cards(workouts: list[dict]) -> fh.Div:
         ],
         cls="space-y-4"
     )
+
+async def generate_overview(session):
+    """Generate the performance overview analysis by getting the user's daily stats, activities,
+    and caloric information."""
+    try:
+        tracker = tracker_factory(session["tracker"], session["access_token"])
+        today = datetime.date.today()
+        daily_stats, workouts = get_performance_info(tracker)
+        daily_nutrition = db.get_daily_cumulative_nutrition(DB, today)
+        caloric_consumption = daily_nutrition.calories
+        caloric_target = calculate_caloric_target(daily_nutrition, Goals.MAINTAIN)
+        
+        workout_trend_summary = assistants.summarize_workout_trends(workouts)
+        
+        current_time = datetime.datetime.now().time()
+        time_cutoff = datetime.time(hour=20)  # 8 PM cutoff
+        
+        analysis = assistants.early_daily_performance_overview(
+            daily_stats=daily_stats,
+            activities=workouts,
+            caloric_target=caloric_target,
+            caloric_consumption=caloric_consumption,
+            workout_trend_summary=workout_trend_summary,
+            time=current_time,
+            time_cutoff=time_cutoff
+        )
+        print(f"analysis: {analysis}")
+        return fh.Card(
+            fh.Div(
+                fh.P(analysis, cls="text-primary-content"),
+                cls="p-4 space-y-2"
+            ),
+            cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
+        )
+        
+    except Exception as e:
+        return fh.P(
+            f"Error generating performance analysis: {str(e)}",
+            cls="text-red-500 font-semibold text-center"
+        )
