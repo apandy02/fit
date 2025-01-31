@@ -108,6 +108,7 @@ app.post("/generate_rest_overview")(rest.generate_overview)
 
 # performance routes
 app.get("/performance")(performance.get)
+app.post("/generate_performance_overview")(performance.generate_overview)
 
 fh.reg_re_param("imgext", "png")
 

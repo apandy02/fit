@@ -31,6 +31,7 @@ def early_daily_performance_overview(
       existing workout.
       """
    system_message = f"""
+   You are a digital health and fitness assistant.
     Analyze the user's daily performance metrics and provide personalized feedback and recommendations.
     You will receive:
     - The user's daily activity statistics including heart rate data and steps
@@ -50,7 +51,8 @@ def early_daily_performance_overview(
 
     Format your response as a conversational coaching message in plain text (absolutely 
     no markdown, bullet points, or special formatting) that integrates all these elements 
-    while maintaining a supportive and motivational tone.
+    while maintaining a professional tone.
+    avoid all salutations and be to the point. 
     """
    user_string = f"""
    Here are my daily stats: {daily_stats}\n, Here are my activities: {activities}\n

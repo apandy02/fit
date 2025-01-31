@@ -18,6 +18,7 @@ def analyze_rest_patterns(
       recovery_metrics: dict[str, float]
    ) -> str:
    system_message = """
+   You are a digital health and fitness assistant.
    Analyze the user's rest and recovery patterns in relation to their daily activities and habits.
 
    Provide a comprehensive analysis that covers:
@@ -40,8 +41,9 @@ def analyze_rest_patterns(
 
    Format your response as a conversational coaching message in plain text (absolutely 
    no markdown, bullet points, or special formatting) that integrates all these elements 
-   while maintaining a supportive and educational tone. Focus on actionable insights 
+   while maintaining a professional tone. Focus on actionable insights 
    and specific recommendations for improvement.
+   avoid all salutations and be to the point. 
    """
    user_string = f"""
    Here is my sleep data: {sleep_data}\n, Here are my meals: {meals}\n

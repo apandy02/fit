@@ -2,14 +2,15 @@ import datetime
 
 import fasthtml.common as fh
 
+import fit.rest.assistants as assistants
+import fit.web.databases as db
 from fit.trackers.base import FitnessTracker
 from fit.trackers.implementations.whoop import Whoop
 from fit.trackers.manager import tracker_factory
-from fit.web.common import (create_fab_menu, create_text_generation_card,
-                            create_time_filter, page_outline, DB)
-import fit.web.databases as db
+from fit.web.common import (DB, create_fab_menu, create_text_generation_card,
+                            create_time_filter, page_outline)
 
-import fit.rest.assistants as assistants
+
 def get(session):
     """Return the rest tracking page content"""
     tracker = tracker_factory(session["tracker"], session["access_token"])
