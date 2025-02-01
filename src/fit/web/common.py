@@ -25,7 +25,7 @@ ALL_METRICS = [
 ]
 
 
-DB = init_db(DB_PATH, ALL_METRICS, "default")
+DB = init_db(DB_PATH, ALL_METRICS)
 micronutrient_goals = MICRO_GOALS["male"]
 
 

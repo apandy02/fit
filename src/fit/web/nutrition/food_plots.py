@@ -55,7 +55,7 @@ def create_apex_donut(data_points: tuple[list, ...]):
                 series: [chartData.consumed, chartData.remaining],
                 colors: ["rgb(34, 197, 94)", "rgb(239, 68, 68)"],
                 chart: {{
-                    height: 280,
+                    height: 250,
                     width: "100%",
                     type: "donut",
                 }},
@@ -91,7 +91,7 @@ def create_apex_donut(data_points: tuple[list, ...]):
                                     }},
                                 }},
                             }},
-                            size: "80%",
+                            size: "75%",
                         }},
                     }},
                 }},

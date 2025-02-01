@@ -8,12 +8,21 @@ from fit.nutrition.data_models import (KITCHEN_ITEM_CATEGORIES, Carbohydrates,
                                        Micronutrients, NutritionalInformation)
 
 
-def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
+def init_db(database_path: str, metrics: dict[str, list[str]]):
     """
     Initialize the database and create tables if they don't exist.
     """
     db = fh.database(database_path)
-    user_id = "default" # TODO: get user id from auth, hardcode for now
+
+    users_table = db.t.users
+    if users_table not in db.t:
+        users_table.create(
+            dict(
+                user_id=int,
+                email=str,
+            ),
+            pk='user_id'
+        )
 
     meals_table = db.t.meals
     if meals_table not in db.t:
@@ -38,6 +47,7 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
                 sodium=float,
                 creatine=float,
                 is_supplement=bool,
+                user_id=int, # foreign key
             ),
             pk="rowid"
         )
@@ -47,6 +57,7 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
     if supplements_table not in db.t:
         supplements_table.create(
             dict(
+                user_id=int, # foreign key
                 name=str, 
                 description=str,
                 calories=float,
@@ -73,23 +84,9 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
                 datetime=str,
                 height=float,
                 weight=float,
+                user_id=int, # foreign key
             ),
             pk='uuid'
-        )
-    
-    visible_metrics_table = db.t.visible_metrics
-    if visible_metrics_table not in db.t:
-        visible_metrics_table.create(
-            dict(
-                user_id=str,
-                metrics=str,
-            ),
-            pk='user_id'
-        )
-        metrics = json.dumps(metrics)
-        visible_metrics_table.insert(
-            user_id=user_id,
-            metrics=metrics
         )
     
     water_table = db.t.water
@@ -97,17 +94,18 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
         water_table.create(
             dict(
                 date=str,
+                user_id=int, # foreign key
                 time=str,
                 water_consumed_ml=float,
             ),
             pk='uuid'
         )
 
-    user_data_table = db.t.user_data
-    if user_data_table not in db.t:
-        user_data_table.create(
+    profile_table = db.t.profile
+    if profile_table not in db.t:
+        profile_table.create(
             dict(
-                user_id=str,
+                user_id=int, # foreign key
                 name=str,
                 email=str,
                 gender=str,
@@ -117,14 +115,12 @@ def init_db(database_path: str, metrics: dict[str, list[str]], user_id: str):
             ),
             pk='user_id'
         )
-        user_data_table.insert(
-            user_id=user_id,
-        )
     
     inventory_table = db.t.inventory
     if inventory_table not in db.t:
         inventory_table.create(
             dict(
+                user_id=int, # foreign key
                 title=str,
                 quantity=float,
                 unit=str,
@@ -316,7 +312,7 @@ def set_visible_metrics(database: fh.Database, metrics: list[str], user_id: str)
 def get_user_data(db: fh.Database, user_id="default"):
     """Get user data from the database"""
     query = """
-            SELECT name, email, date_of_birth, units, gender, dietary_restrictions FROM user_data WHERE user_id = ?
+            SELECT name, email, date_of_birth, units, gender, dietary_restrictions FROM profile WHERE user_id = ?
     """
     result = db.execute(query, (user_id,)).fetchone()
     if result:

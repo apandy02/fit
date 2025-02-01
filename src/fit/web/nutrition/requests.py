@@ -51,7 +51,6 @@ def overview_page_content(data: list[dict], current_view: str, date: datetime.da
         ("Supplement", "💊", "openSupplementModal()")
     ]
 
-    visible_metrics = databases.get_visible_metrics(DB, "default") # TODO: get user_id from session, hardcoded for now
     water_metrics = [
         {"name": "Water", "column_name": "water", "unit": "ml", "plot_id": "water-plot"}
     ]
@@ -59,7 +58,7 @@ def overview_page_content(data: list[dict], current_view: str, date: datetime.da
     content = fh.Article(
         fh.Div(
             ui.create_page_header(current_view, date),
-            ui.create_metrics_grid(data, visible_metrics, water_metrics, current_view, date),
+            ui.create_metrics_grid(data, water_metrics, current_view, date),
             ui.food_tracking_modal(date),
             common.create_fab_menu(menu_items),
             cls="max-w-6xl mx-auto p-6"
