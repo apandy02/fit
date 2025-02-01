@@ -1,14 +1,15 @@
 from datetime import datetime
 
 import fasthtml.common as fh
+from fasthtml.common import RedirectResponse
+from fasthtml.oauth import redir_url
+
 import fit.web.kitchen.requests as kitchen
 import fit.web.nutrition.requests as nutrition
 import fit.web.performance as performance
 import fit.web.progress as progress
 import fit.web.rest as rest
 import fit.web.user_profile as user_profile
-from fasthtml.common import RedirectResponse
-from fasthtml.oauth import redir_url
 from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
 from fit.web.auth.clients import whoop_client_oauth as whoop_client
 from fit.web.auth.login_page import get_login_page
@@ -35,12 +36,8 @@ modal_css = fh.Link(rel="stylesheet", href="/static/public/modal.css")
 def before(req, session):
     access_token_expiry = session.get('access_token_expiry', None)
     req.scope['auth'] = access_token_expiry
-    
-    # Check if token is missing or expired
     if not access_token_expiry or datetime.now().timestamp() > access_token_expiry:
         return RedirectResponse('/login', status_code=303)
-        
-    # fh.counts.xtra(name=access_token_expiry)
 
 auth_callback_path = "/auth_redirect"
 
