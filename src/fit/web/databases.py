@@ -8,7 +8,7 @@ from fit.nutrition.data_models import (KITCHEN_ITEM_CATEGORIES, Carbohydrates,
                                        Micronutrients, NutritionalInformation)
 
 
-def init_db(database_path: str, metrics: dict[str, list[str]]):
+def init_db(database_path: str):
     """
     Initialize the database and create tables if they don't exist.
     """
@@ -17,116 +17,108 @@ def init_db(database_path: str, metrics: dict[str, list[str]]):
     users_table = db.t.users
     if users_table not in db.t:
         users_table.create(
-            dict(
-                user_id=int,
-                email=str,
-            ),
+            user_id=int,
+            email=str,
             pk='user_id'
         )
 
     meals_table = db.t.meals
     if meals_table not in db.t:
         meals_table.create(
-            dict(
-                date_entered=str,
-                ingredients=str,
-                meal_time=str,
-                user_description=str,
-                llm_summary=str,
-                calories=float,
-                protein=float,
-                carbohydrates=float,
-                fat=float,
-                fiber=float,
-                vitamin_a=float,
-                vitamin_c=float,
-                vitamin_d=float,
-                calcium=float,
-                iron=float,
-                potassium=float,
-                sodium=float,
-                creatine=float,
-                is_supplement=bool,
-                user_id=int, # foreign key
-            ),
-            pk="rowid"
+            date_entered=str,
+            ingredients=str,
+            meal_time=str,
+            user_description=str,
+            llm_summary=str,
+            calories=float,
+            protein=float,
+            carbohydrates=float,
+            fat=float,
+            fiber=float,
+            vitamin_a=float,
+            vitamin_c=float,
+            vitamin_d=float,
+            calcium=float,
+            iron=float,
+            potassium=float,
+            sodium=float,
+            creatine=float,
+            is_supplement=bool,
+            user_id=int, # foreign key
+            pk="rowid",
+            not_null= ["user_id"]
         )
 
     # Table for storing supplement definitions
     supplements_table = db.t.supplements
     if supplements_table not in db.t:
         supplements_table.create(
-            dict(
-                user_id=int, # foreign key
-                name=str, 
-                description=str,
-                calories=float,
-                protein=float,
-                carbohydrates=float,
-                fat=float,
-                fiber=float,
-                vitamin_a=float,
-                vitamin_c=float,
-                vitamin_d=float,
-                calcium=float,
-                iron=float,
-                potassium=float,
-                sodium=float,
-                creatine=float,
-            ),
-            pk='name'
+            user_id=int, # foreign key
+            name=str, 
+            description=str,
+            calories=float,
+            protein=float,
+            carbohydrates=float,
+            fat=float,
+            fiber=float,
+            vitamin_a=float,
+            vitamin_c=float,
+            vitamin_d=float,
+            calcium=float,
+            iron=float,
+            potassium=float,
+            sodium=float,
+            creatine=float,
+            pk='name',
+            not_null= ["user_id"]
         )
 
     measurements_table = db.t.measurements  
     if measurements_table not in db.t:
         measurements_table.create(
-            dict(
-                datetime=str,
-                height=float,
-                weight=float,
-                user_id=int, # foreign key
-            ),
-            pk='uuid'
+            datetime=str,
+            height=float,
+            weight=float,
+            user_id=int, # foreign key
+            pk='uuid',
+            not_null= ["user_id"]
         )
     
     water_table = db.t.water
     if water_table not in db.t:
         water_table.create(
-            dict(
-                date=str,
-                user_id=int, # foreign key
-                time=str,
-                water_consumed_ml=float,
-            ),
-            pk='uuid'
+            date=str,
+            user_id=int, # foreign key
+            time=str,
+            water_consumed_ml=float,
+            pk='uuid',
+            not_null= ["user_id"]
         )
 
     profile_table = db.t.profile
     if profile_table not in db.t:
         profile_table.create(
-            dict(
-                user_id=int, # foreign key
-                name=str,
-                email=str,
-                gender=str,
-                date_of_birth=str,
-                units=str,
-                dietary_restrictions=str,
-            ),
-            pk='user_id'
+            user_id=int, # foreign key
+            name=str,
+            email=str,
+            gender=str,
+            date_of_birth=str,
+            units=str,
+            dietary_restrictions=str,
+            pk='user_id',
+            not_null= ["user_id"]
         )
     
     inventory_table = db.t.inventory
     if inventory_table not in db.t:
         inventory_table.create(
-            dict(
-                user_id=int, # foreign key
-                title=str,
-                quantity=float,
-                unit=str,
-                category=str,
-            ),
-            pk='rowid'
+            user_id=int, # foreign key
+            title=str,
+            quantity=float,
+            unit=str,
+            category=str,
+            pk='rowid',
+            not_null= ["user_id"]
         )
 
     return db
@@ -265,22 +257,22 @@ def insert_meal(database: fh.Database, meal_description: str, meal: MealBreakdow
         meals_table.insert(
             date_entered=meal_date,
             meal_time=meal_time,
-        user_description=meal_description,
-        llm_summary=meal.title,
-        ingredients=meal.ingredients,
-        calories=meal.calories,
-        protein=meal.macronutrients.protein,
-        carbohydrates=meal.macronutrients.carbohydrates.total,
-        fat=meal.macronutrients.fat.total,  
-        vitamin_a=meal.micronutrients.vitamin_a,
-        vitamin_c=meal.micronutrients.vitamin_c,
-        vitamin_d=meal.micronutrients.vitamin_d,
-        calcium=meal.micronutrients.calcium,
-        iron=meal.micronutrients.iron,
-        potassium=meal.micronutrients.potassium,
-        sodium=meal.micronutrients.sodium,
-        fiber=meal.macronutrients.carbohydrates.fiber,
-        creatine=meal.conditional_nutrients.creatine,
+            user_description=meal_description,
+            llm_summary=meal.title,
+            ingredients=meal.ingredients,
+            calories=meal.calories,
+            protein=meal.macronutrients.protein,
+            carbohydrates=meal.macronutrients.carbohydrates.total,
+            fat=meal.macronutrients.fat.total,  
+            vitamin_a=meal.micronutrients.vitamin_a,
+            vitamin_c=meal.micronutrients.vitamin_c,
+            vitamin_d=meal.micronutrients.vitamin_d,
+            calcium=meal.micronutrients.calcium,
+            iron=meal.micronutrients.iron,
+            potassium=meal.micronutrients.potassium,
+            sodium=meal.micronutrients.sodium,
+            fiber=meal.macronutrients.carbohydrates.fiber,
+            creatine=meal.conditional_nutrients.creatine,
             is_supplement=False
         )
     except Exception as e:
