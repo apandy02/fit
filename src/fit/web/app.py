@@ -24,7 +24,8 @@ tlink = (fh.Script(src="https://cdn.tailwindcss.com"),)
 amcharts = [
     fh.Script(src="https://cdn.amcharts.com/lib/5/index.js"),
     fh.Script(src="https://cdn.amcharts.com/lib/5/percent.js"),
-    fh.Script(src="https://cdn.amcharts.com/lib/5/themes/Dark.js")
+    fh.Script(src="https://cdn.amcharts.com/lib/5/themes/Dark.js"),
+    fh.Script(src="https://cdn.jsdelivr.net/npm/apexcharts@3.46.0/dist/apexcharts.min.js")
 ]
 plotly = fh.Script(src="https://cdn.plot.ly/plotly-2.32.0.min.js")
 

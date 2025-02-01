@@ -20,7 +20,7 @@ def metric_card(
     ):
     """Create a card containing a metric plot"""
     if view_type == "daily":
-        plot_data, plot_layout, js_code = food_plots.create_amcharts_donut(data)
+        plot_data, plot_layout, js_code = food_plots.create_apex_donut(data)
     else:
         plot_data, plot_layout, js_code = food_plots.create_plotly_bars(title, y_axis_title, data)
     
@@ -61,7 +61,7 @@ def metric_card(
             fh.Div(
                 fh.Button(
                     "Get Suggestions",
-                    cls="btn btn-sm btn-primary mt-4",
+                    cls="btn btn-sm btn-primary outline outline-1 outline-primary-content mt-4 rounded-md text-xs",
                     hx_post=f"/get_nutrient_suggestions/{title.lower()}",
                     hx_target=f"#{plot_id}-suggestions",
                     hx_indicator=f"#{plot_id}-suggestions-loading-indicator"
@@ -82,7 +82,7 @@ def metric_card(
         fh.Div(
             *buttons,
             fh.Div(
-                fh.H3(display_title, cls="text-xl font-bold text-primary-content text-center mb-4"),
+                fh.H3(display_title, cls="text-xl font-bold text-primary-content text-center mb-8"),
                 fh.Div(id=plot_id, cls="w-full h-[300px]"),
                 cls="w-full"
             ),
@@ -95,9 +95,8 @@ def metric_card(
                     Plotly.newPlot('{plot_id}', data, layout, {{responsive: true}});
                     """
                 ),
-                cls="w-"
             ),
-            fh.P(analysis_text, cls="text-md text-primary-content mt-4 text-center") if analysis_text else None,
+            fh.P(analysis_text, cls="text-md text-primary-content mb-2 text-center") if analysis_text else None,
             fh.Div(
                 suggestions_button,
                 cls="flex justify-center"

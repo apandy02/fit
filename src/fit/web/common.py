@@ -190,7 +190,7 @@ def create_text_generation_card(endpoint: str, button_text: str = "Generate Anal
                 fh.Div(
                     fh.Button(
                         button_text,
-                        cls="btn btn-primary outline outline-1 outline-primary-content mt-4",
+                        cls="btn btn-primary outline outline-1 outline-primary-content mt-4 rounded-md",
                         hx_post=endpoint,
                         hx_target="#analysis-content",
                         hx_indicator="#loading-indicator"
