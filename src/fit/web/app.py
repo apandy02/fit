@@ -1,14 +1,15 @@
 from datetime import datetime
 
 import fasthtml.common as fh
+from fasthtml.common import RedirectResponse
+from fasthtml.oauth import redir_url
+
 import fit.web.kitchen.requests as kitchen
 import fit.web.nutrition.requests as nutrition
 import fit.web.performance as performance
 import fit.web.progress as progress
 import fit.web.rest as rest
 import fit.web.user_profile as user_profile
-from fasthtml.common import RedirectResponse
-from fasthtml.oauth import redir_url
 from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
 from fit.web.auth.clients import whoop_client_oauth as whoop_client
 from fit.web.auth.login_page import get_login_page
