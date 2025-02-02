@@ -16,11 +16,7 @@ def init_db(database_path: str):
 
     users_table = db.t.users
     if users_table not in db.t:
-        users_table.create(
-            user_id=int,
-            email=str,
-            pk='user_id'
-        )
+        users_table.create(user_id=int, email=str, provider=str, provider_user_id=str, pk='user_id')
 
     meals_table = db.t.meals
     if meals_table not in db.t:

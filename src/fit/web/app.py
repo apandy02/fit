@@ -8,10 +8,7 @@ import fit.web.progress as progress
 import fit.web.rest as rest
 import fit.web.user_profile as user_profile
 from fasthtml.common import RedirectResponse
-from fasthtml.oauth import redir_url
-from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
-from fit.web.auth.clients import whoop_client_oauth as whoop_client
-from fit.web.auth.login_page import get_login_page
+import  fit.web.auth.auth as auth
 
 htmx_indicator_style = fh.Style("""
 .htmx-indicator {
@@ -105,6 +102,10 @@ app.post("/generate_performance_overview")(performance.generate_overview)
 
 fh.reg_re_param("imgext", "png")
 
+app.get("/login")(auth.login)
+app.get(auth.fitbit_auth_callback_path)(auth.fitbit_auth_redirect)
+app.get(auth.whoop_auth_callback_path)(auth.whoop_auth_redirect)
+
 @app.get(r"/static/{path:path}")
 def get(path: str):
     return fh.FileResponse(f"{path}")
@@ -112,33 +113,6 @@ def get(path: str):
 @app.get('/')
 def home(auth): return fh.P('Logged in!'), fh.A('Log out', href='/logout')
 
-@app.get('/login')
-def login(req):
-    fitbit_redir = redir_url(req, f"{auth_callback_path}/fitbit")
-    whoop_redir = redir_url(req, f"{auth_callback_path}/whoop")
-    fitbit_login_link = fitbit_client.login_link(fitbit_redir, scope=fitbit_scope)
-    whoop_login_link = whoop_client.login_link(whoop_redir, scope=whoop_scope)
-    return get_login_page(req, fitbit_login_link=fitbit_login_link, whoop_login_link=whoop_login_link)
-
-@app.get(fitbit_auth_callback_path)
-def fitbit_auth_redirect(code:str, request, session):
-    redir = redir_url(request, f"{auth_callback_path}/fitbit")
-    access_token_dict = fitbit_client.fetch_access_token(code, redir)
-    session['access_token'] = access_token_dict['access_token']
-    session['access_token_expiry'] = access_token_dict['expires_at']
-    session['refresh_token'] = access_token_dict['refresh_token']
-    session["tracker"] = "fitbit"
-    return RedirectResponse('/nutrition', status_code=303)
-
-@app.get(whoop_auth_callback_path)
-def whoop_auth_redirect(code:str, request, session):
-    redir = redir_url(request, whoop_auth_callback_path)
-    access_token_dict = whoop_client.fetch_access_token(code, redir)
-    session['access_token'] = access_token_dict['access_token']
-    session['access_token_expiry'] = access_token_dict['expires_at']
-    session['refresh_token'] = access_token_dict['refresh_token']
-    session["tracker"] = "whoop"
-    return RedirectResponse('/nutrition', status_code=303)
 
 
 fh.serve() 
