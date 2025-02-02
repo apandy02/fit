@@ -1,6 +1,8 @@
 from datetime import datetime
 
 import fasthtml.common as fh
+from fasthtml.common import RedirectResponse
+
 import fit.web.auth.auth as auth
 import fit.web.kitchen.requests as kitchen
 import fit.web.nutrition.requests as nutrition
@@ -8,7 +10,6 @@ import fit.web.performance as performance
 import fit.web.progress as progress
 import fit.web.rest as rest
 import fit.web.user_profile as user_profile
-from fasthtml.common import RedirectResponse
 
 htmx_indicator_style = fh.Style("""
 .htmx-indicator {

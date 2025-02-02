@@ -1,4 +1,5 @@
 import fasthtml.common as fh
+
 from fit.web.common import DB, page_outline
 from fit.web.databases import get_user_data
 
