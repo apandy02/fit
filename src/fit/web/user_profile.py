@@ -222,6 +222,7 @@ async def update_profile(session, request: fh.Request):
         if "existing_restrictions[]" in form_data:
             form_data.pop("existing_restrictions[]")
         
+        print(form_data)
         DB.t.profile.update(form_data)
         
         return fh.P(

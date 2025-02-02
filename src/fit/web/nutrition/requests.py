@@ -254,9 +254,9 @@ async def save_supplement(session, request: fh.Request):
             cls="text-red-500 font-semibold text-center"
         )
 
-async def get_supplements():
+async def get_supplements(session):
     """Get all supplements for the dropdown"""
-    supplements = databases.get_supplement_names(DB)
+    supplements = databases.get_supplement_names(DB, session["user_id"])
     return fh.Select(
         *[
             fh.Option(

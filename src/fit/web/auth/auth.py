@@ -29,6 +29,7 @@ def fitbit_auth_redirect(code:str, request, session):
     user_id = get_user_id(DB, provider_user_id, "fitbit")
     if user_id is None:
         user_id = insert_new_user(DB, provider_user_id, "fitbit")
+        DB.t.profile.insert({"user_id": user_id}) # TODO: more verbose profile creation from oauth user details
         # TODO: separate handling of new and existing users
     else:
         user_id = user_id[0] # TODO: assess if this is the best way to handle this
@@ -49,6 +50,7 @@ def whoop_auth_redirect(code:str, request, session):
     
     if user_id is None:
         user_id = insert_new_user(DB, provider_user_id, "whoop")
+        DB.t.profile.insert({"user_id": user_id})
         # TODO: separate handling of new and existing users
     else:
         user_id = user_id[0] # TODO: see if raising user doesnt exist error is better than returning None
