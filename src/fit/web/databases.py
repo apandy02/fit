@@ -133,7 +133,9 @@ def insert_new_user(database: fh.Database, provider_user_id: str, provider: str)
         "provider_user_id": provider_user_id,
         "provider": provider
     })
-    return database.lastrowid
+    query = "select user_id from users where provider_user_id = ? and provider = ?" #TODO: figure out if there is a more efficient way to do this (get last inserted id)
+    result = database.execute(query, (provider_user_id, provider)).fetchone()
+    return result[0]
 
 def get_daily_meals(database: fh.Database, date: datetime, user_id: int) -> list[dict]:
     """Get all meals for a given date
@@ -150,7 +152,6 @@ def get_daily_meals(database: fh.Database, date: datetime, user_id: int) -> list
         WHERE date_entered = ? AND is_supplement = 0 AND user_id = ?
         ORDER BY meal_time ASC
     """
-    
     results = database.execute(query, (str(date), user_id)).fetchall()
     meals = []
     for row in results:
@@ -314,12 +315,12 @@ def set_visible_metrics(database: fh.Database, metrics: list[str], user_id: int)
     metrics = json.dumps(metrics)
     database.execute(query, (metrics, user_id))
 
-def get_user_data(db: fh.Database, user_id: int):
+def get_user_data(database: fh.Database, user_id: int):
     """Get user data from the database"""
     query = """
             SELECT name, email, date_of_birth, units, gender, dietary_restrictions FROM profile WHERE user_id = ?
     """
-    result = db.execute(query, (user_id,)).fetchone()
+    result = database.execute(query, (user_id,)).fetchone()
     if result:
         return {
             "name": result[0],
@@ -335,10 +336,12 @@ def get_user_data(db: fh.Database, user_id: int):
 def get_dietary_restrictions(database: fh.Database, user_id: int):
     """Get the dietary restrictions from the database"""
     query = """
-        select dietary_restrictions from user_data where user_id = ?
+        select dietary_restrictions from profile where user_id = ?
     """
     result = database.execute(query, (user_id,)).fetchone()
-    return result[0]
+    if result:
+        return result[0]
+    return None
 
 def insert_supplement(database: fh.Database, name: str, consumption_time: str, nutritional_info: NutritionalInformation, date: str, user_id: int):
     """

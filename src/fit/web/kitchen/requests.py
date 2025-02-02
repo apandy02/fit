@@ -8,21 +8,22 @@ from fit.nutrition import assistants as assistants
 from PIL import Image
 
 
-def get():
+def get(session):
     """Return the kitchen inventory page content"""
-    inventory = get_inventory()
+    inventory = get_inventory(session["user_id"])
     content = ui.kitchen_page_content(inventory)
     return common.page_outline(1, "Kitchen Inventory", True, True, content) 
 
-async def add_item(request: fh.Request):
+async def add_item(session, request: fh.Request):
     """Add an item to the kitchen inventory"""
     try:
         form = await request.form()
+        user_id = session["user_id"]
         item = form.get("item")
         quantity = form.get("quantity")
         unit = form.get("unit")
         category = form.get("category")
-        db.insert_inventory_item(common.DB, item, quantity, unit, category)
+        db.insert_inventory_item(common.DB, item, quantity, unit, category, user_id=user_id)
         return fh.Response(status=200)
     except Exception as e:
         print(e)
@@ -39,10 +40,11 @@ async def add_inventory_from_image(food_image: fh.UploadFile, additional_context
         print(e)
         return fh.Response(status=500)
 
-async def save_inventory(request: fh.Request):
+async def save_inventory(session, request: fh.Request):
     """Save the inventory items to the database"""
     try:
         form = await request.form()
+        user_id = session["user_id"]
         items = []
         i = 0
         while f"items[{i}][title]" in form:
@@ -60,7 +62,8 @@ async def save_inventory(request: fh.Request):
                 item["title"],
                 item["quantity"],
                 item["unit"],
-                item["category"]
+                item["category"],
+                user_id=user_id
             )
         
         return fh.Div(
@@ -82,10 +85,10 @@ async def save_inventory(request: fh.Request):
             cls="text-red-500 font-semibold text-center"
         )
 
-def get_inventory():
+def get_inventory(user_id: int):
     """Get the inventory from the database"""
     try:
-        inventory = db.get_inventory(common.DB)
+        inventory = db.get_inventory(common.DB, user_id)
         return inventory
     except Exception as e:
         print(e)
@@ -134,13 +137,14 @@ async def delete_inventory_item(rowid: int):
         print(e)
         return fh.Response(status=500)
 
-async def generate_inventory_additions(request: fh.Request):
+async def generate_inventory_additions(session, request: fh.Request):
     """Generate inventory additions"""
     try:
-        current_inventory = get_inventory()
-        user_meals = db.get_all_meal_summaries(common.DB)
+        user_id = session["user_id"]
+        current_inventory = get_inventory(user_id)
+        user_meals = db.get_all_meal_summaries(common.DB, user_id)
         user_preferences = assistants.summarize_user_preferences(user_meals)
-        dietary_restrictions = db.get_dietary_restrictions(common.DB, "default")
+        dietary_restrictions = db.get_dietary_restrictions(common.DB, user_id)
         grocery_list = assistants.generate_grocery_list(
             current_inventory, user_preferences, dietary_restrictions
         ).content[0].parsed

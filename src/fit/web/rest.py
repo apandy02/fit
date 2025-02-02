@@ -135,7 +135,7 @@ async def generate_overview(session):
         tracker = tracker_factory(session["tracker"], session["access_token"])
         yesterday = datetime.datetime.today().date() - datetime.timedelta(days=1)
         sleep_data = tracker.get_daily_sleep(yesterday)
-        meals = db.get_daily_meals(DB, yesterday)
+        meals = db.get_daily_meals(DB, yesterday, session["user_id"])
         formatted_meals = [(datetime.datetime.combine(yesterday, meal["meal_time"]), meal["meal"]) for meal in meals]
         activities = tracker.get_daily_workouts(yesterday)
         formatted_activities = [(activity.start_time, activity.type, activity.intensity) for activity in activities]

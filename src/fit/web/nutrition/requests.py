@@ -29,9 +29,12 @@ def get_daily_overview(session, date: str = None):
             date = datetime.strptime(date, "%Y-%m-%d").date()
         except ValueError:
             date = datetime.today().date()
+
+    if date is None:
+        date = datetime.today().date()
     
     data = get_daily_nutrition_data(date, tracker, session["user_id"])
-    return overview_page_content(data, "daily", date)
+    return overview_page_content(session, data, "daily", date)
 
     
 
@@ -41,10 +44,10 @@ def get_weekly_overview(session):
     week = get_current_week_dates()
     data = get_weekly_nutrition_data(week, tracker, session["user_id"])
     date = datetime.today().date()
-    return overview_page_content(data, "weekly", date)
+    return overview_page_content(session, data, "weekly", date)
 
 
-def overview_page_content(data: list[dict], current_view: str, date: datetime.date = None):
+def overview_page_content(session, data: list[dict], current_view: str, date: datetime.date = None):
     menu_items = [
         ("Food", "🍽️", "openFoodModal()"),
         ("Water", "💧", "openWaterModal()"),  # Updated to use water modal
@@ -58,7 +61,7 @@ def overview_page_content(data: list[dict], current_view: str, date: datetime.da
     content = fh.Article(
         fh.Div(
             ui.create_page_header(current_view, date),
-            ui.create_metrics_grid(data, water_metrics, current_view, date),
+            ui.create_metrics_grid(session["user_id"], data, water_metrics, current_view, date),
             ui.food_tracking_modal(date),
             common.create_fab_menu(menu_items),
             cls="max-w-6xl mx-auto p-6"
@@ -140,8 +143,9 @@ async def analyze_image(food_image: fh.UploadFile, additional_context: str, meal
 
     return ui.feedback_form(additional_context, meal_time_obj, nutrition_info, date)
 
-async def save_meal(request: fh.Request, date: str | None = None):
+async def save_meal(session, request: fh.Request, date: str | None = None):
     """Save the meal with user-adjusted nutrition values"""
+    user_id = session["user_id"]
     try:
         form = await request.form()
         if date is not None:
@@ -183,7 +187,7 @@ async def save_meal(request: fh.Request, date: str | None = None):
             micronutrients=micronutrients,
             conditional_nutrients=conditional_nutrients
         )    
-        databases.insert_meal(DB, form["title"], nutrition_info, date, meal_time)
+        databases.insert_meal(DB, form["title"], nutrition_info, date, meal_time, user_id=user_id)
         return fh.Response(headers={"HX-Redirect": "/nutrition"}, status_code=200)
     
     except Exception as e:
@@ -203,8 +207,9 @@ async def delete_meal(meal_id: int):
             cls="text-red-500 font-semibold text-center"
         )
 
-async def save_supplement(request: fh.Request):
+async def save_supplement(session, request: fh.Request):
     """Save the supplement with user-adjusted nutrition values"""
+    user_id = session["user_id"]
     try:
         form = await request.form()
 
@@ -222,7 +227,9 @@ async def save_supplement(request: fh.Request):
             potassium=form["potassium"],
             sodium=form["sodium"]
         )    
-        databases.insert_supplement(DB, name=form["summary"], consumption_time=form["time_consumed"], nutritional_info=nutrition_info)
+        databases.insert_supplement(
+            DB, name=form["summary"], consumption_time=form["time_consumed"], nutritional_info=nutrition_info, user_id=user_id
+        )
         
         return fh.Div(
             fh.P(
@@ -261,8 +268,9 @@ async def get_supplements():
         required=True
     )
 
-async def log_supplement_consumption(request: fh.Request, date: str | None = None):
+async def log_supplement_consumption(session, request: fh.Request, date: str | None = None):
     """Log a supplement consumption entry"""
+    user_id = session["user_id"]
     try:
         form = await request.form()
         supplement_name = form["supplement_name"]
@@ -273,7 +281,8 @@ async def log_supplement_consumption(request: fh.Request, date: str | None = Non
             DB, 
             name=supplement_name,
             consumption_time=time_consumed,
-            nutritional_info=supplement_info
+            nutritional_info=supplement_info,
+            user_id=user_id
         )
         
         return fh.Div(
@@ -440,8 +449,9 @@ async def get_nutrient_suggestions(session, nutrient: str):
         cls="bg-base-200 p-4 rounded-lg"
     )
 
-async def log_water(request: fh.Request, date: str | None = None):
+async def log_water(session, request: fh.Request, date: str | None = None):
     """Save water consumption entry"""
+    user_id = session["user_id"]
     try:
         form = await request.form()
         time_consumed = form["time_consumed"]
@@ -450,7 +460,7 @@ async def log_water(request: fh.Request, date: str | None = None):
             date = datetime.today().date()
         time_obj = datetime.strptime(time_consumed, "%H:%M").time()
         databases.insert_water_consumption(
-            database=DB, water_consumed_ml=form["amount"], date_consumed=date, time_consumed=time_obj
+            database=DB, water_consumed_ml=form["amount"], date_consumed=date, time_consumed=time_obj, user_id=user_id
         )
         
         return fh.Div(

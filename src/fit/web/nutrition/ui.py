@@ -505,13 +505,6 @@ def create_page_header(current_view: str, date: datetime.date = None):
 
 def create_metric_overview_section(title, data, metrics, view_type: str = "daily"):
     """Create a metrics overview section with configurable metrics"""    
-    print(f"{data=}, {metrics=}")
-    print([
-        (data[metric["column_name"]]["consumed"],
-        data[metric["column_name"]]["goal"],
-        data[metric["column_name"]].get("burned"))
-        for metric in metrics
-    ])
     return fh.Section(
         fh.Div(
             fh.Div(
@@ -546,7 +539,6 @@ def create_macro_section(data, view_type: str):
         {"name": "Carbohydrates", "column_name": "carbohydrates", "unit": "g", "plot_id": "carbohydrates"},
         {"name": "Fat", "column_name": "fat", "unit": "g", "plot_id": "fat"}
     ]
-
     return create_metric_overview_section("Macronutrients", data, macro_metrics, view_type)
 
 def create_micro_section(data, view_type: str):
@@ -574,6 +566,7 @@ def create_metrics_grid(user_id, data, water_metrics, view_type: str, date: date
             text_generation_endpoint += f"/{date.strftime('%Y-%m-%d')}"
     else:
         text_generation_endpoint = "/generate_weekly_nutrition_overview"
+    
     sections = [
         create_text_generation_card(text_generation_endpoint, "Generate Nutrition Overview"),
         create_meals_list(user_id, date) if view_type == "daily" else None,
@@ -892,7 +885,7 @@ def supplement_modal(date: datetime.date):
 
 def create_meals_list(user_id, date: datetime.date):
     """Create an expandable list of meals for the given date"""
-    meals = get_daily_meals(DB, user_id, date)
+    meals = get_daily_meals(DB, user_id=user_id, date=date)
     
     if not meals:
         content = fh.P("No meals logged for this day", cls="text-primary-content text-center")
