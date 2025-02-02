@@ -30,7 +30,7 @@ def get_daily_overview(session, date: str = None):
         except ValueError:
             date = datetime.today().date()
     
-    data = get_daily_nutrition_data(date, tracker)
+    data = get_daily_nutrition_data(date, tracker, session["user_id"])
     return overview_page_content(data, "daily", date)
 
     
@@ -39,7 +39,7 @@ def get_weekly_overview(session):
     """Return the weekly nutritional overview page content"""
     tracker = tracker_factory(session["tracker"], session["access_token"])
     week = get_current_week_dates()
-    data = get_weekly_nutrition_data(week, tracker)
+    data = get_weekly_nutrition_data(week, tracker, session["user_id"])
     date = datetime.today().date()
     return overview_page_content(data, "weekly", date)
 
@@ -67,7 +67,7 @@ def overview_page_content(data: list[dict], current_view: str, date: datetime.da
     )
     return common.page_outline(1, "Nutritional Overview", True, True, content)
 
-def get_weekly_nutrition_data(week: list[datetime], tracker: FitnessTracker):
+def get_weekly_nutrition_data(week: list[datetime], tracker: FitnessTracker, user_id: int):
     """Get the current nutrition data for display"""
     data = {
         "calories": {"consumed": [], "goal": [], "burned": []},
@@ -90,21 +90,21 @@ def get_weekly_nutrition_data(week: list[datetime], tracker: FitnessTracker):
                 for key in data[metric]:
                     data[metric][key].extend([0])
         else:
-            daily_data = get_daily_nutrition_data(date, tracker)
+            daily_data = get_daily_nutrition_data(date, tracker, user_id)
             for metric, values in daily_data.items():
                 for key, value in values.items():
                     data[metric][key].extend(value)
     
     return data
 
-def get_daily_nutrition_data(date: datetime, tracker: FitnessTracker):
+def get_daily_nutrition_data(date: datetime, tracker: FitnessTracker, user_id: int):
     """Get the current nutrition data for display"""
     calories_burned = tracker.get_daily_calories_burned(date)
     goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
-    daily_consumption = databases.get_daily_cumulative_nutrition(DB, date)
-    water_consumed = databases.get_daily_water_consumption(DB, date)
-    user_info = databases.get_user_data(DB)
-    measurements = databases.get_latest_user_measurements(DB)
+    daily_consumption = databases.get_daily_cumulative_nutrition(DB, date, user_id)
+    water_consumed = databases.get_daily_water_consumption(DB, date, user_id)
+    user_info = databases.get_user_data(DB, user_id)
+    measurements = databases.get_latest_user_measurements(DB, user_id)
     water_goal = estimate_daily_water_intake(measurements, user_info, calories_burned)
     
     return {
@@ -119,43 +119,6 @@ def get_daily_nutrition_data(date: datetime, tracker: FitnessTracker):
         "water": {"consumed": [water_consumed], "goal": [water_goal]},
         "creatine": {"consumed": [2.0], "goal": [5.0]}
     }
-
-async def toggle_dropdown(dropdown_id: str):
-    """Toggle the visibility of a dropdown"""
-    visible = databases.get_visible_metrics(DB, "default")
-    if "macro" in dropdown_id:
-        all_metrics = ["Calories", "Protein", "Carbohydrates", "Fat"]
-    elif "micro" in dropdown_id:
-        all_metrics = ["Vitamin A", "Vitamin C", "Iron", "Calcium"]
-    elif "conditional" in dropdown_id:
-        all_metrics = ["Creatine"]
-
-    metric_column_names = [metric.lower().replace(" ", "_") for metric in all_metrics]
-    hidden = [metric for metric in metric_column_names if metric not in visible]
-
-    # Return the dropdown with its content
-    return fh.Div(
-        *[
-            fh.A(
-                metric["name"],
-                cls="block w-full text-left px-4 py-2 text-sm text-primary-content hover:bg-base-200 outline  cursor-pointer",
-                onclick=f"""
-                    fetch('/show_metric/{metric}', {{method: 'POST'}})
-                        .then(response => response.text())
-                        .then(html => {{
-                            document.getElementById('metrics-container').outerHTML = html;
-                            document.getElementById('{dropdown_id}').classList.add('hidden');
-                        }});
-                    return false;
-                """,
-                href="#"
-            )
-            for metric in hidden
-        ],
-        cls="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-base-200 outline  ring-1 ring-black ring-opacity-5 z-10 block",
-        id=dropdown_id
-    )
-
 
 async def analyze_text(request: fh.Request, date: str | None = None):
     """Handle meal description analysis"""
@@ -350,27 +313,6 @@ async def regenerate_analysis(feedback: str, original_description: str):
     
     return ui.feedback_form(original_description, meal_datetime, improved_info)
 
-async def hide_metric(plot_id: str):
-    """Hide a metric by removing it from visible_metrics"""
-    visible_metrics = databases.get_visible_metrics(DB, "default")
-
-    if plot_id in visible_metrics:
-        visible_metrics.remove(plot_id)
-        databases.set_visible_metrics(DB, visible_metrics, "default")
-    return ""  # Return empty string to remove the card
-
-async def show_metric(plot_id: str, view_type: str):
-    """Show a previously hidden metric"""
-    visible_metrics = databases.get_visible_metrics(DB, "default")
-    column_name = plot_id.replace("-plot", "").replace("_", "")
-    if column_name not in visible_metrics:
-        visible_metrics.append(column_name)
-        databases.set_visible_metrics(DB, visible_metrics, "default")
-    
-    date = datetime.today().date()
-    return ui.create_metrics_grid(get_daily_nutrition_data(date), visible_metrics, view_type)
-
-
 # TODO: the next two functions are doing a lot of the same work, find a way to refactor
 async def generate_weekly_overview(session):
     """
@@ -413,6 +355,7 @@ async def generate_daily_overview(session, date: str | None = None):
     Then, passing these to the daily_io_analysis LMP.
     """
     tracker = tracker_factory(session["tracker"], session["access_token"])
+    user_id = session["user_id"]
     if date is None:
         date_obj = datetime.today().date()
     else:
@@ -421,8 +364,8 @@ async def generate_daily_overview(session, date: str | None = None):
         except ValueError:
             date_obj = datetime.today().date()
             
-    meals = databases.get_daily_meals(DB, date_obj)
-    dietary_restrictions = databases.get_dietary_restrictions(DB, "default")
+    meals = databases.get_daily_meals(DB, date_obj, user_id)
+    dietary_restrictions = databases.get_dietary_restrictions(DB, user_id)
     calories_burned = tracker.get_daily_calories_burned(date_obj)
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
@@ -458,14 +401,15 @@ async def nutrition_redirect(request: fh.Request):
 
 async def get_nutrient_suggestions(session, nutrient: str):
     """Generate meal suggestions based on a specific nutrient"""
-    daily_nutrition = databases.get_daily_cumulative_nutrition(DB, datetime.today().date())
+    user_id = session["user_id"]
+    daily_nutrition = databases.get_daily_cumulative_nutrition(DB, datetime.today().date(), user_id)
     tracker = tracker_factory(session["tracker"], session["access_token"])
     calories_burned = tracker.get_daily_calories_burned(datetime.today().date())
     targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     targets.update(micronutrient_goals)
-    restrictions = databases.get_dietary_restrictions(DB, "default")
-    user_preferences = assistants.summarize_user_preferences(databases.get_all_meal_summaries(DB)) # TODO: cache the output of this so that we aren't calling it every time
-    kitchen_inventory = databases.get_inventory(DB)
+    restrictions = databases.get_dietary_restrictions(DB, user_id)
+    user_preferences = assistants.summarize_user_preferences(databases.get_all_meal_summaries(DB, user_id)) # TODO: cache the output of this so that we aren't calling it every time
+    kitchen_inventory = databases.get_inventory(DB, user_id)
     
     recommendations = assistants.make_recommendations(
         consumption=daily_nutrition,

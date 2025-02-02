@@ -505,6 +505,13 @@ def create_page_header(current_view: str, date: datetime.date = None):
 
 def create_metric_overview_section(title, data, metrics, view_type: str = "daily"):
     """Create a metrics overview section with configurable metrics"""    
+    print(f"{data=}, {metrics=}")
+    print([
+        (data[metric["column_name"]]["consumed"],
+        data[metric["column_name"]]["goal"],
+        data[metric["column_name"]].get("burned"))
+        for metric in metrics
+    ])
     return fh.Section(
         fh.Div(
             fh.Div(
@@ -559,7 +566,7 @@ def create_conditional_section(data, view_type: str):
     ]
     return create_metric_overview_section("Conditionally Essential Nutrients", data, conditional_metrics, view_type)
 
-def create_metrics_grid(data, water_metrics, view_type: str, date: datetime.date = None):
+def create_metrics_grid(user_id, data, water_metrics, view_type: str, date: datetime.date = None):
     """Create the grid of metric cards"""
     if view_type == "daily":
         text_generation_endpoint = "/generate_daily_nutrition_overview"
@@ -569,7 +576,7 @@ def create_metrics_grid(data, water_metrics, view_type: str, date: datetime.date
         text_generation_endpoint = "/generate_weekly_nutrition_overview"
     sections = [
         create_text_generation_card(text_generation_endpoint, "Generate Nutrition Overview"),
-        create_meals_list(date) if view_type == "daily" else None,
+        create_meals_list(user_id, date) if view_type == "daily" else None,
         create_macro_section(data, view_type),
         create_micro_section(data, view_type),
         create_conditional_section(data, view_type),
@@ -883,9 +890,9 @@ def supplement_modal(date: datetime.date):
         """)
     )
 
-def create_meals_list(date: datetime.date):
+def create_meals_list(user_id, date: datetime.date):
     """Create an expandable list of meals for the given date"""
-    meals = get_daily_meals(DB, date)
+    meals = get_daily_meals(DB, user_id, date)
     
     if not meals:
         content = fh.P("No meals logged for this day", cls="text-primary-content text-center")
