@@ -119,6 +119,22 @@ def init_db(database_path: str):
 
     return db
 
+def get_user_id(database: fh.Database, provider_user_id: str, provider: str) -> int | None:
+    """Get the user id for a given provider user id and provider"""
+    query = """
+        SELECT user_id FROM users WHERE provider_user_id = ? AND provider = ?
+    """
+    result = database.execute(query, (provider_user_id, provider)).fetchone()
+    return result
+
+def insert_new_user(database: fh.Database, provider_user_id: str, provider: str) -> int:
+    """Insert a new user into the database"""
+    database.t.users.insert({
+        "provider_user_id": provider_user_id,
+        "provider": provider
+    })
+    return database.lastrowid
+
 def get_daily_meals(database: fh.Database, date: datetime, user_id: int) -> list[dict]:
     """Get all meals for a given date
     
