@@ -128,15 +128,10 @@ def get_user_id(database: fh.Database, provider_user_id: str, provider: str) -> 
     result = database.execute(query, (provider_user_id, provider)).fetchone()
     return result
 
-def insert_new_user(database: fh.Database, provider_user_id: str, provider: str) -> int:
+def insert_new_user(database: fh.Database, user_dict: dict) -> int:
     """Insert a new user into the database"""
-    database.t.users.insert({
-        "provider_user_id": provider_user_id,
-        "provider": provider
-    })
-    query = "select user_id from users where provider_user_id = ? and provider = ?" #TODO: figure out if there is a more efficient way to do this (get last inserted id)
-    result = database.execute(query, (provider_user_id, provider)).fetchone()
-    return result[0]
+    row = database.t.users.insert(user_dict)
+    return row
 
 def get_daily_meals(database: fh.Database, date: datetime, user_id: int) -> list[dict]:
     """Get all meals for a given date

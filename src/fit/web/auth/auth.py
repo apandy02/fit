@@ -1,6 +1,6 @@
 from fasthtml.common import RedirectResponse
 from fasthtml.oauth import redir_url
-
+from datetime import datetime
 from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
 from fit.web.auth.clients import whoop_client_oauth as whoop_client
 from fit.web.auth.login_page import get_login_page
@@ -28,8 +28,16 @@ def fitbit_auth_redirect(code:str, request, session):
     provider_user_id = access_token_dict['user_id']
     user_id = get_user_id(DB, provider_user_id, "fitbit")
     if user_id is None:
-        user_id = insert_new_user(DB, provider_user_id, "fitbit")
-        DB.t.profile.insert({"user_id": user_id}) # TODO: more verbose profile creation from oauth user details
+        user_dict = {
+            "provider_user_id": provider_user_id,
+            "provider": "fitbit"
+        }
+        more_info = fitbit_client.get_info(token=access_token_dict['access_token'])
+        user_dict["name"] = more_info['user']['fullName']
+        user_dict["gender"] = more_info['user']['gender']
+        user_dict["date_of_birth"] = datetime.strptime(more_info['user']['dateOfBirth'], '%Y-%m-%d').strftime('%m-%d-%Y')
+        row = insert_new_user(DB, user_dict)
+        user_id = row['user_id']
         # TODO: separate handling of new and existing users
     else:
         user_id = user_id[0] # TODO: assess if this is the best way to handle this
@@ -49,8 +57,17 @@ def whoop_auth_redirect(code:str, request, session):
     user_id = get_user_id(DB, provider_user_id, "whoop")
     
     if user_id is None:
-        user_id = insert_new_user(DB, provider_user_id, "whoop")
-        DB.t.profile.insert({"user_id": user_id})
+        user_dict = {
+            "provider_user_id": provider_user_id,
+            "provider": "whoop"
+        }
+        more_info = whoop_client.get_info(token=access_token_dict['access_token'])
+        # TODO: The whoop doesn't give me gender or dob, so when I implement the front end, 
+        # there should be a form where the user must input this information
+        user_dict["name"] = more_info['user']['first_name'] + " " + more_info['user']['last_name']
+        user_dict["email"] = more_info['user']['email']
+        row = insert_new_user(DB, user_dict)
+        user_id = row['user_id']
         # TODO: separate handling of new and existing users
     else:
         user_id = user_id[0] # TODO: see if raising user doesnt exist error is better than returning None
