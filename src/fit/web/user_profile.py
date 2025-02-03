@@ -29,14 +29,140 @@ def create_editable_input(name: str, value: str, input_type: str = "text", place
         cls="flex items-center gap-2" 
     )
 
+def create_basic_info_card(user_data):
+    """Create the basic information card section"""
+    return fh.Card(
+        fh.Header(
+            fh.H3("Basic Information", cls="text-xl font-bold text-center mb-2 text-primary-content"),
+            cls="mb-6 bg-base-200"
+        ),
+        fh.Div(
+            # Name
+            create_form_row("Name", create_editable_input(
+                "name",
+                user_data.get("name", ""),
+                placeholder="John Doe"
+            )),
+            create_form_row("Email", create_editable_input(
+                "email",
+                user_data.get("email", ""),
+                input_type="email",
+                placeholder="john@example.com"
+            )),
+            # Gender
+            create_form_row("Gender", fh.Select(
+                fh.Option("Select gender", value="", selected=not user_data.get("gender"), disabled=True),
+                fh.Option("Male", value="male", selected=user_data.get("gender") == "male"),
+                fh.Option("Female", value="female", selected=user_data.get("gender") == "female"),
+                name="gender",
+                required=True,
+                cls="select select-bordered w-full bg-base-200 text-primary-content"
+            )),
+            # Date of Birth
+            create_form_row("Date of Birth", create_editable_input(
+                "date_of_birth",
+                user_data.get("date_of_birth", ""),
+                input_type="date",
+                placeholder="MM/DD/YYYY"
+            )),
+            cls="space-y-4"
+        ),
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6 mb-8"
+    )
+
+def create_dietary_restrictions_card(restrictions):
+    """Create the dietary restrictions card section"""
+    return fh.Card(
+        fh.Header(
+            fh.H3("Dietary Restrictions", cls="text-xl font-bold text-center mb-2 text-primary-content"),
+            cls="mb-6 bg-base-200"
+        ),
+        fh.Div(
+            create_form_row("Restrictions", fh.Div(
+                # Dropdown for adding restrictions
+                fh.Select(
+                    fh.Option("Select a restriction", value="", selected=True, disabled=True),
+                    fh.Option("Vegetarian", value="vegetarian"),
+                    fh.Option("Vegan", value="vegan"),
+                    fh.Option("Gluten-Free", value="gluten_free"),
+                    fh.Option("Dairy-Free", value="dairy_free"),
+                    fh.Option("Nut-Free", value="nut_free"),
+                    fh.Option("Kosher", value="kosher"),
+                    fh.Option("Halal", value="halal"),
+                    name="dietary_restrictions",
+                    hx_post="/add_restriction",
+                    hx_target="#restrictions-list",
+                    cls="select select-bordered w-full bg-base-200 text-primary-content mb-4"
+                ),
+                # Container for restriction tags
+                fh.Div(
+                    # Pre-populate existing restrictions
+                    *[
+                        fh.Div(
+                            fh.Div(
+                                r.replace('_', ' ').title(),
+                                cls="flex-grow mr-8"
+                            ),
+                            fh.Button(
+                                "×",
+                                hx_post="/remove_restriction",
+                                hx_vals=f'{{"restriction": "{r}"}}',
+                                hx_target="#restrictions-list",
+                                cls="text-lg hover:text-error focus:outline-none focus:ring-0 border-none"
+                            ),
+                            cls="bg-neutral flex items-center justify-between px-4 py-2 rounded-lg mr-2 mb-2"
+                        )
+                        for r in restrictions
+                    ],
+                    # Hidden inputs to maintain state
+                    *[
+                        fh.Input(
+                            type="hidden",
+                            name="existing_restrictions[]",
+                            value=r
+                        )
+                        for r in restrictions
+                    ],
+                    id="restrictions-list",
+                    cls="flex flex-wrap"
+                ),
+                cls="w-full"
+            )),
+            cls="space-y-4"
+        ),
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6 mb-8"
+    )
+
+def create_preferences_card(user_data):
+    """Create the preferences card section"""
+    return fh.Card(
+        fh.Header(
+            fh.H3("Preferences", cls="text-xl font-bold text-center mb-2 text-primary-content"),
+            cls="mb-6 bg-base-200"
+        ),
+        fh.Div(
+            create_form_row("Units", fh.Select(
+                fh.Option("Imperial (lbs, inches)", value="imperial", selected=user_data.get("units") == "imperial"),
+                fh.Option("Metric (kg, cm)", value="metric", selected=user_data.get("units") == "metric"),
+                name="units",
+                cls="select select-bordered w-full bg-base-200 text-primary-content"
+            )),
+            cls="space-y-4"
+        ),
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6 mb-8"
+    )
 
 def get(session):
     """Return the profile page content"""
     # Get user data
     user_data = get_profile_data(DB, session["user_id"])
     restrictions = user_data.get("dietary_restrictions", "")
+    print(f"restrictions: {restrictions}")
     if restrictions == "" or restrictions is None:
         restrictions = []
+    else:
+        restrictions = restrictions.split(",")
+
     content = fh.Article(
         fh.Div(
             # User Profile Section
@@ -50,123 +176,9 @@ def get(session):
                     hx_target="#profile-result",
                     cls="space-y-6"
                 )(
-                    # Basic Information
-                    fh.Card(
-                        fh.Header(
-                            fh.H3("Basic Information", cls="text-xl font-bold text-center mb-2 text-primary-content"),
-                            cls="mb-6 bg-base-200"
-                        ),
-                        fh.Div(
-                            # Name
-                            create_form_row("Name", create_editable_input(
-                                "name",
-                                user_data.get("name", ""),
-                                placeholder="John Doe"
-                            )),
-                            create_form_row("Email", create_editable_input(
-                                "email",
-                                user_data.get("email", ""),
-                                input_type="email",
-                                placeholder="john@example.com"
-                            )),
-                            # Gender
-                            create_form_row("Gender", fh.Select(
-                                fh.Option("Select gender", value="", selected=not user_data.get("gender"), disabled=True),
-                                fh.Option("Male", value="male", selected=user_data.get("gender") == "male"),
-                                fh.Option("Female", value="female", selected=user_data.get("gender") == "female"),
-                                name="gender",
-                                required=True,
-                                cls="select select-bordered w-full bg-base-200 text-primary-content"
-                            )),
-                            # Date of Birth
-                            create_form_row("Date of Birth", create_editable_input(
-                                "date_of_birth",
-                                user_data.get("date_of_birth", ""),
-                                input_type="date",
-                                placeholder="MM/DD/YYYY"
-                            )),
-                            cls="space-y-4"
-                        ),
-                        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6 mb-8"
-                    ),
-                    # Dietary Restrictions
-                    fh.Card(
-                        fh.Header(
-                            fh.H3("Dietary Restrictions", cls="text-xl font-bold text-center mb-2 text-primary-content"),
-                            cls="mb-6 bg-base-200"
-                        ),
-                        fh.Div(
-                            create_form_row("Restrictions", fh.Div(
-                                # Dropdown for adding restrictions
-                                fh.Select(
-                                    fh.Option("Select a restriction", value="", selected=True, disabled=True),
-                                    fh.Option("Vegetarian", value="vegetarian"),
-                                    fh.Option("Vegan", value="vegan"),
-                                    fh.Option("Gluten-Free", value="gluten_free"),
-                                    fh.Option("Dairy-Free", value="dairy_free"),
-                                    fh.Option("Nut-Free", value="nut_free"),
-                                    fh.Option("Kosher", value="kosher"),
-                                    fh.Option("Halal", value="halal"),
-                                    name="dietary_restrictions",
-                                    hx_post="/add_restriction",
-                                    hx_target="#restrictions-list",
-                                    cls="select select-bordered w-full bg-base-200 text-primary-content mb-4"
-                                ),
-                                # Container for restriction tags
-                                fh.Div(
-                                    # Pre-populate existing restrictions
-                                    *[
-                                        fh.Div(
-                                            fh.Div(
-                                                r.replace('_', ' ').title(),
-                                                cls="flex-grow mr-8"
-                                            ),
-                                            fh.Button(
-                                                "×",
-                                                hx_post="/remove_restriction",
-                                                hx_vals=f'{{"restriction": "{r}"}}',
-                                                hx_target="#restrictions-list",
-                                                cls="text-lg hover:text-error focus:outline-none focus:ring-0 border-none"
-                                            ),
-                                            cls="bg-neutral flex items-center justify-between px-4 py-2 rounded-lg mr-2 mb-2"
-                                        )
-                                        for r in restrictions
-                                    ],
-                                    # Hidden inputs to maintain state
-                                    *[
-                                        fh.Input(
-                                            type="hidden",
-                                            name="existing_restrictions[]",
-                                            value=r
-                                        )
-                                        for r in restrictions
-                                    ],
-                                    id="restrictions-list",
-                                    cls="flex flex-wrap"
-                                ),
-                                cls="w-full"
-                            )),
-                            cls="space-y-4"
-                        ),
-                        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6 mb-8"
-                    ),
-                    # Preferences
-                    fh.Card(
-                        fh.Header(
-                            fh.H3("Preferences", cls="text-xl font-bold text-center mb-2 text-primary-content"),
-                            cls="mb-6 bg-base-200"
-                        ),
-                        fh.Div(
-                            create_form_row("Units", fh.Select(
-                                fh.Option("Imperial (lbs, inches)", value="imperial", selected=user_data.get("units") == "imperial"),
-                                fh.Option("Metric (kg, cm)", value="metric", selected=user_data.get("units") == "metric"),
-                                    name="units",
-                                    cls="select select-bordered w-full bg-base-200 text-primary-content"
-                            )),
-                            cls="space-y-4"
-                        ),
-                        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6 mb-8"
-                    ),
+                    create_basic_info_card(user_data),
+                    create_dietary_restrictions_card(restrictions),
+                    create_preferences_card(user_data),
                     fh.Button(
                         "Save Changes",
                         type="submit",
