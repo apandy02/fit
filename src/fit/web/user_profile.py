@@ -1,4 +1,5 @@
 import fasthtml.common as fh
+
 from fit.web.common import DB, page_outline
 from fit.web.databases import get_user_data
 
@@ -30,10 +31,10 @@ def create_editable_input(name: str, value: str, input_type: str = "text", place
     )
 
 
-def get():
+def get(session):
     """Return the profile page content"""
     # Get user data
-    user_data = get_user_data(DB)
+    user_data = get_user_data(DB, session["user_id"])
     restrictions = user_data.get("dietary_restrictions", "")
     if restrictions == "" or restrictions is None:
         restrictions = []
@@ -209,7 +210,7 @@ def create_login_input_section(label: str, name: str, input_type: str = "text", 
 
 
 
-async def update_profile(request: fh.Request):
+async def update_profile(session, request: fh.Request):
     """Handle profile update"""
     try:
         form = await request.form()
@@ -217,11 +218,12 @@ async def update_profile(request: fh.Request):
         restrictions = form.getlist("existing_restrictions[]")
         form_data = dict(form)
         form_data["dietary_restrictions"] = ",".join(restrictions) if restrictions else ""
-        form_data["user_id"] = "default"
+        form_data["user_id"] = session["user_id"]
         if "existing_restrictions[]" in form_data:
             form_data.pop("existing_restrictions[]")
         
-        DB.t.user_data.update(form_data)
+        print(form_data)
+        DB.t.profile.update(form_data)
         
         return fh.P(
             "Profile updated successfully!",

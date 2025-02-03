@@ -1,17 +1,15 @@
 from datetime import datetime
 
 import fasthtml.common as fh
+from fasthtml.common import RedirectResponse
+
+import fit.web.auth.auth as auth
 import fit.web.kitchen.requests as kitchen
 import fit.web.nutrition.requests as nutrition
 import fit.web.performance as performance
 import fit.web.progress as progress
 import fit.web.rest as rest
 import fit.web.user_profile as user_profile
-from fasthtml.common import RedirectResponse
-from fasthtml.oauth import redir_url
-from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
-from fit.web.auth.clients import whoop_client_oauth as whoop_client
-from fit.web.auth.login_page import get_login_page
 
 htmx_indicator_style = fh.Style("""
 .htmx-indicator {
@@ -35,12 +33,8 @@ modal_css = fh.Link(rel="stylesheet", href="/static/public/modal.css")
 def before(req, session):
     access_token_expiry = session.get('access_token_expiry', None)
     req.scope['auth'] = access_token_expiry
-    
-    # Check if token is missing or expired
     if not access_token_expiry or datetime.now().timestamp() > access_token_expiry:
         return RedirectResponse('/login', status_code=303)
-        
-    # fh.counts.xtra(name=access_token_expiry)
 
 auth_callback_path = "/auth_redirect"
 
@@ -69,9 +63,6 @@ app.post("/save_meal/{date:str}")(nutrition.save_meal)
 app.post("/delete_meal/{meal_id:int}")(nutrition.delete_meal)
 app.post("/reset_text_form")(nutrition.reset_text_form)
 app.post("/regenerate_analysis")(nutrition.regenerate_analysis)
-app.post("/hide_metric/{plot_id}")(nutrition.hide_metric)
-app.post("/show_metric/{plot_id}")(nutrition.show_metric)
-app.get("/toggle_dropdown/{dropdown_id}")(nutrition.toggle_dropdown)
 app.post("/nutrition_redirect")(nutrition.nutrition_redirect)
 app.post("/save_supplement")(nutrition.save_supplement)
 app.get("/get_supplements")(nutrition.get_supplements)
@@ -109,6 +100,10 @@ app.post("/generate_performance_overview")(performance.generate_overview)
 
 fh.reg_re_param("imgext", "png")
 
+app.get("/login")(auth.login)
+app.get(auth.fitbit_auth_callback_path)(auth.fitbit_auth_redirect)
+app.get(auth.whoop_auth_callback_path)(auth.whoop_auth_redirect)
+
 @app.get(r"/static/{path:path}")
 def get(path: str):
     return fh.FileResponse(f"{path}")
@@ -116,33 +111,6 @@ def get(path: str):
 @app.get('/')
 def home(auth): return fh.P('Logged in!'), fh.A('Log out', href='/logout')
 
-@app.get('/login')
-def login(req):
-    fitbit_redir = redir_url(req, f"{auth_callback_path}/fitbit")
-    whoop_redir = redir_url(req, f"{auth_callback_path}/whoop")
-    fitbit_login_link = fitbit_client.login_link(fitbit_redir, scope=fitbit_scope)
-    whoop_login_link = whoop_client.login_link(whoop_redir, scope=whoop_scope)
-    return get_login_page(req, fitbit_login_link=fitbit_login_link, whoop_login_link=whoop_login_link)
-
-@app.get(fitbit_auth_callback_path)
-def fitbit_auth_redirect(code:str, request, session):
-    redir = redir_url(request, f"{auth_callback_path}/fitbit")
-    access_token_dict = fitbit_client.fetch_access_token(code, redir)
-    session['access_token'] = access_token_dict['access_token']
-    session['access_token_expiry'] = access_token_dict['expires_at']
-    session['refresh_token'] = access_token_dict['refresh_token']
-    session["tracker"] = "fitbit"
-    return RedirectResponse('/nutrition', status_code=303)
-
-@app.get(whoop_auth_callback_path)
-def whoop_auth_redirect(code:str, request, session):
-    redir = redir_url(request, whoop_auth_callback_path)
-    access_token_dict = whoop_client.fetch_access_token(code, redir)
-    session['access_token'] = access_token_dict['access_token']
-    session['access_token_expiry'] = access_token_dict['expires_at']
-    session['refresh_token'] = access_token_dict['refresh_token']
-    session["tracker"] = "whoop"
-    return RedirectResponse('/nutrition', status_code=303)
 
 
 fh.serve() 

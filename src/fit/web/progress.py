@@ -2,15 +2,16 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
+
 from fit.nutrition.data_models import Goals
 from fit.web.common import DB, page_outline
 from fit.web.databases import (get_latest_user_measurements,
                                get_user_measurements, insert_user_measurements)
 
 
-def get():
+def get(session):
     """Return the progress tracking page content"""
-    measurements = get_user_measurements(DB)
+    measurements = get_user_measurements(DB, session["user_id"])
     plot_data, plot_layout = create_weight_plot(measurements)
     
     content = fh.Article(
@@ -55,16 +56,16 @@ def get():
                 ),
                 cls="fixed bottom-8 right-8"
             ),
-            measurements_modal(),
+            measurements_modal(session["user_id"]),
             cls="max-w-4xl mx-auto p-6 bg-base-100"
         ),
         cls="bg-base-100"
     )
     return page_outline(2, "Progress Tracking", True, True, content)
 
-def get_latest_measurements():
+def get_latest_measurements(user_id: int):
     """Get the latest measurements from the database"""
-    latest = get_latest_user_measurements(DB)
+    latest = get_latest_user_measurements(DB, user_id)
     
     if latest:
         weight = latest["weight"] if latest["weight"] is not None else 0
@@ -78,9 +79,9 @@ def get_latest_measurements():
     
     return weight, feet, inches
 
-def create_weight_form():
+def create_weight_form(session):
     """Create the weight input form"""
-    weight, _, _ = get_latest_measurements()
+    weight, _, _ = get_latest_measurements(session["user_id"])
     return fh.Form(
         hx_post="/update_weight",
         hx_target="#weight-result",
@@ -233,9 +234,9 @@ def create_goal_form():
         fh.Div(id="goal-result")
     )
 
-def measurements_modal():
+def measurements_modal(user_id: int):
     """Create the measurements tracking modal"""
-    weight, feet, inches = get_latest_measurements()
+    weight, feet, inches = get_latest_measurements(user_id)
     return fh.Div(
         fh.Dialog(
             fh.Div(
@@ -326,7 +327,7 @@ def measurements_modal():
         """)
     )
 
-async def update_measurements(request: fh.Request):
+async def update_measurements(session, request: fh.Request):
     """Handle measurements update"""
     # Insert weight measurement
     form = await request.form()
@@ -338,7 +339,8 @@ async def update_measurements(request: fh.Request):
         database=DB,
         height=total_height,
         weight=weight,
-        datetime=datetime.now()
+        datetime=datetime.now(),
+        user_id=session["user_id"]
     )
 
     return fh.Div(

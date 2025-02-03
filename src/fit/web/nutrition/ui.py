@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 import fasthtml.common as fh
+
 import fit.nutrition.assistants as assistants
 import fit.web.nutrition.food_plots as food_plots
 from fit.nutrition.data_models import MealBreakdown
@@ -12,10 +13,9 @@ from fit.web.databases import get_daily_meals
 def metric_card(
         title: str,
         unit: str,
-        y_axis_title:
-        str, plot_id:
-        str, data:list[tuple[float, float, float | None]],
-        allow_hide: bool = True,
+        y_axis_title: str,
+        plot_id: str,
+        data: list[tuple[float, float, float | None]],
         view_type: str = "daily"
     ):
     """Create a card containing a metric plot"""
@@ -38,17 +38,6 @@ def metric_card(
         )
     else:
         analysis_text = None
-
-    buttons = []
-    if allow_hide and title.lower() not in ["calories", "water", "creatine"]:
-        buttons.append(fh.Button(
-            "×",
-            cls="absolute right-2 top-2 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
-            style="outline: none; box-shadow: none;",
-            hx_post=f"/hide_metric/{plot_id}",
-            hx_target=f"#{plot_id}-container",
-            hx_swap="outerHTML"
-        ))
     
     # Extract unit from y_axis_title if present
     unit = y_axis_title.split('(')[-1].strip(')') if '(' in y_axis_title else None
@@ -80,7 +69,6 @@ def metric_card(
     
     return fh.Card(
         fh.Div(
-            *buttons,
             fh.Div(
                 fh.H3(display_title, cls="text-xl font-bold text-primary-content text-center mb-8"),
                 fh.Div(id=plot_id, cls="w-full h-[300px]"),
@@ -516,41 +504,9 @@ def create_page_header(current_view: str, date: datetime.date = None):
         cls="mb-8"
     )
 
-def create_metric_overview_section(title, metrics_data, filtered_metrics, all_metrics=None, view_type: str = "daily"):
+def create_metric_overview_section(title, data, metrics, view_type: str = "daily"):
     """Create a metrics overview section with configurable metrics"""    
-    # Create dropdown of hidden metrics if all_metrics is provided
-    add_button = None
-    hidden_metrics = []
-    if all_metrics is not None:
-        hidden_metrics = [
-            metric for metric in all_metrics 
-            if metric["column_name"] not in [m["column_name"] for m in filtered_metrics]
-        ]
-    
-    if hidden_metrics:
-        dropdown_id = f"dropdown-{title.lower().replace(' ', '-')}"
-        add_button = fh.Div(
-            fh.Button(
-                "+",
-                cls="text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
-                hx_get=f"/toggle_dropdown/{dropdown_id}",
-                hx_target=f"#{dropdown_id}",
-                hx_swap="innerHTML",
-                onclick=f"document.getElementById('{dropdown_id}').classList.toggle('hidden')"
-            ),
-            fh.Div(
-                cls="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-base-200 outline  ring-1 ring-black ring-opacity-5 z-10",
-                id=dropdown_id
-            ),
-            cls="relative inline-block text-left ml-2"
-        )
-
     return fh.Section(
-        fh.Div(
-            fh.H3(f"{title}", cls="text-2xl font-bold text-center mb-8 text-primary-content"),
-            add_button if add_button else None,
-            cls="flex items-center justify-center"
-        ),
         fh.Div(
             fh.Div(
                 *[fh.Div(
@@ -560,16 +516,15 @@ def create_metric_overview_section(title, metrics_data, filtered_metrics, all_me
                         f"{metric['name']} ({metric['unit']})" if metric["unit"] else metric["name"],
                         metric["plot_id"],
                         (
-                            metrics_data[metric["column_name"]]["consumed"],
-                            metrics_data[metric["column_name"]]["goal"],
-                            metrics_data[metric["column_name"]].get("burned")
+                            data[metric["column_name"]]["consumed"],
+                            data[metric["column_name"]]["goal"],
+                            data[metric["column_name"]].get("burned")
                         ),
-                        allow_hide=metric["name"].lower() not in ["calories", "water", "creatine"],
                         view_type=view_type
                     ),
-                    cls="w-1/2 p-2" if i < len(filtered_metrics) - 1 or len(filtered_metrics) % 2 == 0 
+                    cls="w-1/2 p-2" if i < len(metrics) - 1 or len(metrics) % 2 == 0 
                         else "w-1/2 p-2 mx-auto"
-                ) for i, metric in enumerate(filtered_metrics)],
+                ) for i, metric in enumerate(metrics)],
                 cls="flex flex-wrap"
             ),
             cls="w-full"
@@ -577,7 +532,7 @@ def create_metric_overview_section(title, metrics_data, filtered_metrics, all_me
         cls="w-full"
     )
 
-def create_macro_section(data, visible_metrics, view_type: str):
+def create_macro_section(data, view_type: str):
     """Create the macronutrient metrics section"""
     macro_metrics = [
         {"name": "Calories", "column_name": "calories", "unit": "", "plot_id": "calories"},
@@ -585,14 +540,9 @@ def create_macro_section(data, visible_metrics, view_type: str):
         {"name": "Carbohydrates", "column_name": "carbohydrates", "unit": "g", "plot_id": "carbohydrates"},
         {"name": "Fat", "column_name": "fat", "unit": "g", "plot_id": "fat"}
     ]
+    return create_metric_overview_section("Macronutrients", data, macro_metrics, view_type)
 
-    filtered_metrics = [
-        metric for metric in macro_metrics 
-        if metric["column_name"].lower() in visible_metrics
-    ]
-    return create_metric_overview_section("Macronutrients", data, filtered_metrics, macro_metrics, view_type)
-
-def create_micro_section(data, visible_metrics, view_type: str):
+def create_micro_section(data, view_type: str):
     """Create the micronutrient metrics section"""
     micro_metrics = [
         {"name": "Vitamin A", "column_name": "vitamin_a", "unit": "IU", "plot_id": "vitamin_a"},
@@ -600,24 +550,16 @@ def create_micro_section(data, visible_metrics, view_type: str):
         {"name": "Iron", "column_name": "iron", "unit": "mg", "plot_id": "iron"},
         {"name": "Calcium", "column_name": "calcium", "unit": "mg", "plot_id": "calcium"}
     ]
-    filtered_metrics = [
-        metric for metric in micro_metrics 
-        if metric["column_name"].lower() in visible_metrics
-    ]
-    return create_metric_overview_section("Micronutrients", data, filtered_metrics, micro_metrics, view_type)
+    return create_metric_overview_section("Micronutrients", data, micro_metrics, view_type)
 
-def create_conditional_section(data, visible_metrics, view_type: str):
+def create_conditional_section(data, view_type: str):
     """Create the conditionally essential nutrients section"""
     conditional_metrics = [
         {"name": "Creatine", "column_name": "creatine", "unit": "g", "plot_id": "creatine"}
     ]
-    filtered_metrics = [
-        metric for metric in conditional_metrics 
-        if metric["column_name"].lower() in visible_metrics
-    ]
-    return create_metric_overview_section("Conditionally Essential Nutrients", data, filtered_metrics, conditional_metrics, view_type)
+    return create_metric_overview_section("Conditionally Essential Nutrients", data, conditional_metrics, view_type)
 
-def create_metrics_grid(data, visible_metrics, water_metrics, view_type: str, date: datetime.date = None):
+def create_metrics_grid(user_id, data, water_metrics, view_type: str, date: datetime.date = None):
     """Create the grid of metric cards"""
     if view_type == "daily":
         text_generation_endpoint = "/generate_daily_nutrition_overview"
@@ -625,12 +567,13 @@ def create_metrics_grid(data, visible_metrics, water_metrics, view_type: str, da
             text_generation_endpoint += f"/{date.strftime('%Y-%m-%d')}"
     else:
         text_generation_endpoint = "/generate_weekly_nutrition_overview"
+    
     sections = [
         create_text_generation_card(text_generation_endpoint, "Generate Nutrition Overview"),
-        create_meals_list(date) if view_type == "daily" else None,
-        create_macro_section(data, visible_metrics, view_type),
-        create_micro_section(data, visible_metrics, view_type),
-        create_conditional_section(data, visible_metrics, view_type),
+        create_meals_list(user_id, date) if view_type == "daily" else None,
+        create_macro_section(data, view_type),
+        create_micro_section(data, view_type),
+        create_conditional_section(data, view_type),
         create_metric_overview_section("Hydration", data, water_metrics, view_type=view_type)
     ]
     sections = [section for section in sections if section is not None]
@@ -941,9 +884,9 @@ def supplement_modal(date: datetime.date):
         """)
     )
 
-def create_meals_list(date: datetime.date):
+def create_meals_list(user_id, date: datetime.date):
     """Create an expandable list of meals for the given date"""
-    meals = get_daily_meals(DB, date)
+    meals = get_daily_meals(DB, user_id=user_id, date=date)
     
     if not meals:
         content = fh.P("No meals logged for this day", cls="text-primary-content text-center")

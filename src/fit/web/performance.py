@@ -1,6 +1,7 @@
 import datetime
 
 import fasthtml.common as fh
+
 import fit.performance.assistants as assistants
 import fit.web.databases as db
 from fit.nutrition.targets import Goals, calculate_caloric_target
@@ -126,7 +127,7 @@ async def generate_overview(session):
         tracker = tracker_factory(session["tracker"], session["access_token"])
         today = datetime.date.today()
         daily_stats, workouts = get_performance_info(tracker)
-        daily_nutrition = db.get_daily_cumulative_nutrition(DB, today)
+        daily_nutrition = db.get_daily_cumulative_nutrition(DB, today, session["user_id"])
         caloric_consumption = daily_nutrition.calories
         caloric_target = calculate_caloric_target(daily_nutrition, Goals.MAINTAIN)
         
