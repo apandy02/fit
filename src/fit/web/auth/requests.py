@@ -1,51 +1,110 @@
+from datetime import datetime
+
 import fasthtml.common as fh
+from fasthtml.common import RedirectResponse
+from fasthtml.oauth import redir_url
+from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
+from fit.web.auth.clients import whoop_client_oauth as whoop_client
+from fit.web.auth.ui import get_login_page, create_editable_input, create_form_row
 from fit.web.common import DB, page_outline
-from fit.web.databases import get_user_data
+from fit.web.databases import get_profile_data, get_user_id, insert_new_user
+
+auth_callback_path = "/auth_redirect"
+fitbit_auth_callback_path = auth_callback_path + '/fitbit'
+whoop_auth_callback_path = auth_callback_path + '/whoop'
+
+fitbit_scope = ["activity", "heartrate", "profile"]
+whoop_scope = ["offline", "read:recovery", "read:cycles", "read:workout", "read:sleep", "read:profile"]
 
 
-def get_login_page(req, fitbit_login_link: str, whoop_login_link: str):
-    auth_card = fh.Form(
-        fh.Div(
-            fh.H5("Sign in with your fitness tracker", cls="text-xl font-medium text-primary-content mt-6 text-center mb-6"),
-            fh.Div(
-                fh.A("Whoop", cls="btn btn-outline text-primary-content bg-base-100 rounded-lg", href=whoop_login_link),
-                fh.A("Fitbit", cls="btn btn-outline text-primary-content bg-base-100 rounded-lg", href=fitbit_login_link),
-                cls="flex flex-col space-y-4 mt-4"
-            )
-        ),
-        cls="w-full max-w-sm p-4 bg-primary border border-base-300 rounded-lg shadow sm:p-6 md:p-8"
-    )
-    page_content = fh.Div(
-        fh.Div(
-            auth_card,
-            cls="flex items-center justify-center min-h-screen"
-        )
-    )
-    return page_outline(7, "Login", False, False, page_content)
+def login(req):
+    fitbit_redir = redir_url(req, f"{auth_callback_path}/fitbit")
+    whoop_redir = redir_url(req, f"{auth_callback_path}/whoop")
+    fitbit_login_link = fitbit_client.login_link(fitbit_redir, scope=fitbit_scope)
+    whoop_login_link = whoop_client.login_link(whoop_redir, scope=whoop_scope)
+    return get_login_page(req, fitbit_login_link=fitbit_login_link, whoop_login_link=whoop_login_link)
+
+def fitbit_auth_redirect(code:str, request, session):
+    redir = redir_url(request, f"{auth_callback_path}/fitbit")
+    access_token_dict = fitbit_client.fetch_access_token(code, redir)
+    provider_user_id = access_token_dict['user_id']
+    user_id = get_user_id(DB, provider_user_id, "fitbit")
+    new_user = False
+    if user_id is None:
+        new_user = True
+        user_dict = {
+            "provider_user_id": provider_user_id,
+            "provider": "fitbit"
+        }
+        row = insert_new_user(DB, user_dict)
+        user_id = row['user_id']
+        profile_info = fitbit_client.get_info(token=access_token_dict['access_token'])
+        profile_dict = {
+            "user_id": user_id,
+            "name": profile_info['user']['fullName'],
+            "gender": profile_info['user']['gender'],
+            "date_of_birth": datetime.strptime(profile_info['user']['dateOfBirth'], '%Y-%m-%d').strftime('%m-%d-%Y')
+        }
+        
+        DB.t.profile.insert(profile_dict)
+
+    else:
+        user_id = user_id[0] # TODO: assess if this is the best way to handle this
+    
+    session['user_id'] = user_id
+    session['access_token'] = access_token_dict['access_token']
+    session['access_token_expiry'] = access_token_dict['expires_at']
+    session['refresh_token'] = access_token_dict['refresh_token']
+    session["tracker"] = "fitbit"
+
+    if new_user:
+        return RedirectResponse('/onboarding/profile', status_code=303)
+    else:
+        return RedirectResponse('/nutrition', status_code=303)
+
+def whoop_auth_redirect(code:str, request, session):
+    redir = redir_url(request, whoop_auth_callback_path)
+    access_token_dict = whoop_client.fetch_access_token(code, redir)
+    user_info = whoop_client.get_info()
+    provider_user_id = user_info['user_id']
+    user_id = get_user_id(DB, provider_user_id, "whoop")
+    new_user = False
+    if user_id is None:
+        new_user = True
+        user_dict = {
+            "provider_user_id": provider_user_id,
+            "provider": "whoop"
+        }
+        
+        # TODO: The whoop doesn't give me gender or dob, so when I implement the front end, 
+        # there should be a form where the user must input this information
+        row = insert_new_user(DB, user_dict)
+        user_id = row['user_id']
+        profile_info = whoop_client.get_info(token=access_token_dict['access_token'])
+        profile_dict = {
+            "user_id": user_id,
+            "name": profile_info['first_name'] + " " + profile_info['last_name'],
+            "email": profile_info['email']
+        }
+        DB.t.profile.insert(profile_dict)
+    else:
+        user_id = user_id[0] # TODO: see if raising user doesnt exist error is better than returning None
+    
+    session['user_id'] = user_id
+    session['access_token'] = access_token_dict['access_token']
+    session['access_token_expiry'] = access_token_dict['expires_at']
+    session['refresh_token'] = access_token_dict['refresh_token']
+    session["tracker"] = "whoop"
+    if new_user:
+        return RedirectResponse('/onboarding/profile', status_code=303)
+    else:
+        return RedirectResponse('/nutrition', status_code=303)
 
 
-def create_editable_input(name: str, value: str, input_type: str = "text", placeholder: str = "", required: bool = True):
-    """Create an input field for the onboarding form"""
-    return fh.Input(
-        type=input_type,
-        name=name,
-        value=value if value else "",
-        placeholder=placeholder,
-        required=required,
-        cls="input input-bordered w-full bg-base-200 text-primary-content focus:bg-base-200 focus:text-primary-content"
-    )
-
-def create_form_row(label: str, input_element):
-    """Create a form row with label on the left and input on the right"""
-    return fh.Div(
-        fh.Label(label, cls="text-primary-content w-1/3 h-12 flex items-center"),
-        fh.Div(input_element, cls="w-2/3"),
-        cls="flex gap-4"
-    )
 
 def get_profile_page(session):
     """Return the profile completion page"""
-    user_data = get_user_data(DB, session["user_id"])
+    user_data = get_profile_data(DB, session["user_id"])
     print(user_data)
     
     content = fh.Article(
@@ -123,7 +182,7 @@ def get_activity_page(session):
                         cls="mb-6 bg-base-200"
                     ),
                     fh.Form(
-                        hx_post="/onboarding/activity",
+                        hx_post="/onboarding/handle_activity_selection",
                         cls="space-y-6"
                     )(
                         fh.Div(
@@ -192,6 +251,8 @@ async def handle_profile_completion(session, request: fh.Request):
         form = await request.form()
         form_data = dict(form)
         form_data["user_id"] = session["user_id"]
+
+        print(f"form_data: {form_data}")
         
         DB.t.profile.update(form_data)
         
@@ -208,7 +269,9 @@ async def handle_activity_selection(session, request: fh.Request):
     try:
         form = await request.form()
         activity_level = form.get("activity_level")
-        
+        user_profile = get_profile_data(DB, session["user_id"])
+        print(f"user_profile: {user_profile}")
+        print(f"activity_level: {activity_level}")
         # Store activity level in profile
         DB.t.profile.update({
             "user_id": session["user_id"],

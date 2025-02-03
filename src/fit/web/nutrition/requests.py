@@ -106,7 +106,7 @@ def get_daily_nutrition_data(date: datetime, tracker: FitnessTracker, user_id: i
     goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     daily_consumption = databases.get_daily_cumulative_nutrition(DB, date, user_id)
     water_consumed = databases.get_daily_water_consumption(DB, date, user_id)
-    user_info = databases.get_user_data(DB, user_id)
+    user_info = databases.get_profile_data(DB, user_id)
     measurements = databases.get_latest_user_measurements(DB, user_id)
     water_goal = estimate_daily_water_intake(measurements, user_info, calories_burned)
     

@@ -1,6 +1,6 @@
 import fasthtml.common as fh
 from fit.web.common import DB, page_outline
-from fit.web.databases import get_user_data
+from fit.web.databases import get_profile_data
 
 
 def create_editable_input(name: str, value: str, input_type: str = "text", placeholder: str = "", required: bool = True):
@@ -33,7 +33,7 @@ def create_editable_input(name: str, value: str, input_type: str = "text", place
 def get(session):
     """Return the profile page content"""
     # Get user data
-    user_data = get_user_data(DB, session["user_id"])
+    user_data = get_profile_data(DB, session["user_id"])
     restrictions = user_data.get("dietary_restrictions", "")
     if restrictions == "" or restrictions is None:
         restrictions = []

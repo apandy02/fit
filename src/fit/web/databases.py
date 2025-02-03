@@ -311,10 +311,10 @@ def set_visible_metrics(database: fh.Database, metrics: list[str], user_id: int)
     metrics = json.dumps(metrics)
     database.execute(query, (metrics, user_id))
 
-def get_user_data(database: fh.Database, user_id: int):
+def get_profile_data(database: fh.Database, user_id: int):
     """Get user data from the database"""
     query = """
-            SELECT name, email, date_of_birth, units, gender, dietary_restrictions FROM profile WHERE user_id = ?
+        SELECT name, email, date_of_birth, units, gender, dietary_restrictions, activity_level FROM profile WHERE user_id = ?
     """
     result = database.execute(query, (user_id,)).fetchone()
     if result:
@@ -324,7 +324,8 @@ def get_user_data(database: fh.Database, user_id: int):
             "date_of_birth": result[2],
             "units": result[3],
             "gender": result[4],
-            "dietary_restrictions": result[5]
+            "dietary_restrictions": result[5],
+            "activity_level": result[6]
         }
     return {}
 

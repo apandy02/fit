@@ -1,15 +1,16 @@
 from datetime import datetime
 
 import fasthtml.common as fh
-import fit.web.auth.auth as auth
+import fit.web.auth.requests as auth
 import fit.web.kitchen.requests as kitchen
 import fit.web.nutrition.requests as nutrition
-import fit.web.onboarding as onboarding
 import fit.web.performance as performance
 import fit.web.progress as progress
 import fit.web.rest as rest
 import fit.web.user_profile as user_profile
 from fasthtml.common import RedirectResponse
+from fit.web.common import DB
+from fit.web.databases import get_profile_data
 
 htmx_indicator_style = fh.Style("""
 .htmx-indicator {
@@ -30,11 +31,26 @@ dlink = fh.Link(
 )
 modal_css = fh.Link(rel="stylesheet", href="/static/public/modal.css")
 
-def before(req, session):
+def auth_before(req, session):
     access_token_expiry = session.get('access_token_expiry', None)
     req.scope['auth'] = access_token_expiry
+    print(f"access_token_expiry: {access_token_expiry}")
+    # if a user is not logged in, redirect to the login page
     if not access_token_expiry or datetime.now().timestamp() > access_token_expiry:
         return RedirectResponse('/login', status_code=303)
+
+def onboarding_before(req, session):
+    # if a user is logged in but has not completed the onboarding process,
+    # redirect to the onboarding page
+    user_profile = get_profile_data(DB, session["user_id"])
+    profile_params = ["name", "email", "gender", "date_of_birth"]
+
+    if not all(user_profile.get(param, None) for param in profile_params):
+        return RedirectResponse('/onboarding/profile', status_code=303)
+
+    activity_level = user_profile.get("activity_level", None)
+    if activity_level is None:
+        return RedirectResponse('/onboarding/activity', status_code=303)
 
 auth_callback_path = "/auth_redirect"
 
@@ -44,8 +60,29 @@ whoop_auth_callback_path = auth_callback_path + '/whoop'
 fitbit_scope = ["activity", "heartrate", "profile"]
 whoop_scope = ["offline", "read:recovery", "read:cycles", "read:workout", "read:sleep", "read:profile"]
 
-bware = fh.Beforeware(before, skip=['/login', auth_callback_path, fitbit_auth_callback_path, whoop_auth_callback_path])
-app = fh.FastHTML(before=bware, hdrs=(htmx_indicator_style, tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
+auth_bware = fh.Beforeware(
+    auth_before,
+    skip=[
+        '/login',
+        auth_callback_path,
+        fitbit_auth_callback_path,
+        whoop_auth_callback_path
+    ]
+)
+onboarding_bware = fh.Beforeware(
+    onboarding_before, 
+    skip=[
+        '/login',
+        auth_callback_path,
+        fitbit_auth_callback_path,
+        whoop_auth_callback_path,
+        '/onboarding/profile',
+        '/onboarding/activity',
+        '/onboarding/complete_profile',
+        '/onboarding/handle_activity_selection'
+    ]
+)
+app = fh.FastHTML(before=[auth_bware, onboarding_bware], hdrs=(htmx_indicator_style, tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
 
 # Food routes
 app.get("/nutrition/weekly")(nutrition.get_weekly_overview)
@@ -99,10 +136,10 @@ app.get("/performance")(performance.get)
 app.post("/generate_performance_overview")(performance.generate_overview)
 
 # Add onboarding routes
-app.get("/onboarding/profile")(onboarding.get_profile_page)
-app.get("/onboarding/activity")(onboarding.get_activity_page)
-app.post("/onboarding/complete_profile")(onboarding.handle_profile_completion)
-app.post("/onboarding/activity")(onboarding.handle_activity_selection)
+app.get("/onboarding/profile")(auth.get_profile_page)
+app.get("/onboarding/activity")(auth.get_activity_page)
+app.post("/onboarding/complete_profile")(auth.handle_profile_completion)
+app.post("/onboarding/handle_activity_selection")(auth.handle_activity_selection)
 
 fh.reg_re_param("imgext", "png")
 
@@ -114,8 +151,6 @@ app.get(auth.whoop_auth_callback_path)(auth.whoop_auth_redirect)
 def get(path: str):
     return fh.FileResponse(f"{path}")
 
-@app.get('/')
-def home(auth): return fh.P('Logged in!'), fh.A('Log out', href='/logout')
 
 fh.serve() 
 
