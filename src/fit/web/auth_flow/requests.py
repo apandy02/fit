@@ -2,7 +2,6 @@ from datetime import datetime
 
 from fasthtml.common import RedirectResponse
 from fasthtml.oauth import redir_url
-
 from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
 from fit.web.auth.clients import whoop_client_oauth as whoop_client
 from fit.web.auth.login_page import get_login_page
@@ -48,7 +47,6 @@ def fitbit_auth_redirect(code:str, request, session):
         
         DB.t.profile.insert(profile_dict)
 
-        # TODO: separate handling of new and existing users
     else:
         user_id = user_id[0] # TODO: assess if this is the best way to handle this
     
@@ -57,8 +55,11 @@ def fitbit_auth_redirect(code:str, request, session):
     session['access_token_expiry'] = access_token_dict['expires_at']
     session['refresh_token'] = access_token_dict['refresh_token']
     session["tracker"] = "fitbit"
-        
-    return RedirectResponse('/onboarding/profile', status_code=303)
+
+    if new_user:
+        return RedirectResponse('/onboarding/profile', status_code=303)
+    else:
+        return RedirectResponse('/nutrition', status_code=303)
 
 def whoop_auth_redirect(code:str, request, session):
     redir = redir_url(request, whoop_auth_callback_path)
@@ -85,7 +86,6 @@ def whoop_auth_redirect(code:str, request, session):
             "email": profile_info['email']
         }
         DB.t.profile.insert(profile_dict)
-        # TODO: separate handling of new and existing users
     else:
         user_id = user_id[0] # TODO: see if raising user doesnt exist error is better than returning None
     
