@@ -1,5 +1,5 @@
 import fasthtml.common as fh
-from fit.web.common import DB, page_outline
+from fit.web.common import page_outline
 
 
 def get_login_page(req, fitbit_login_link: str, whoop_login_link: str):

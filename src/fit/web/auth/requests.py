@@ -5,9 +5,11 @@ from fasthtml.common import RedirectResponse
 from fasthtml.oauth import redir_url
 from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
 from fit.web.auth.clients import whoop_client_oauth as whoop_client
-from fit.web.auth.ui import get_login_page, create_editable_input, create_form_row
+from fit.web.auth.ui import (create_editable_input, create_form_row,
+                             get_login_page)
 from fit.web.common import DB, page_outline
 from fit.web.databases import get_profile_data, get_user_id, insert_new_user
+from fit.web.user_profile import create_dietary_restrictions_card
 
 auth_callback_path = "/auth_redirect"
 fitbit_auth_callback_path = auth_callback_path + '/fitbit'
@@ -256,11 +258,34 @@ async def handle_profile_completion(session, request: fh.Request):
         
         DB.t.profile.update(form_data)
         
-        return fh.Response(headers={"HX-Redirect": "/onboarding/activity"})
+        return fh.Response(headers={"HX-Redirect": "/onboarding/dietary"})
     except Exception as e:
         print(f"Error updating profile: {e}")
         return fh.P(
             f"Error updating profile: {str(e)}",
+            cls="text-error font-semibold text-center mt-4"
+        )
+
+async def handle_dietary_completion(session, request: fh.Request):
+    """Handle dietary preferences submission"""
+    try:
+        form = await request.form()
+        restrictions = form.getlist("existing_restrictions[]")
+        
+        # Join restrictions with comma if any exist
+        restrictions_str = ",".join(restrictions) if restrictions else ""
+        
+        # Update the profile with dietary restrictions
+        DB.t.profile.update({
+            "user_id": session["user_id"],
+            "dietary_restrictions": restrictions_str
+        })
+        
+        return fh.Response(headers={"HX-Redirect": "/onboarding/activity"})
+    except Exception as e:
+        print(f"Error updating dietary restrictions: {e}")
+        return fh.P(
+            f"Error updating dietary restrictions: {str(e)}",
             cls="text-error font-semibold text-center mt-4"
         )
 
@@ -284,4 +309,33 @@ async def handle_activity_selection(session, request: fh.Request):
         return fh.P(
             f"Error updating activity level: {str(e)}",
             cls="text-error font-semibold text-center mt-4"
-        ) 
+        )
+
+def get_dietary_page(session):
+    """Return the dietary restrictions page"""
+    content = fh.Article(
+        fh.Div(
+            fh.Card(
+                fh.Div(
+                    fh.Form(
+                        hx_post="/onboarding/complete_dietary",
+                        cls="space-y-6"
+                    )(
+                        create_dietary_restrictions_card([], hx_target="onboarding-restrictions-list"),  # Pass empty list for initial state
+                        fh.Button(
+                            "Next →",
+                            type="submit",
+                            cls="btn btn-primary outline outline-1 outline-primary-content w-full mt-8"
+                        ),
+                        cls="p-6"
+                    ),
+                    cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6"
+                ),
+                cls="bg-base-200 shadow-lg rounded-lg"
+            ),
+            cls="max-w-2xl mx-auto p-6"
+        ),
+        cls="bg-base-100 min-h-screen flex items-center"
+    )
+    
+    return page_outline(None, "Dietary Restrictions", False, False, content) 

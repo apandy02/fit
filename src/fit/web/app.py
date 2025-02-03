@@ -48,6 +48,10 @@ def onboarding_before(req, session):
     if not all(user_profile.get(param, None) for param in profile_params):
         return RedirectResponse('/onboarding/profile', status_code=303)
 
+    dietary_restrictions = user_profile.get("dietary_restrictions", None)
+    if dietary_restrictions is None:
+        return RedirectResponse('/onboarding/dietary', status_code=303)
+
     activity_level = user_profile.get("activity_level", None)
     if activity_level is None:
         return RedirectResponse('/onboarding/activity', status_code=303)
@@ -78,8 +82,12 @@ onboarding_bware = fh.Beforeware(
         whoop_auth_callback_path,
         '/onboarding/profile',
         '/onboarding/activity',
+        '/onboarding/dietary',
         '/onboarding/complete_profile',
-        '/onboarding/handle_activity_selection'
+        '/onboarding/complete_dietary',
+        '/onboarding/handle_activity_selection',
+        '/add_restriction',
+        '/remove_restriction',
     ]
 )
 app = fh.FastHTML(before=[auth_bware, onboarding_bware], hdrs=(htmx_indicator_style, tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
@@ -138,7 +146,9 @@ app.post("/generate_performance_overview")(performance.generate_overview)
 # Add onboarding routes
 app.get("/onboarding/profile")(auth.get_profile_page)
 app.get("/onboarding/activity")(auth.get_activity_page)
+app.get("/onboarding/dietary")(auth.get_dietary_page)
 app.post("/onboarding/complete_profile")(auth.handle_profile_completion)
+app.post("/onboarding/complete_dietary")(auth.handle_dietary_completion)
 app.post("/onboarding/handle_activity_selection")(auth.handle_activity_selection)
 
 fh.reg_re_param("imgext", "png")

@@ -70,7 +70,7 @@ def create_basic_info_card(user_data):
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6 mb-8"
     )
 
-def create_dietary_restrictions_card(restrictions):
+def create_dietary_restrictions_card(restrictions, hx_target="restrictions-list"):
     """Create the dietary restrictions card section"""
     return fh.Card(
         fh.Header(
@@ -91,7 +91,7 @@ def create_dietary_restrictions_card(restrictions):
                     fh.Option("Halal", value="halal"),
                     name="dietary_restrictions",
                     hx_post="/add_restriction",
-                    hx_target="#restrictions-list",
+                    hx_target=f"#{hx_target}",
                     cls="select select-bordered w-full bg-base-200 text-primary-content mb-4"
                 ),
                 # Container for restriction tags
@@ -107,7 +107,7 @@ def create_dietary_restrictions_card(restrictions):
                                 "×",
                                 hx_post="/remove_restriction",
                                 hx_vals=f'{{"restriction": "{r}"}}',
-                                hx_target="#restrictions-list",
+                                hx_target=f"#{hx_target}",
                                 cls="text-lg hover:text-error focus:outline-none focus:ring-0 border-none"
                             ),
                             cls="bg-neutral flex items-center justify-between px-4 py-2 rounded-lg mr-2 mb-2"
@@ -123,7 +123,7 @@ def create_dietary_restrictions_card(restrictions):
                         )
                         for r in restrictions
                     ],
-                    id="restrictions-list",
+                    id=hx_target,
                     cls="flex flex-wrap"
                 ),
                 cls="w-full"
