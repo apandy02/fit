@@ -29,17 +29,25 @@ def fitbit_auth_redirect(code:str, request, session):
     access_token_dict = fitbit_client.fetch_access_token(code, redir)
     provider_user_id = access_token_dict['user_id']
     user_id = get_user_id(DB, provider_user_id, "fitbit")
+    new_user = False
     if user_id is None:
+        new_user = True
         user_dict = {
             "provider_user_id": provider_user_id,
             "provider": "fitbit"
         }
-        more_info = fitbit_client.get_info(token=access_token_dict['access_token'])
-        user_dict["name"] = more_info['user']['fullName']
-        user_dict["gender"] = more_info['user']['gender']
-        user_dict["date_of_birth"] = datetime.strptime(more_info['user']['dateOfBirth'], '%Y-%m-%d').strftime('%m-%d-%Y')
         row = insert_new_user(DB, user_dict)
         user_id = row['user_id']
+        profile_info = fitbit_client.get_info(token=access_token_dict['access_token'])
+        profile_dict = {
+            "user_id": user_id,
+            "name": profile_info['user']['fullName'],
+            "gender": profile_info['user']['gender'],
+            "date_of_birth": datetime.strptime(profile_info['user']['dateOfBirth'], '%Y-%m-%d').strftime('%m-%d-%Y')
+        }
+        
+        DB.t.profile.insert(profile_dict)
+
         # TODO: separate handling of new and existing users
     else:
         user_id = user_id[0] # TODO: assess if this is the best way to handle this
@@ -49,7 +57,8 @@ def fitbit_auth_redirect(code:str, request, session):
     session['access_token_expiry'] = access_token_dict['expires_at']
     session['refresh_token'] = access_token_dict['refresh_token']
     session["tracker"] = "fitbit"
-    return RedirectResponse('/nutrition', status_code=303)
+        
+    return RedirectResponse('/onboarding/profile', status_code=303)
 
 def whoop_auth_redirect(code:str, request, session):
     redir = redir_url(request, whoop_auth_callback_path)
@@ -57,19 +66,25 @@ def whoop_auth_redirect(code:str, request, session):
     user_info = whoop_client.get_info()
     provider_user_id = user_info['user_id']
     user_id = get_user_id(DB, provider_user_id, "whoop")
-    
+    new_user = False
     if user_id is None:
+        new_user = True
         user_dict = {
             "provider_user_id": provider_user_id,
             "provider": "whoop"
         }
-        more_info = whoop_client.get_info(token=access_token_dict['access_token'])
+        
         # TODO: The whoop doesn't give me gender or dob, so when I implement the front end, 
         # there should be a form where the user must input this information
-        user_dict["name"] = more_info['user']['first_name'] + " " + more_info['user']['last_name']
-        user_dict["email"] = more_info['user']['email']
         row = insert_new_user(DB, user_dict)
         user_id = row['user_id']
+        profile_info = whoop_client.get_info(token=access_token_dict['access_token'])
+        profile_dict = {
+            "user_id": user_id,
+            "name": profile_info['first_name'] + " " + profile_info['last_name'],
+            "email": profile_info['email']
+        }
+        DB.t.profile.insert(profile_dict)
         # TODO: separate handling of new and existing users
     else:
         user_id = user_id[0] # TODO: see if raising user doesnt exist error is better than returning None
@@ -79,4 +94,7 @@ def whoop_auth_redirect(code:str, request, session):
     session['access_token_expiry'] = access_token_dict['expires_at']
     session['refresh_token'] = access_token_dict['refresh_token']
     session["tracker"] = "whoop"
-    return RedirectResponse('/nutrition', status_code=303)
+    if new_user:
+        return RedirectResponse('/onboarding/profile', status_code=303)
+    else:
+        return RedirectResponse('/nutrition', status_code=303)

@@ -102,6 +102,7 @@ def init_db(database_path: str):
             date_of_birth=str,
             units=str,
             dietary_restrictions=str,
+            activity_level=str,
             pk='user_id',
             not_null= ["user_id"]
         )

@@ -10,6 +10,7 @@ import fit.web.performance as performance
 import fit.web.progress as progress
 import fit.web.rest as rest
 import fit.web.user_profile as user_profile
+import fit.web.onboarding as onboarding
 
 htmx_indicator_style = fh.Style("""
 .htmx-indicator {
@@ -98,6 +99,12 @@ app.post("/generate_rest_overview")(rest.generate_overview)
 app.get("/performance")(performance.get)
 app.post("/generate_performance_overview")(performance.generate_overview)
 
+# Add onboarding routes
+app.get("/onboarding/profile")(onboarding.get_profile_page)
+app.get("/onboarding/activity")(onboarding.get_activity_page)
+app.post("/onboarding/complete_profile")(onboarding.handle_profile_completion)
+app.post("/onboarding/activity")(onboarding.handle_activity_selection)
+
 fh.reg_re_param("imgext", "png")
 
 app.get("/login")(auth.login)
@@ -110,8 +117,6 @@ def get(path: str):
 
 @app.get('/')
 def home(auth): return fh.P('Logged in!'), fh.A('Log out', href='/logout')
-
-
 
 fh.serve() 
 
