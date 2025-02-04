@@ -40,21 +40,21 @@ def auth_before(req, session):
         return RedirectResponse('/login', status_code=303)
 
 def onboarding_before(req, session):
-    # if a user is logged in but has not completed the onboarding process,
-    # redirect to the onboarding page
     user_profile = get_profile_data(DB, session["user_id"])
-    profile_params = ["name", "email", "gender", "date_of_birth"]
 
-    if not all(user_profile.get(param, None) for param in profile_params):
+    if user_profile["onboarding_stage"] == 0:
         return RedirectResponse('/onboarding/profile', status_code=303)
 
-    dietary_restrictions = user_profile.get("dietary_restrictions", None)
-    if dietary_restrictions is None:
+    if user_profile["onboarding_stage"] == 1:
         return RedirectResponse('/onboarding/dietary', status_code=303)
 
-    activity_level = user_profile.get("activity_level", None)
-    if activity_level is None:
+    if user_profile["onboarding_stage"] == 2:
         return RedirectResponse('/onboarding/activity', status_code=303)
+    
+def onboarding_complete_before(req, session):
+    user_profile = get_profile_data(DB, session["user_id"])
+    if user_profile["onboarding_stage"] != 3:
+        return RedirectResponse('/nutrition', status_code=303)
 
 auth_callback_path = "/auth_redirect"
 
@@ -90,6 +90,7 @@ onboarding_bware = fh.Beforeware(
         '/remove_restriction',
     ]
 )
+
 app = fh.FastHTML(before=[auth_bware, onboarding_bware], hdrs=(htmx_indicator_style, tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
 
 # Food routes

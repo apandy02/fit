@@ -196,9 +196,16 @@ async def save_meal(session, request: fh.Request, date: str | None = None):
             cls="text-red-500 font-semibold text-center"
         )
 
-async def delete_meal(meal_id: int):
+async def delete_meal(session, meal_id: int):
     """Delete a meal from the database and return updated meals list"""
-    success = databases.delete_meal(DB, meal_id)
+    try:
+        success = databases.delete_meal(DB, meal_id)
+    except Exception as e:
+        print(f"Error deleting meal: {e}")
+        return fh.P(
+            f"Error deleting meal: {str(e)}",
+            cls="text-red-500 font-semibold text-center"
+        )
     if success:
         return None  # This will remove the meal card from the UI
     else:
