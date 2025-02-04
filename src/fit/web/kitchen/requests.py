@@ -1,12 +1,11 @@
 import io
 
 import fasthtml.common as fh
-from PIL import Image
-
 import fit.web.common as common
 import fit.web.databases as db
 import fit.web.kitchen.ui as ui
 from fit.nutrition import assistants as assistants
+from PIL import Image
 
 
 def get(session):

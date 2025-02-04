@@ -1,7 +1,6 @@
 import datetime
 
 import fasthtml.common as fh
-
 import fit.rest.assistants as assistants
 import fit.web.databases as db
 from fit.trackers.base import FitnessTracker

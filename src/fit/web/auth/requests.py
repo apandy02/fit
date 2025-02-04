@@ -3,14 +3,13 @@ from datetime import datetime
 import fasthtml.common as fh
 from fasthtml.common import RedirectResponse
 from fasthtml.oauth import redir_url
-
 from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
 from fit.web.auth.clients import whoop_client_oauth as whoop_client
-from fit.web.auth.ui import (create_editable_input, create_form_row,
-                             get_login_page)
+from fit.web.auth.ui import (get_login_page)
 from fit.web.common import DB, page_outline
 from fit.web.databases import get_profile_data, get_user_id, insert_new_user
-from fit.web.user_profile import create_dietary_restrictions_card
+from fit.web.user_profile import (create_basic_info_card,
+                                  create_dietary_restrictions_card)
 
 auth_callback_path = "/auth_redirect"
 fitbit_auth_callback_path = auth_callback_path + '/fitbit'
@@ -107,63 +106,23 @@ def whoop_auth_redirect(code:str, request, session):
 
 def get_profile_page(session):
     """Return the profile completion page"""
+    # Get user data
     user_data = get_profile_data(DB, session["user_id"])
-    print(user_data)
     
     content = fh.Article(
         fh.Div(
             fh.Card(
-                fh.Div(
-                    fh.Header(
-                        fh.H3("Complete Your Profile", cls="text-2xl font-bold text-center mb-6 text-primary-content"),
-                        cls="mb-6 bg-base-200"
+                fh.Form(
+                    hx_post="/onboarding/complete_profile",
+                    cls="space-y-6"
+                )(
+                    create_basic_info_card(user_data),
+                    fh.Button(
+                        "Next →",
+                        type="submit",
+                        cls="btn btn-primary outline outline-1 outline-primary-content w-full mt-8"
                     ),
-                    fh.Form(
-                        hx_post="/onboarding/complete_profile",
-                        cls="space-y-6"
-                    )(
-                        fh.Div(
-                            create_form_row("Name", create_editable_input(
-                                "name",
-                                user_data.get("name", ""),
-                                placeholder="John Doe"
-                            )),
-                            create_form_row("Email", create_editable_input(
-                                "email",
-                                user_data.get("email", ""),
-                                input_type="email",
-                                placeholder="john@example.com"
-                            )),
-                            create_form_row("Gender", fh.Select(
-                                fh.Option("Select gender", value="", selected=not user_data.get("gender"), disabled=True),
-                                fh.Option("Male", value="male", selected=user_data.get("gender") == "male"),
-                                fh.Option("Female", value="female", selected=user_data.get("gender") == "female"),
-                                name="gender",
-                                required=True,
-                                cls="select select-bordered w-full bg-base-200 text-primary-content"
-                            )),
-                            create_form_row("Date of Birth", create_editable_input(
-                                "date_of_birth",
-                                user_data.get("date_of_birth", ""),
-                                input_type="date",
-                                placeholder="MM/DD/YYYY"
-                            )),
-                            create_form_row("Units", fh.Select(
-                                fh.Option("Imperial (lbs, inches)", value="imperial", selected=user_data.get("units") == "imperial"),
-                                fh.Option("Metric (kg, cm)", value="metric", selected=user_data.get("units") == "metric"),
-                                name="units",
-                                cls="select select-bordered w-full bg-base-200 text-primary-content"
-                            )),
-                            cls="space-y-4"
-                        ),
-                        fh.Button(
-                            "Next →",
-                            type="submit",
-                            cls="btn btn-primary outline outline-1 outline-primary-content w-full mt-8"
-                        ),
-                        cls="p-6"
-                    ),
-                    cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6"
+                    cls="p-6"
                 ),
                 cls="bg-base-200 shadow-lg rounded-lg"
             ),
