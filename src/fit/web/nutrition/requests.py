@@ -2,8 +2,6 @@ import io
 from datetime import datetime
 
 import fasthtml.common as fh
-from PIL import Image
-
 import fit.nutrition.assistants as assistants
 import fit.web.common as common
 import fit.web.databases as databases
@@ -18,6 +16,7 @@ from fit.trackers.base import FitnessTracker
 from fit.trackers.manager import tracker_factory
 from fit.utils.calendar import get_current_week_dates
 from fit.web.common import DB, micronutrient_goals
+from PIL import Image
 
 
 def get_daily_overview(session, date: str = None):
@@ -107,7 +106,7 @@ def get_daily_nutrition_data(date: datetime, tracker: FitnessTracker, user_id: i
     goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
     daily_consumption = databases.get_daily_cumulative_nutrition(DB, date, user_id)
     water_consumed = databases.get_daily_water_consumption(DB, date, user_id)
-    user_info = databases.get_user_data(DB, user_id)
+    user_info = databases.get_profile_data(DB, user_id)
     measurements = databases.get_latest_user_measurements(DB, user_id)
     water_goal = estimate_daily_water_intake(measurements, user_info, calories_burned)
     
@@ -197,9 +196,16 @@ async def save_meal(session, request: fh.Request, date: str | None = None):
             cls="text-red-500 font-semibold text-center"
         )
 
-async def delete_meal(meal_id: int):
+async def delete_meal(session, meal_id: int):
     """Delete a meal from the database and return updated meals list"""
-    success = databases.delete_meal(DB, meal_id)
+    try:
+        success = databases.delete_meal(DB, meal_id)
+    except Exception as e:
+        print(f"Error deleting meal: {e}")
+        return fh.P(
+            f"Error deleting meal: {str(e)}",
+            cls="text-red-500 font-semibold text-center"
+        )
     if success:
         return None  # This will remove the meal card from the UI
     else:
