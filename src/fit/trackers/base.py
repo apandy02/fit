@@ -10,6 +10,7 @@ class FitnessTracker(ABC):
     This will handle interaction with the tracker-specific
     API to retrieve a standardized set of metrics.
     """
+
     def __init__(self):
         try:
             print("Authenticating...")
@@ -27,7 +28,7 @@ class FitnessTracker(ABC):
     @abstractmethod
     def get_daily_calories_burned(self, day: datetime.date) -> float:
         """Fetch calories burned for the most recent day."""
-    
+
     @abstractmethod
     def get_daily_sleep(self, day: datetime.date) -> float:
         """Fetch sleep for a given day."""
@@ -39,8 +40,7 @@ class FitnessTracker(ABC):
     @abstractmethod
     def get_daily_hrv(self, day: datetime.date) -> float:
         """Fetch hrv for a given day."""
-    
+
     @abstractmethod
     def _authenticate(self):
         pass
-

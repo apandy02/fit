@@ -18,28 +18,31 @@ json_path = os.path.join(os.path.dirname(__file__), "config/whoop_sports.json")
 with open(json_path, "r") as f:
     SPORTS_MAP = json.load(f)["sports"]
 
+
 def make_code_verifier_and_challenge():
-    code_verifier = base64.urlsafe_b64encode(os.urandom(64)).decode('utf-8').rstrip('=')
-    sha256 = hashlib.sha256(code_verifier.encode('utf-8')).digest()
-    code_challenge = base64.urlsafe_b64encode(sha256).decode('utf-8').rstrip('=')
+    code_verifier = base64.urlsafe_b64encode(os.urandom(64)).decode("utf-8").rstrip("=")
+    sha256 = hashlib.sha256(code_verifier.encode("utf-8")).digest()
+    code_challenge = base64.urlsafe_b64encode(sha256).decode("utf-8").rstrip("=")
     return code_verifier, code_challenge
+
 
 class WhoopAppClient(WebApplicationClient):
     """
     A PKCE-capable client for WHOOP.
     """
+
     base_url = "https://api.prod.whoop.com/oauth/oauth2/auth"
     token_url = "https://api.prod.whoop.com/oauth/oauth2/token"
     info_url = "https://api.prod.whoop.com/developer/v1/user/profile/basic"
-    
+
     def __init__(self, client_id, client_secret, code=None, scope=None, **kwargs):
         super().__init__(client_id, code=code, scope=scope, **kwargs)
         self.code_verifier, self.code_challenge = make_code_verifier_and_challenge()
         self.client_secret = client_secret
-    
+
     def login_link(self, redirect_uri, scope=None, state=None):
         """Create the WHOOP login link with PKCE parameters."""
-        if scope is None: 
+        if scope is None:
             scope = self.SCOPE
         if state is None:
             state = secrets.token_urlsafe(16)
@@ -48,14 +51,11 @@ class WhoopAppClient(WebApplicationClient):
         extra_params = {
             "code_challenge": self.code_challenge,
             "code_challenge_method": "S256",
-            "state": state
+            "state": state,
         }
 
         auth_url = self.prepare_request_uri(
-            self.base_url,
-            redirect_uri=redirect_uri,
-            scope=scope,
-            **extra_params
+            self.base_url, redirect_uri=redirect_uri, scope=scope, **extra_params
         )
         return auth_url
 
@@ -71,7 +71,7 @@ class WhoopAppClient(WebApplicationClient):
         }
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "application/json"
+            "Accept": "application/json",
         }
 
         r = httpx.post(self.token_url, data=data, headers=headers)
@@ -107,19 +107,27 @@ class Whoop(FitnessTracker):
 
     Attributes:
         access_token (str): OAuth2 access token for the WHOOP API.
-    
+
     Constants:
         SCOPE (list): Required OAuth2 scopes for the WHOOP API.
         BASE_URL (str): Base URL for API requests.
         INFO_URL (str): URL for user profile info.
     """
-    SCOPE = ["offline", "read:recovery", "read:cycles", "read:workout", "read:sleep", "read:profile"]
+
+    SCOPE = [
+        "offline",
+        "read:recovery",
+        "read:cycles",
+        "read:workout",
+        "read:sleep",
+        "read:profile",
+    ]
     BASE_URL = "https://api.prod.whoop.com/developer"
     INFO_URL = "https://api.prod.whoop.com/developer/v1/user/profile/basic"
 
     def __init__(self, access_token: str):
         """Initialize a Whoop session with OAuth2 access token.
-        
+
         Args:
             access_token (str): OAuth2 access token for WHOOP API access.
         """
@@ -141,35 +149,22 @@ class Whoop(FitnessTracker):
             logging.error(f"Token validation failed: {e}")
             return False
 
-    def _make_request(self, method: str, url_slug: str, **kwargs: Any) -> dict[str, Any]:
-        """Helper method to make authenticated requests to WHOOP API"""
-        headers = kwargs.pop("headers", {})
-        headers["Authorization"] = f"Bearer {self.access_token}"
-        
-        response = httpx.request(
-            method=method,
-            url=f"{self.BASE_URL}/{url_slug}",
-            headers=headers,
-            **kwargs,
-        )
-        response.raise_for_status()
-        return response.json()
-    
     def get_cycle_for_day(self, day: datetime.date) -> dict[str, Any]:
         """
         Get the cycle for a given day.
-        
+
         Args:
             day (datetime.date): The date to get the cycle for.
-        
+
         Returns:
             dict[str, Any]: A dictionary of cycle data.
         """
         return self._max_overlap_cycle(day=day, cycles=self._get_cycles_for_day(day))
 
     def get_daily_resting_heart_rate(self, day: datetime.date) -> float:
-        """Fetch the resting heart rate data for a specific day."""
-        cycle_dict = self._max_overlap_cycle(day=day, cycles=self._get_cycles_for_day(day))
+        cycle_dict = self._max_overlap_cycle(
+            day=day, cycles=self._get_cycles_for_day(day)
+        )
         if cycle_dict is None:
             return 0.0
         cycle_id = cycle_dict["id"]
@@ -178,10 +173,12 @@ class Whoop(FitnessTracker):
 
     def get_daily_calories_burned(self, day: datetime.date) -> float:
         """Fetch calories burned for a specific day."""
-        cycle_dict = self._max_overlap_cycle(day=day, cycles=self._get_cycles_for_day(day))
+        cycle_dict = self._max_overlap_cycle(
+            day=day, cycles=self._get_cycles_for_day(day)
+        )
         if cycle_dict is None:
             return 0.0
-        
+
         calories = kj_to_kcal(cycle_dict["score"]["kilojoule"])
         return calories
 
@@ -190,13 +187,12 @@ class Whoop(FitnessTracker):
         start_dt = datetime.datetime.combine(day, datetime.time.min)
         end_dt = datetime.datetime.combine(day, datetime.time.max)
         sleep_data = self._get_sleep_collection(start_date=start_dt, end_date=end_dt)
-        
+
         if not sleep_data:
             return 0.0
-            
+
         total_minutes = sum(
-            sleep.get("score", {}).get("sleep_duration", 0) 
-            for sleep in sleep_data
+            sleep.get("score", {}).get("sleep_duration", 0) for sleep in sleep_data
         )
         return round(total_minutes / 60.0, 2)
 
@@ -205,7 +201,7 @@ class Whoop(FitnessTracker):
         start_dt = datetime.datetime.combine(day, datetime.time.min)
         end_dt = datetime.datetime.combine(day, datetime.time.max)
         workouts = self._get_workout_collection(start_date=start_dt, end_date=end_dt)
-        
+
         formatted_workouts = []
         for workout in workouts:
             if workout["score_state"] == "SCORED":
@@ -213,14 +209,16 @@ class Whoop(FitnessTracker):
                     "type": SPORTS_MAP.get(str(workout["sport_id"]), "Unknown"),
                     "duration": workout["score"].get("duration", 0),
                     "calories": kj_to_kcal(workout["score"].get("kilojoule", 0)),
-                    "distance": workout["score"].get("distance_meter", 0)
+                    "distance": workout["score"].get("distance_meter", 0),
                 }
                 formatted_workouts.append(formatted_workout)
         return formatted_workouts
 
     def get_daily_hrv(self, day: datetime.date) -> float:
         """Fetch HRV data for a specific day."""
-        cycle_dict = self._max_overlap_cycle(day=day, cycles=self._get_cycles_for_day(day))
+        cycle_dict = self._max_overlap_cycle(
+            day=day, cycles=self._get_cycles_for_day(day)
+        )
         if cycle_dict is None:
             return 0.0
         cycle_id = cycle_dict["id"]
@@ -229,7 +227,9 @@ class Whoop(FitnessTracker):
 
     def get_daily_recovery(self, day: datetime.date) -> float:
         """Fetch recovery data for a specific day."""
-        cycle_dict = self._max_overlap_cycle(day=day, cycles=self._get_cycles_for_day(day))
+        cycle_dict = self._max_overlap_cycle(
+            day=day, cycles=self._get_cycles_for_day(day)
+        )
         if cycle_dict is None:
             return 0.0
         cycle_id = cycle_dict["id"]
@@ -241,6 +241,22 @@ class Whoop(FitnessTracker):
             method="GET",
             url_slug=f"v1/cycle/{cycle_id}/recovery",
         )
+
+    def _make_request(
+        self, method: str, url_slug: str, **kwargs: Any
+    ) -> dict[str, Any]:
+        """Helper method to make authenticated requests to WHOOP API"""
+        headers = kwargs.pop("headers", {})
+        headers["Authorization"] = f"Bearer {self.access_token}"
+
+        response = httpx.request(
+            method=method,
+            url=f"{self.BASE_URL}/{url_slug}",
+            headers=headers,
+            **kwargs,
+        )
+        response.raise_for_status()
+        return response.json()
 
     def _get_cycles_for_day(self, day: datetime.date) -> list[dict[str, Any]]:
         """Get all cycles for a given day."""
@@ -314,44 +330,69 @@ class Whoop(FitnessTracker):
 
         return response_data
 
-    def _max_overlap_cycle(self, day: datetime.date, cycles: list[dict[str, Any]]) -> dict[str, Any] | None:
-        """Find the cycle with maximum overlap for a given day."""
+    def _max_overlap_cycle(
+        self, day: datetime.date, cycles: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
+        """
+        Find the cycle with maximum overlap for a given day.
+
+        Args:
+            day (datetime.date): The date to find the cycle for.
+            cycles (list[dict[str, Any]]): The list of cycles to search through.
+
+        Returns:
+            dict[str, Any] | None: The cycle with maximum overlap.
+        """
         if not cycles:
             return None
-            
         if len(cycles) == 1:
             return cycles[0]
-        
+
         max_overlap = 0
         cycle_dict = None
-        
-        day_start = datetime.datetime.combine(day, datetime.time.min).astimezone(datetime.timezone.utc)
-        day_end = datetime.datetime.combine(day, datetime.time.max).astimezone(datetime.timezone.utc)
+
+        day_start = datetime.datetime.combine(day, datetime.time.min).astimezone(
+            datetime.timezone.utc
+        )
+        day_end = datetime.datetime.combine(day, datetime.time.max).astimezone(
+            datetime.timezone.utc
+        )
 
         for cycle in cycles:
-            cycle_start = datetime.datetime.fromisoformat(cycle["start"].replace("Z", "+00:00"))
-            cycle_start = self.adjust_datetime_by_offset(cycle_start, cycle["timezone_offset"])            
-            
+            cycle_start = datetime.datetime.fromisoformat(
+                cycle["start"].replace("Z", "+00:00")
+            )
+            cycle_start = self.adjust_datetime_by_offset(
+                cycle_start, cycle["timezone_offset"]
+            )
+
             if "end" not in cycle or cycle["end"] is None:
-                return cycle  # if no end, then it's the current cycle
-            
-            cycle_end = datetime.datetime.fromisoformat(cycle["end"].replace("Z", "+00:00"))
-            cycle_end = self.adjust_datetime_by_offset(cycle_end, cycle["timezone_offset"])
+                return cycle
+
+            cycle_end = datetime.datetime.fromisoformat(
+                cycle["end"].replace("Z", "+00:00")
+            )
+            cycle_end = self.adjust_datetime_by_offset(
+                cycle_end, cycle["timezone_offset"]
+            )
             overlap_start = max(day_start, cycle_start)
             overlap_end = min(day_end, cycle_end)
-            
-            if overlap_end > overlap_start:  # If there is overlap
+
+            if overlap_end > overlap_start:
                 overlap_duration = (overlap_end - overlap_start).total_seconds()
                 if overlap_duration > max_overlap:
                     max_overlap = overlap_duration
                     cycle_dict = cycle
-        
+
         return cycle_dict
 
-
-    def adjust_datetime_by_offset(self, dt: datetime.datetime, offset_str: str) -> datetime.datetime:
+    def adjust_datetime_by_offset(
+        self, dt: datetime.datetime, offset_str: str
+    ) -> datetime.datetime:
         """Adjusts a datetime object by a timezone offset string (e.g., '-5:00')."""
-        hours, minutes = map(int, offset_str.split(':'))
+        hours, minutes = map(int, offset_str.split(":"))
         offset_sign = -1 if hours < 0 else 1
-        offset = datetime.timedelta(hours=abs(hours), minutes=abs(minutes)) * offset_sign
+        offset = (
+            datetime.timedelta(hours=abs(hours), minutes=abs(minutes)) * offset_sign
+        )
         return dt + offset
