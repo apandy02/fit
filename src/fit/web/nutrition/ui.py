@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import fasthtml.common as fh
 import fit.nutrition.assistants as assistants
 import fit.web.nutrition.food_plots as food_plots
-from fit.nutrition.data_models import MealBreakdown
+from fit.nutrition.data_models import MealBreakdown, NutritionFeedback
 from fit.web.common import (DB, create_text_form_input,
                             create_text_generation_card, create_time_filter)
 from fit.web.databases import get_daily_meals
@@ -957,4 +957,20 @@ def feedback_form(meal_description: str, meal_time, nutrition_info: MealBreakdow
             cls="space-y-4 w-[90%] mx-auto"
         ),
         id="text-input" if meal_description != "" else "image-input"  # Use image-input ID if description is empty (image case)
+    )
+
+def overview_text(analysis: NutritionFeedback):
+    return fh.Card(
+        fh.Div(
+            fh.P("Summary", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.summary, cls="text-primary-content mb-1"),
+            fh.P("Macronutrients", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.macronutrients, cls="text-primary-content mb-1"),
+            fh.P("Micronutrients", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.micronutrients, cls="text-primary-content mb-1"),
+            fh.P("Suggestions", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.suggestions, cls="text-primary-content mb-1"),
+            cls="p-4 space-y-2 mt-2"
+        ),
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
     )

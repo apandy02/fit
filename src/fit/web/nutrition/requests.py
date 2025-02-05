@@ -333,34 +333,12 @@ async def generate_weekly_overview(session):
     their dietary restrictions, their calories burned for the week, and calculating their targets for the week.
     Then, passing these to the weekly_io_analysis LMP.
     """
-    week = get_current_week_dates()
-    meals = databases.get_weekly_meals(DB, week)
-    tracker = tracker_factory(session["tracker"], session["access_token"])
-    dietary_restrictions = databases.get_dietary_restrictions(DB, "default")
-    calories_burned = [tracker.get_daily_calories_burned(day) for day in week]
-    weight_goal = WeightGoal(databases.get_weight_goal(DB, session["user_id"]))
-    targets = [calculate_macro_targets(calories_burned, weight_goal) for calories_burned in calories_burned]
-    [target.update(micronutrient_goals) for target in targets]
- 
-    analysis = assistants.weekly_io_analysis(meals, targets, dietary_restrictions).content[0].parsed
+    analysis = generate_overview(session, None, weekly=True)
 
     if isinstance(analysis, str):
         return fh.P(analysis, cls="text-primary-content mt-2")
     
-    return fh.Card(
-        fh.Div(
-            fh.P("Summary", cls="text-primary-content mb-1 font-bold"),
-            fh.P(analysis.summary, cls="text-primary-content mb-1"),
-            fh.P("Macronutrients", cls="text-primary-content mb-1 font-bold"),
-            fh.P(analysis.macronutrients, cls="text-primary-content mb-1"),
-            fh.P("Micronutrients", cls="text-primary-content mb-1 font-bold"),
-            fh.P(analysis.micronutrients, cls="text-primary-content mb-1"),
-            fh.P("Suggestions", cls="text-primary-content mb-1 font-bold"),
-            fh.P(analysis.suggestions, cls="text-primary-content mb-1"),
-            cls="p-4 space-y-2 mt-2"
-        ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
-    )
+    return ui.overview_text(analysis)
 
 async def generate_daily_overview(session, date: str | None = None):
     """
@@ -368,41 +346,42 @@ async def generate_daily_overview(session, date: str | None = None):
     their dietary restrictions, their calories burned for the day, and calculating their targets for the day.
     Then, passing these to the daily_io_analysis LMP.
     """
-    tracker = tracker_factory(session["tracker"], session["access_token"])
-    user_id = session["user_id"]
-    if date is None:
-        date_obj = datetime.today().date()
-    else:
-        try:
-            date_obj = datetime.strptime(date, "%Y-%m-%d").date()
-        except ValueError:
-            date_obj = datetime.today().date()
-            
-    meals = databases.get_daily_meals(DB, date_obj, user_id)
-    dietary_restrictions = databases.get_dietary_restrictions(DB, user_id)
-    calories_burned = tracker.get_daily_calories_burned(date_obj)
-    targets = calculate_macro_targets(calories_burned, WeightGoal.MAINTAIN)
-    targets.update(micronutrient_goals)
-    
     try:
-        analysis = assistants.daily_io_analysis(meals, targets, dietary_restrictions).content[0].parsed
+        analysis = generate_overview(session, date, weekly=False)
     except assistants.NoMealsLoggedError as e:
         return fh.P(str(e), cls="text-primary-content mt-2")
         
-    return fh.Card(
-        fh.Div(
-            fh.P("Summary", cls="text-primary-content mb-1 font-bold"),
-            fh.P(analysis.summary, cls="text-primary-content mb-1"),
-            fh.P("Macronutrients", cls="text-primary-content mb-1 font-bold"),
-            fh.P(analysis.macronutrients, cls="text-primary-content mb-1"),
-            fh.P("Micronutrients", cls="text-primary-content mb-1 font-bold"),
-            fh.P(analysis.micronutrients, cls="text-primary-content mb-1"),
-            fh.P("Suggestions", cls="text-primary-content mb-1 font-bold"),
-            fh.P(analysis.suggestions, cls="text-primary-content mb-1"),
-            cls="p-4 space-y-2 mt-2"
-        ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
-    )
+    return ui.overview_text(analysis)
+
+def generate_overview(session, date: str | None = None, weekly: bool = False):
+    """Get the overview data for the given date or week"""
+    tracker = tracker_factory(session["tracker"], session["access_token"])
+    if weekly:
+        days = get_current_week_dates()
+        meals = databases.get_weekly_meals(DB, days, session["user_id"])
+    else:
+        if date is None:
+            days = [datetime.today().date()] # put it in a fake list to make code invariant
+        else:
+            try:
+                days = [datetime.strptime(date, "%Y-%m-%d").date()]
+            except ValueError:
+                days = [datetime.today().date()]
+        meals = databases.get_daily_meals(DB, days[0], session["user_id"])
+    
+    dietary_restrictions = databases.get_dietary_restrictions(DB, "default")
+    calories_burned = [tracker.get_daily_calories_burned(day) for day in days]
+    # weight_goal = WeightGoal(databases.get_weight_goal(DB, session["user_id"]))
+    weight_goal = WeightGoal.MAINTAIN
+    targets = [calculate_macro_targets(calories_burned, weight_goal) for calories_burned in calories_burned]
+    [target.update(micronutrient_goals) for target in targets]
+
+    if weekly:
+        return assistants.weekly_io_analysis(meals, targets, dietary_restrictions).content[0].parsed
+    else:
+        print(meals)
+        print(targets)
+        return assistants.daily_io_analysis(meals, targets[0], dietary_restrictions).content[0].parsed
 
 async def nutrition_redirect(request: fh.Request):
     """Redirect to the nutrition page"""
