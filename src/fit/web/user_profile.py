@@ -21,7 +21,7 @@ def create_editable_input(name: str, value: str, input_type: str = "text", place
             cls="w-11/12" 
         ),
         fh.Button(
-            "✎",  # pen symbol
+            "✎", 
             type="button",
             onclick=f"document.getElementById('{input_id}').readOnly = false; document.getElementById('{input_id}').focus();",
             cls="flex items-center justify-center h-12 w-12 hover:bg-slate-700 focus:bg-slate-700 rounded-lg bg-slate-600 border-none outline-none"
@@ -37,7 +37,6 @@ def create_basic_info_card(user_data):
             cls="mb-6 bg-base-200"
         ),
         fh.Div(
-            # Name
             create_form_row("Name", create_editable_input(
                 "name",
                 user_data.get("name", ""),
@@ -49,7 +48,6 @@ def create_basic_info_card(user_data):
                 input_type="email",
                 placeholder="john@example.com"
             )),
-            # Gender
             create_form_row("Gender", fh.Select(
                 fh.Option("Select gender", value="", selected=not user_data.get("gender"), disabled=True),
                 fh.Option("Male", value="male", selected=user_data.get("gender") == "male"),
@@ -58,7 +56,6 @@ def create_basic_info_card(user_data):
                 required=True,
                 cls="select select-bordered w-full bg-base-200 text-primary-content"
             )),
-            # Date of Birth
             create_form_row("Date of Birth", create_editable_input(
                 "date_of_birth",
                 user_data.get("date_of_birth", ""),
@@ -79,7 +76,6 @@ def create_dietary_restrictions_card(restrictions, hx_target="restrictions-list"
         ),
         fh.Div(
             create_form_row("Restrictions", fh.Div(
-                # Dropdown for adding restrictions
                 fh.Select(
                     fh.Option("Select a restriction", value="", selected=True, disabled=True),
                     fh.Option("Vegetarian", value="vegetarian"),
@@ -94,9 +90,7 @@ def create_dietary_restrictions_card(restrictions, hx_target="restrictions-list"
                     hx_target=f"#{hx_target}",
                     cls="select select-bordered w-full bg-base-200 text-primary-content mb-4"
                 ),
-                # Container for restriction tags
                 fh.Div(
-                    # Pre-populate existing restrictions
                     *[
                         fh.Div(
                             fh.Div(
@@ -114,7 +108,6 @@ def create_dietary_restrictions_card(restrictions, hx_target="restrictions-list"
                         )
                         for r in restrictions
                     ],
-                    # Hidden inputs to maintain state
                     *[
                         fh.Input(
                             type="hidden",
@@ -154,7 +147,6 @@ def create_preferences_card(user_data):
 
 def get(session):
     """Return the profile page content"""
-    # Get user data
     user_data = get_profile_data(DB, session["user_id"])
     restrictions = user_data.get("dietary_restrictions", "")
     print(f"restrictions: {restrictions}")
@@ -165,7 +157,6 @@ def get(session):
 
     content = fh.Article(
         fh.Div(
-            # User Profile Section
             fh.Card(
                 fh.Header(
                     fh.H3("User Profile", cls="text-2xl font-bold text-center mb-2 text-primary-content"),

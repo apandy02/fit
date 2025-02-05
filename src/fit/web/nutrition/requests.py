@@ -50,7 +50,7 @@ def get_weekly_overview(session):
 def overview_page_content(session, data: list[dict], current_view: str, date: datetime.date = None):
     menu_items = [
         ("Food", "🍽️", "openFoodModal()"),
-        ("Water", "💧", "openWaterModal()"),  # Updated to use water modal
+        ("Water", "💧", "openWaterModal()"), 
         ("Supplement", "💊", "openSupplementModal()")
     ]
 
@@ -196,7 +196,7 @@ async def save_meal(session, request: fh.Request, date: str | None = None):
             cls="text-red-500 font-semibold text-center"
         )
 
-async def delete_meal(session, meal_id: int):
+async def delete_meal(meal_id: int):
     """Delete a meal from the database and return updated meals list"""
     try:
         success = databases.delete_meal(DB, meal_id)
@@ -207,7 +207,8 @@ async def delete_meal(session, meal_id: int):
             cls="text-red-500 font-semibold text-center"
         )
     if success:
-        return None  # This will remove the meal card from the UI
+        return None  
+
     else:
         return fh.P(
             "Error deleting meal",
@@ -321,7 +322,7 @@ async def reset_text_form():
 async def regenerate_analysis(feedback: str, original_description: str):
     """Regenerate analysis based on feedback"""
     original_info = assistants.natural_language_nutritional_breakdown(original_description).content[0].parsed #TODO: why are we re-running this?
-    improved_info = assistants.improve_breakdown(original_info, feedback).content[0].parsed # todo: maybe the parsing should be done in the assistant
+    improved_info = assistants.improve_breakdown(original_info, feedback).content[0].parsed # TODO: maybe the parsing should be done in the assistant
     
 
     meal_time_obj = datetime.now().time()

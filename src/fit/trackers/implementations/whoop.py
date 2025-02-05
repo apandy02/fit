@@ -198,7 +198,7 @@ class Whoop(FitnessTracker):
             sleep.get("score", {}).get("sleep_duration", 0) 
             for sleep in sleep_data
         )
-        return round(total_minutes / 60.0, 2)  # Convert to hours
+        return round(total_minutes / 60.0, 2)
 
     def get_daily_workouts(self, day: datetime.date) -> list[dict[str, Any]]:
         """Get all workouts for a given day."""
@@ -211,9 +211,9 @@ class Whoop(FitnessTracker):
             if workout["score_state"] == "SCORED":
                 formatted_workout = {
                     "type": SPORTS_MAP.get(str(workout["sport_id"]), "Unknown"),
-                    "duration": round(workout["score"].get("duration", 0) / 60, 2),  # Convert to minutes
+                    "duration": workout["score"].get("duration", 0),
                     "calories": kj_to_kcal(workout["score"].get("kilojoule", 0)),
-                    "distance": round(workout["score"].get("distance_meter", 0) / 1000, 2),  # Convert to km
+                    "distance": workout["score"].get("distance_meter", 0)
                 }
                 formatted_workouts.append(formatted_workout)
         return formatted_workouts

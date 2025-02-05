@@ -206,9 +206,9 @@ class Fitbit(FitnessTracker):
             for activity in activities:
                 workout = {
                     "type": activity.get('activityName', 'Unknown'),
-                    "duration": round(activity.get('duration', 0) / 60000, 2),  # Convert from milliseconds to minutes
+                    "duration": activity.get('duration', 0),
                     "calories": activity.get('calories', 0),
-                    "distance": round(activity.get('distance', 0) * 1.60934, 2)  # Convert miles to km
+                    "distance": activity.get('distance', 0)
                 }
                 workouts.append(workout)
             return workouts
