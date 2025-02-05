@@ -172,7 +172,6 @@ class Whoop(FitnessTracker):
         return recovery_dict["score"]["resting_heart_rate"]
 
     def get_daily_calories_burned(self, day: datetime.date) -> float:
-        """Fetch calories burned for a specific day."""
         cycle_dict = self._max_overlap_cycle(
             day=day, cycles=self._get_cycles_for_day(day)
         )
@@ -183,7 +182,6 @@ class Whoop(FitnessTracker):
         return calories
 
     def get_daily_sleep(self, day: datetime.date) -> float:
-        """Fetch sleep data for a specific day in hours."""
         start_dt = datetime.datetime.combine(day, datetime.time.min)
         end_dt = datetime.datetime.combine(day, datetime.time.max)
         sleep_data = self._get_sleep_collection(start_date=start_dt, end_date=end_dt)
@@ -197,7 +195,6 @@ class Whoop(FitnessTracker):
         return round(total_minutes / 60.0, 2)
 
     def get_daily_workouts(self, day: datetime.date) -> list[dict[str, Any]]:
-        """Get all workouts for a given day."""
         start_dt = datetime.datetime.combine(day, datetime.time.min)
         end_dt = datetime.datetime.combine(day, datetime.time.max)
         workouts = self._get_workout_collection(start_date=start_dt, end_date=end_dt)
@@ -215,7 +212,6 @@ class Whoop(FitnessTracker):
         return formatted_workouts
 
     def get_daily_hrv(self, day: datetime.date) -> float:
-        """Fetch HRV data for a specific day."""
         cycle_dict = self._max_overlap_cycle(
             day=day, cycles=self._get_cycles_for_day(day)
         )
@@ -226,7 +222,6 @@ class Whoop(FitnessTracker):
         return float(recovery_dict["score"].get("hrv_rmssd", 0))
 
     def get_daily_recovery(self, day: datetime.date) -> float:
-        """Fetch recovery data for a specific day."""
         cycle_dict = self._max_overlap_cycle(
             day=day, cycles=self._get_cycles_for_day(day)
         )
