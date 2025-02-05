@@ -163,7 +163,6 @@ def create_meal_prompt_form(
 def create_text_input_form(is_feedback: bool = False, original_description: str = None, date: str | None = None, original_breakdown: MealBreakdown | None = None):
     """Create the text input form for meal description"""
     analyze_endpoint = f"/analyze_text/{date}" if date is not None else "/analyze_text"
-    print(f"{original_breakdown=}")
     if not is_feedback:
         return create_meal_prompt_form(
             title="Describe Your Meal",

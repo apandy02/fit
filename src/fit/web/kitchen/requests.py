@@ -1,4 +1,5 @@
 import io
+import logging
 
 import fasthtml.common as fh
 import fit.web.common as common
@@ -26,7 +27,7 @@ async def add_item(session, request: fh.Request):
         db.insert_inventory_item(common.DB, item, quantity, unit, category, user_id=user_id)
         return fh.Response(status=200)
     except Exception as e:
-        print(e)
+        logging.error(f"Error adding item: {e}")
         return fh.Response(status=500)
 
 async def add_inventory_from_image(food_image: fh.UploadFile, additional_context: str):
@@ -36,8 +37,8 @@ async def add_inventory_from_image(food_image: fh.UploadFile, additional_context
         image = Image.open(io.BytesIO(contents))
         inventory = assistants.inventory_from_image(image, additional_context)
         return ui.create_editable_inventory_form(inventory)
-    except Exception as e:
-        print(e)
+    except Exception:
+        logging.e
         return fh.Response(status=500)
 
 async def save_inventory(session, request: fh.Request):
@@ -79,7 +80,7 @@ async def save_inventory(session, request: fh.Request):
             """)
         )
     except Exception as e:
-        print(e)
+        logging.e
         return fh.P(
             f"Error saving items: {str(e)}",
             cls="text-red-500 font-semibold text-center"
@@ -90,8 +91,8 @@ def get_inventory(user_id: int):
     try:
         inventory = db.get_inventory(common.DB, user_id)
         return inventory
-    except Exception as e:
-        print(e)
+    except Exception:
+        logging.e
         return []
     
 async def add_inventory_from_text(request: fh.Request):
@@ -121,7 +122,7 @@ async def add_inventory_from_text(request: fh.Request):
             id="describe-view"
         )
     except Exception as e:
-        print(e)
+        logging.e
         return fh.P(
             f"Error analyzing items: {str(e)}",
             cls="text-red-500 font-semibold text-center"
@@ -133,8 +134,8 @@ async def delete_inventory_item(rowid: int):
         common.DB.t.inventory.delete(rowid)
         # Return an empty div that will replace the card
         return fh.Div()
-    except Exception as e:
-        print(e)
+    except Exception:
+        logging.e
         return fh.Response(status=500)
 
 async def generate_inventory_additions(session, request: fh.Request):
@@ -169,6 +170,6 @@ async def generate_inventory_additions(session, request: fh.Request):
             *grocery_cards,
             cls="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
         )
-    except Exception as e:
-        print(e)
+    except Exception:
+        logging.e
         return fh.Response(status=500)
