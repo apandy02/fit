@@ -590,4 +590,4 @@ def get_weight_goal(database: fh.Database, user_id: int) -> float:
     query = """
         SELECT weight_goal FROM profile WHERE user_id = ?
     """
-    result = database.execute(query, (user_id,)).fetchone()
+    return database.execute(query, (user_id,)).fetchone()[0]

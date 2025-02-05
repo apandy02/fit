@@ -7,9 +7,9 @@ import fit.web.common as common
 import fit.web.databases as databases
 import fit.web.nutrition.ui as ui
 from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
-                                       Fats, WeightGoal, Macronutrients,
-                                       MealBreakdown, Micronutrients,
-                                       NutritionalInformation)
+                                       Fats, Macronutrients, MealBreakdown,
+                                       Micronutrients, NutritionalInformation,
+                                       WeightGoal)
 from fit.nutrition.targets import (calculate_macro_targets,
                                    estimate_daily_water_intake)
 from fit.trackers.base import FitnessTracker
