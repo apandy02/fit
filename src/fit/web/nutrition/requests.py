@@ -391,7 +391,6 @@ async def get_nutrient_suggestions(session, nutrient: str):
     nutritional_data = get_user_nutritional_data_for_dates(session, [datetime.today().date()])
     user_preferences = assistants.summarize_user_preferences(databases.get_all_meal_summaries(DB, session["user_id"])) # TODO: cache the output of this so that we aren't calling it every time
     kitchen_inventory = databases.get_inventory(DB, session["user_id"])
-    
     recommendations = assistants.make_recommendations(
         consumption=daily_nutrition,
         targets=nutritional_data["targets"][0],
@@ -400,6 +399,7 @@ async def get_nutrient_suggestions(session, nutrient: str):
         user_preferences=user_preferences,
         kitchen_inventory=kitchen_inventory
     ).content[0].parsed
+
     return fh.Div(
         fh.H4("Suggestions", cls="text-lg font-bold mb-1 text-primary-content text-center"),
         fh.Div(
@@ -422,20 +422,30 @@ async def get_nutrient_suggestions(session, nutrient: str):
     )
 
 def get_user_nutritional_data_for_dates(session, dates: list[datetime.date]):
-    """Get the user's nutritional data"""
+    """
+    Get the user's nutritional data for the given dates.
+    Args:
+        session: the user's session
+        dates: a list of the dates to get the nutritional data for
+    Returns:
+        - dict:
+            - targets: a list of the user's targets for the given dates
+            - daily_nutrition: a list of the user's daily nutrition for the given dates
+            - weight_goal: the user's weight goal
+            - restrictions: the user's dietary restrictions
+            - calories_burned: the user's calories burned for the given dates
+    """
     tracker = tracker_factory(session["tracker"], session["access_token"])
-    calories_burned = [tracker.get_daily_calories_burned(day) for day in dates]
     weight_goal = WeightGoal(databases.get_weight_goal(DB, session["user_id"]))
+    calories_burned = [tracker.get_daily_calories_burned(day) for day in dates]
     targets = [calculate_macro_targets(calories_burned, weight_goal) for calories_burned in calories_burned]
     [target.update(micronutrient_goals) for target in targets]
-    daily_nutrition = [databases.get_daily_cumulative_nutrition(DB, day, session["user_id"]) for day in dates]
-    weight_goal = WeightGoal(databases.get_weight_goal(DB, session["user_id"]))
-    dietary_restrictions = databases.get_dietary_restrictions(DB, session["user_id"])
+    
     return {
         "targets": targets,
-        "daily_nutrition": daily_nutrition,
+        "daily_nutrition": [databases.get_daily_cumulative_nutrition(DB, day, session["user_id"]) for day in dates],
         "weight_goal": weight_goal, 
-        "restrictions": dietary_restrictions,
+        "restrictions": databases.get_dietary_restrictions(DB, session["user_id"]),
         "calories_burned": calories_burned
     }
 
