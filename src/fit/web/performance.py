@@ -1,6 +1,7 @@
 import datetime
 
 import fasthtml.common as fh
+
 import fit.performance.assistants as assistants
 import fit.web.databases as db
 from fit.nutrition.targets import WeightGoal, calculate_caloric_target

@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
+
 from fit.nutrition.data_models import WeightGoal
 from fit.web.common import DB, page_outline
 from fit.web.databases import (get_latest_user_measurements,
