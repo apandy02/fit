@@ -3,7 +3,7 @@ import datetime
 import fasthtml.common as fh
 import fit.performance.assistants as assistants
 import fit.web.databases as db
-from fit.nutrition.targets import Goals, calculate_caloric_target
+from fit.nutrition.targets import WeightGoal, calculate_caloric_target
 from fit.trackers.base import FitnessTracker
 from fit.trackers.implementations.whoop import Whoop
 from fit.trackers.manager import tracker_factory
@@ -128,7 +128,7 @@ async def generate_overview(session):
         daily_stats, workouts = get_performance_info(tracker)
         daily_nutrition = db.get_daily_cumulative_nutrition(DB, today, session["user_id"])
         caloric_consumption = daily_nutrition.calories
-        caloric_target = calculate_caloric_target(daily_nutrition, Goals.MAINTAIN)
+        caloric_target = calculate_caloric_target(daily_nutrition, WeightGoal.MAINTAIN)
         
         workout_trend_summary = assistants.summarize_workout_trends(workouts)
         

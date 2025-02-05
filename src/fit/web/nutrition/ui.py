@@ -160,9 +160,10 @@ def create_meal_prompt_form(
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-12 shadow-none "
     )
 
-def create_text_input_form(is_feedback: bool = False, original_description: str = None, date: str | None = None):
+def create_text_input_form(is_feedback: bool = False, original_description: str = None, date: str | None = None, original_breakdown: MealBreakdown | None = None):
     """Create the text input form for meal description"""
     analyze_endpoint = f"/analyze_text/{date}" if date is not None else "/analyze_text"
+    print(f"{original_breakdown=}")
     if not is_feedback:
         return create_meal_prompt_form(
             title="Describe Your Meal",
@@ -187,6 +188,13 @@ def create_text_input_form(is_feedback: bool = False, original_description: str 
                     name="original_description",
                     id="original_description",
                     value=original_description
+                ),
+                # Add hidden fields for all the meal breakdown data
+                fh.Input(
+                    type="hidden",
+                    name="original_breakdown",
+                    id="original_breakdown",
+                    value=original_breakdown.model_dump_json()
                 )
             ],
             header_buttons=[
@@ -944,7 +952,7 @@ def feedback_form(meal_description: str, meal_time, nutrition_info: MealBreakdow
     """Create a consistent feedback form layout used by both analyze and regenerate functions"""
     return fh.Div(
         fh.Div(
-            create_text_input_form(is_feedback=True, original_description=meal_description),
+            create_text_input_form(is_feedback=True, original_description=meal_description, original_breakdown=nutrition_info),
             create_meal_breakdown(nutrition_info, meal_time=meal_time, date=date),
             cls="space-y-4 w-[90%] mx-auto"
         ),

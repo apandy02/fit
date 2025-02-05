@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 
 import fasthtml.common as fh
-from fit.nutrition.data_models import Goals
+from fit.nutrition.data_models import WeightGoal
 from fit.web.common import DB, page_outline
 from fit.web.databases import (get_latest_user_measurements,
                                get_user_measurements, insert_user_measurements)
@@ -218,7 +218,7 @@ def create_goal_form():
             fh.Select(
                 *[
                     fh.Option(goal.value.title(), value=goal.value)
-                    for goal in Goals
+                    for goal in WeightGoal
                 ],
                 name="fitness_goal",
                 cls="select select-bordered w-full bg-base-200 text-primary-content"

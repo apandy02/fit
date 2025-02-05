@@ -102,6 +102,8 @@ def init_db(database_path: str):
             units=str,
             dietary_restrictions=str,
             activity_level=str,
+            weight_goal=float,
+            fitness_goal=str,
             onboarding_stage=int,
             pk='user_id',
             not_null= ["user_id"],
@@ -582,3 +584,10 @@ def get_inventory(database: fh.Database, user_id: int) -> list[tuple[str, float,
         })
     
     return results
+
+def get_weight_goal(database: fh.Database, user_id: int) -> float:
+    """Get the weight goal from the database"""
+    query = """
+        SELECT weight_goal FROM profile WHERE user_id = ?
+    """
+    result = database.execute(query, (user_id,)).fetchone()

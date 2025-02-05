@@ -7,7 +7,7 @@ import fit.web.common as common
 import fit.web.databases as databases
 import fit.web.nutrition.ui as ui
 from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
-                                       Fats, Goals, Macronutrients,
+                                       Fats, WeightGoal, Macronutrients,
                                        MealBreakdown, Micronutrients,
                                        NutritionalInformation)
 from fit.nutrition.targets import (calculate_macro_targets,
@@ -103,7 +103,7 @@ def get_weekly_nutrition_data(week: list[datetime], tracker: FitnessTracker, use
 def get_daily_nutrition_data(date: datetime, tracker: FitnessTracker, user_id: int):
     """Get the current nutrition data for display"""
     calories_burned = tracker.get_daily_calories_burned(date)
-    goals = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
+    goals = calculate_macro_targets(calories_burned, WeightGoal.MAINTAIN)
     daily_consumption = databases.get_daily_cumulative_nutrition(DB, date, user_id)
     water_consumed = databases.get_daily_water_consumption(DB, date, user_id)
     user_info = databases.get_profile_data(DB, user_id)
@@ -319,15 +319,11 @@ async def reset_text_form():
     """Reset the text form to its original state"""
     return ui.create_text_input_form(is_feedback=False)
 
-async def regenerate_analysis(feedback: str, original_description: str):
+async def regenerate_analysis(feedback: str, original_description: str, original_breakdown: str):
     """Regenerate analysis based on feedback"""
-    original_info = assistants.natural_language_nutritional_breakdown(original_description).content[0].parsed #TODO: why are we re-running this?
-    improved_info = assistants.improve_breakdown(original_info, feedback).content[0].parsed # TODO: maybe the parsing should be done in the assistant
-    
-
+    improved_info = assistants.improve_breakdown(original_breakdown, feedback).content[0].parsed
     meal_time_obj = datetime.now().time()
     meal_datetime = datetime.combine(datetime.today().date(), meal_time_obj).isoformat()
-    
     return ui.feedback_form(original_description, meal_datetime, improved_info)
 
 # TODO: the next two functions are doing a lot of the same work, find a way to refactor
@@ -342,7 +338,8 @@ async def generate_weekly_overview(session):
     tracker = tracker_factory(session["tracker"], session["access_token"])
     dietary_restrictions = databases.get_dietary_restrictions(DB, "default")
     calories_burned = [tracker.get_daily_calories_burned(day) for day in week]
-    targets = [calculate_macro_targets(calories_burned, Goals.MAINTAIN) for calories_burned in calories_burned]
+    weight_goal = WeightGoal(databases.get_weight_goal(DB, session["user_id"]))
+    targets = [calculate_macro_targets(calories_burned, weight_goal) for calories_burned in calories_burned]
     [target.update(micronutrient_goals) for target in targets]
  
     analysis = assistants.weekly_io_analysis(meals, targets, dietary_restrictions).content[0].parsed
@@ -384,7 +381,7 @@ async def generate_daily_overview(session, date: str | None = None):
     meals = databases.get_daily_meals(DB, date_obj, user_id)
     dietary_restrictions = databases.get_dietary_restrictions(DB, user_id)
     calories_burned = tracker.get_daily_calories_burned(date_obj)
-    targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
+    targets = calculate_macro_targets(calories_burned, WeightGoal.MAINTAIN)
     targets.update(micronutrient_goals)
     
     try:
@@ -422,7 +419,8 @@ async def get_nutrient_suggestions(session, nutrient: str):
     daily_nutrition = databases.get_daily_cumulative_nutrition(DB, datetime.today().date(), user_id)
     tracker = tracker_factory(session["tracker"], session["access_token"])
     calories_burned = tracker.get_daily_calories_burned(datetime.today().date())
-    targets = calculate_macro_targets(calories_burned, Goals.MAINTAIN)
+    weight_goal = WeightGoal(databases.get_weight_goal(DB, session["user_id"]))
+    targets = calculate_macro_targets(calories_burned, weight_goal)
     targets.update(micronutrient_goals)
     restrictions = databases.get_dietary_restrictions(DB, user_id)
     user_preferences = assistants.summarize_user_preferences(databases.get_all_meal_summaries(DB, user_id)) # TODO: cache the output of this so that we aren't calling it every time
