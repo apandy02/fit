@@ -7,9 +7,8 @@ from typing import Any
 class FitnessTracker(ABC):
     """
     Abstract base class for fitness trackers.
-    
-    I'm not the biggest fan of abstractions, so let's try and keep the
-    responsibilities of this class down to the bare minimum as necessary.
+    This will handle interaction with the tracker-specific
+    API to retrieve a standardized set of metrics.
     """
     def __init__(self):
         try:
