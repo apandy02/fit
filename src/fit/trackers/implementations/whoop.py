@@ -329,7 +329,7 @@ class Whoop(FitnessTracker):
         self, day: datetime.date, cycles: list[dict[str, Any]]
     ) -> dict[str, Any] | None:
         """
-        Find the cycle with maximum overlap for a given day.
+        Find the whoop "cycle" with maximum overlap for a given day.
 
         Args:
             day (datetime.date): The date to find the cycle for.
