@@ -135,7 +135,7 @@ def page_outline(selidx, title, logged_in: bool, display_nav: bool, *c):
     return (
         fh.Title(title),
         fh.Body(
-            fh.Html(data_theme="black"),
+            fh.Html(data_theme="forest"),
             fh.Div(
                 fh.Div(
                     *[
@@ -174,7 +174,7 @@ def create_text_generation_card(endpoint: str, button_text: str = "Generate Anal
                 fh.Div(
                     fh.Button(
                         button_text,
-                        cls="btn btn-neutral outline outline-1 outline-base-content mt-4 rounded-md",
+                        cls="btn btn-neutral outline outline-1 text-base-content font-light outline-base-content mt-4 rounded-md",
                         hx_post=endpoint,
                         hx_target="#analysis-content",
                         hx_indicator="#loading-indicator"

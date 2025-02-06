@@ -50,7 +50,7 @@ def metric_card(
             fh.Div(
                 fh.Button(
                     "Get Suggestions",
-                    cls="btn btn-sm btn-primary outline outline-1 outline-base-content mt-4 rounded-md text-xs",
+                    cls="btn btn-sm btn-neutral outline outline-1 outline-base-content mt-4 rounded-md font-light text-xs",
                     hx_post=f"/get_nutrient_suggestions/{title.lower()}",
                     hx_target=f"#{plot_id}-suggestions",
                     hx_indicator=f"#{plot_id}-suggestions-loading-indicator"
@@ -489,7 +489,7 @@ def create_page_header(current_view: str, date: datetime.date = None):
             ),
             fh.P(
                 date.strftime("%B %d, %Y"),
-                cls="text-lg text-base-content mx-4"
+                cls="text-md font-light text-base-content mx-4"
             ),
             fh.A(
                 "→",
@@ -500,7 +500,7 @@ def create_page_header(current_view: str, date: datetime.date = None):
         )
     
     return fh.Div(
-        fh.P("Nutrition Center", cls="text-3xl font-bold text-center mb-6 text-base-content"),
+        fh.P("Nutrition Center", cls="text-4xl font-light text-center mb-6 text-base-content"),
         fh.Div(
             create_time_filter(current_view),
             cls="flex justify-center mb-8"
@@ -515,7 +515,7 @@ def create_metric_overview_section(title, data, metrics, view_type: str = "daily
     """Create a metrics overview section with configurable metrics"""    
     return fh.Section(
         fh.Div(
-            fh.H2(title, cls="text-4xl my-8 text-base-content text-center"),
+            fh.H2(title, cls="text-3xl my-8 text-base-content text-center"),
             fh.Div(
                 *[fh.Div(
                     metric_card(
@@ -940,7 +940,7 @@ def create_meals_list(user_id, date: datetime.date):
     return fh.Div(
         fh.Details(
             fh.Summary(
-                fh.H3("Meals Logged", cls="text-xl font-bold text-base-content inline-block"),
+                fh.H3("Meals Logged", cls="text-xl text-base-content inline-block"),
                 cls="cursor-pointer hover:opacity-80"
             ),
             content,

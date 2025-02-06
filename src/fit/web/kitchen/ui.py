@@ -9,7 +9,7 @@ def kitchen_page_content(inventory: dict):
     """Create the main kitchen page content"""
     content = fh.Article(
         fh.Div(
-            fh.H2("My Kitchen", cls="text-3xl font-bold text-primary-content mb-8 text-center"),
+            fh.H2("Your Kitchen", cls="text-4xl font-light text-primary-content mb-8 text-center"),
             create_text_generation_card("/generate_inventory_additions", "Grocery Recommendations"),
             create_kitchen_sections(inventory),
             create_add_items_modal(),
@@ -58,13 +58,13 @@ def create_expandable_section(title: str, items: list):
     return fh.Div(
         fh.Details(
             fh.Summary(
-                fh.H3(title, cls="text-xl font-bold text-primary-content inline-block"),
+                fh.H3(title, cls="text-xl font-light text-primary-content inline-block"),
                 cls="cursor-pointer hover:opacity-80"
             ),
             content,
             cls="p-6"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
+        cls="bg-base-200 outline outline-2 outline-primary-content rounded-xl mt-8"
     )
 
 def create_item_card(item: tuple):
