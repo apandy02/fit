@@ -3,7 +3,6 @@ import logging
 
 import fasthtml.common as fh
 from fasthtml.common import RedirectResponse
-
 from fit.web.common import database_service
 from fit.web.onboarding import ui
 

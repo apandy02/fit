@@ -1,5 +1,4 @@
 import fasthtml.common as fh
-
 from fit.web.common import page_outline
 
 
