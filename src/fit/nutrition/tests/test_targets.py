@@ -1,6 +1,6 @@
 import unittest
 
-from fit.nutrition.data_models import Goals
+from fit.nutrition.data_models import WeightGoal
 from fit.nutrition.targets import (MICRO_GOALS, calculate_caloric_target,
                                    calculate_carb_target, calculate_fat_target,
                                    calculate_macro_targets,
@@ -9,10 +9,10 @@ from fit.nutrition.targets import (MICRO_GOALS, calculate_caloric_target,
 
 class TestTargets(unittest.TestCase):
     def test_calculate_caloric_target(self):
-        self.assertEqual(calculate_caloric_target(2000, Goals.GAIN_MUSCLE), 2200)
-        self.assertEqual(calculate_caloric_target(2000, Goals.LOSE_WEIGHT), 1800)
-        self.assertEqual(calculate_caloric_target(2000, Goals.MAINTAIN), 2000)
-        self.assertEqual(calculate_caloric_target(0, Goals.MAINTAIN), 0)
+        self.assertEqual(calculate_caloric_target(2000, WeightGoal.GAIN), 2200)
+        self.assertEqual(calculate_caloric_target(2000, WeightGoal.LOSE), 1800)
+        self.assertEqual(calculate_caloric_target(2000, WeightGoal.MAINTAIN), 2000)
+        self.assertEqual(calculate_caloric_target(0, WeightGoal.MAINTAIN), 0)
 
     def test_calculate_protein_target(self):
         self.assertEqual(calculate_protein_target(2000), 150)
@@ -30,19 +30,19 @@ class TestTargets(unittest.TestCase):
         self.assertEqual(calculate_carb_target(4000), 400)
 
     def test_calculate_macro_targets(self):
-        result = calculate_macro_targets(2000, Goals.GAIN_MUSCLE)
+        result = calculate_macro_targets(2000, WeightGoal.GAIN)
         self.assertEqual(result["calories"], 2200)
         self.assertEqual(result["protein"], 165)
         self.assertEqual(result["fat"], 73)
         self.assertEqual(result["carbohydrates"], 220)
         
-        result = calculate_macro_targets(2000, Goals.LOSE_WEIGHT)
+        result = calculate_macro_targets(2000, WeightGoal.LOSE)
         self.assertEqual(result["calories"], 1800)
         self.assertEqual(result["protein"], 135)
         self.assertEqual(result["fat"], 60)
         self.assertEqual(result["carbohydrates"], 180)
         
-        result = calculate_macro_targets(2000, Goals.MAINTAIN)
+        result = calculate_macro_targets(2000, WeightGoal.MAINTAIN)
         self.assertEqual(result["calories"], 2000)
         self.assertEqual(result["protein"], 150)
         self.assertEqual(result["fat"], 67)

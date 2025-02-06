@@ -1,4 +1,4 @@
-from fit.nutrition.data_models import Goals
+from fit.nutrition.data_models import WeightGoal
 
 MICRO_GOALS = {
     "male": {
@@ -21,14 +21,14 @@ MICRO_GOALS = {
     }
 }
 
-def calculate_caloric_target(calories_burned: float, goal: Goals) -> float:
+def calculate_caloric_target(calories_burned: float, goal: WeightGoal) -> float:
     """
     Calculate daily caloric target based on calories burned and goal.
     Returns a 10% surplus for gaining, maintenance for maintaining, or 10% deficit for losing.
     """
-    if goal == Goals.GAIN_MUSCLE:
+    if goal == WeightGoal.GAIN:
         return calories_burned * 1.1
-    elif goal == Goals.LOSE_WEIGHT:
+    elif goal == WeightGoal.LOSE:
         return calories_burned * 0.9
     else:
         return calories_burned
@@ -48,7 +48,7 @@ def calculate_carb_target(caloric_target: float) -> float:
     carb_calories = caloric_target * 0.4
     return carb_calories / 4
 
-def calculate_macro_targets(calories_burned: float, goal: Goals) -> dict:
+def calculate_macro_targets(calories_burned: float, goal: WeightGoal) -> dict:
     """
     Calculate all nutritional targets based on calories burned and goal.
     

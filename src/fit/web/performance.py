@@ -1,15 +1,15 @@
 import datetime
 
 import fasthtml.common as fh
+
 import fit.performance.assistants as assistants
-import fit.web.databases as db
-from fit.nutrition.targets import Goals, calculate_caloric_target
+from fit.nutrition.targets import WeightGoal, calculate_caloric_target
 from fit.trackers.base import FitnessTracker
 from fit.trackers.implementations.whoop import Whoop
 from fit.trackers.manager import tracker_factory
 from fit.utils.conversions import kj_to_kcal
-from fit.web.common import (DB, create_fab_menu, create_text_generation_card,
-                            create_time_filter, page_outline)
+from fit.web.common import (create_fab_menu, create_text_generation_card,
+                            create_time_filter, database_service, page_outline)
 
 
 def get(session):
@@ -94,7 +94,7 @@ def get_performance_info(tracker: FitnessTracker):
             "calories": tracker.get_daily_calories_burned(today),
             "average_heart_rate": 55,
             "max_heart_rate": 100,
-        }
+        } # TODO: use the timeseries data to get the average and max heart rate
 
     workouts = tracker.get_daily_workouts(today)
     return daily_stats, workouts
@@ -126,9 +126,9 @@ async def generate_overview(session):
         tracker = tracker_factory(session["tracker"], session["access_token"])
         today = datetime.date.today()
         daily_stats, workouts = get_performance_info(tracker)
-        daily_nutrition = db.get_daily_cumulative_nutrition(DB, today, session["user_id"])
+        daily_nutrition = database_service.get_daily_cumulative_nutrition(today, session["user_id"])
         caloric_consumption = daily_nutrition.calories
-        caloric_target = calculate_caloric_target(daily_nutrition, Goals.MAINTAIN)
+        caloric_target = calculate_caloric_target(daily_nutrition, WeightGoal.MAINTAIN)
         
         workout_trend_summary = assistants.summarize_workout_trends(workouts)
         
@@ -144,7 +144,6 @@ async def generate_overview(session):
             time=current_time,
             time_cutoff=time_cutoff
         )
-        print(f"analysis: {analysis}")
         return fh.Card(
             fh.Div(
                 fh.P(analysis, cls="text-primary-content"),

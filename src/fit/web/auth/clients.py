@@ -15,7 +15,6 @@ fitbit_client_oauth = FitbitAppClient(
     scope=["activity", "heartrate", "profile"], 
 )
 
-
 whoop_config_path = Path(__file__).parent / 'config' / 'whoop_config.json'
 
 with open(whoop_config_path, 'r') as f:

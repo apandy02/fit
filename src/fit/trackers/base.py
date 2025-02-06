@@ -13,9 +13,9 @@ class FitnessTracker(ABC):
 
     def __init__(self):
         try:
-            print("Authenticating...")
+            logging.info("Authenticating...")
             self._authenticate()
-            print("Authentication successful")
+            logging.info("Authentication successful")
 
         except Exception as e:
             logging.error(f"Error authenticating: {e}")

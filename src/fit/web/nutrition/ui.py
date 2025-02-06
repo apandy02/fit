@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
 
 import fasthtml.common as fh
+
 import fit.nutrition.assistants as assistants
 import fit.web.nutrition.food_plots as food_plots
-from fit.nutrition.data_models import MealBreakdown
-from fit.web.common import (DB, create_text_form_input,
-                            create_text_generation_card, create_time_filter)
-from fit.web.databases import get_daily_meals
+from fit.nutrition.data_models import MealBreakdown, NutritionFeedback
+from fit.web.common import (create_text_form_input,
+                            create_text_generation_card, create_time_filter,
+                            database_service)
 
 
 def metric_card(
@@ -160,7 +161,7 @@ def create_meal_prompt_form(
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-12 shadow-none "
     )
 
-def create_text_input_form(is_feedback: bool = False, original_description: str = None, date: str | None = None):
+def create_text_input_form(is_feedback: bool = False, original_description: str = None, date: str | None = None, original_breakdown: MealBreakdown | None = None):
     """Create the text input form for meal description"""
     analyze_endpoint = f"/analyze_text/{date}" if date is not None else "/analyze_text"
     if not is_feedback:
@@ -187,6 +188,13 @@ def create_text_input_form(is_feedback: bool = False, original_description: str 
                     name="original_description",
                     id="original_description",
                     value=original_description
+                ),
+                # Add hidden fields for all the meal breakdown data
+                fh.Input(
+                    type="hidden",
+                    name="original_breakdown",
+                    id="original_breakdown",
+                    value=original_breakdown.model_dump_json()
                 )
             ],
             header_buttons=[
@@ -885,7 +893,7 @@ def supplement_modal(date: datetime.date):
 
 def create_meals_list(user_id, date: datetime.date):
     """Create an expandable list of meals for the given date"""
-    meals = get_daily_meals(DB, user_id=user_id, date=date)
+    meals = database_service.get_daily_meals(date, user_id)
     
     if not meals:
         content = fh.P("No meals logged for this day", cls="text-primary-content text-center")
@@ -944,9 +952,25 @@ def feedback_form(meal_description: str, meal_time, nutrition_info: MealBreakdow
     """Create a consistent feedback form layout used by both analyze and regenerate functions"""
     return fh.Div(
         fh.Div(
-            create_text_input_form(is_feedback=True, original_description=meal_description),
+            create_text_input_form(is_feedback=True, original_description=meal_description, original_breakdown=nutrition_info),
             create_meal_breakdown(nutrition_info, meal_time=meal_time, date=date),
             cls="space-y-4 w-[90%] mx-auto"
         ),
         id="text-input" if meal_description != "" else "image-input"  # Use image-input ID if description is empty (image case)
+    )
+
+def overview_text(analysis: NutritionFeedback):
+    return fh.Card(
+        fh.Div(
+            fh.P("Summary", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.summary, cls="text-primary-content mb-1"),
+            fh.P("Macronutrients", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.macronutrients, cls="text-primary-content mb-1"),
+            fh.P("Micronutrients", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.micronutrients, cls="text-primary-content mb-1"),
+            fh.P("Suggestions", cls="text-primary-content mb-1 font-bold"),
+            fh.P(analysis.suggestions, cls="text-primary-content mb-1"),
+            cls="p-4 space-y-2 mt-2"
+        ),
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
     )

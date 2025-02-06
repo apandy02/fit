@@ -1,31 +1,14 @@
 import fasthtml.common as fh
 import fh_bootstrap as fhb
-from fit.nutrition.targets import MICRO_GOALS
-from fit.web.databases import init_db
 from markdown import markdown
+
+from fit.database import DatabaseService
+from fit.nutrition.targets import MICRO_GOALS
 
 DB_PATH = "data/nutrition.db"
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
 
-ALL_METRICS = [
-    "calories",
-    "protein",
-    "carbohydrates", 
-    "fat",
-    "fiber",
-    "vitamin_a",
-    "vitamin_c",
-    "vitamin_d", 
-    "calcium",
-    "iron",
-    "potassium",
-    "sodium",
-    "water",
-    "creatine"
-]
-
-
-DB = init_db(DB_PATH)
+database_service = DatabaseService(DB_PATH)
 micronutrient_goals = MICRO_GOALS["male"]
 
 
@@ -37,7 +20,6 @@ def create_fab_menu(buttons):
         buttons: List of tuples (label, emoji, onclick_handler)
     """
     return fh.Div(
-        # Sub-buttons (initially hidden)
         fh.Div(
             *[
                 fh.Div(
@@ -88,7 +70,6 @@ def create_fab_animation_script(button_ids):
 def create_modal(content, modal_id="modal"):
     """Create a modal with the given content"""
     return fh.Div(
-        # Modal backdrop
         fh.Div(
             cls="fixed inset-0 bg-black bg-opacity-50 transition-opacity hidden",
             id=f"{modal_id}-backdrop",
