@@ -6,7 +6,6 @@ from PIL import Image
 
 import fit.nutrition.assistants as assistants
 import fit.web.common as common
-import fit.web.databases as databases
 import fit.web.nutrition.ui as ui
 from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
                                        Fats, Macronutrients, MealBreakdown,
@@ -17,7 +16,7 @@ from fit.nutrition.targets import (calculate_macro_targets,
 from fit.trackers.base import FitnessTracker
 from fit.trackers.manager import tracker_factory
 from fit.utils.calendar import get_current_week_dates
-from fit.web.common import DB, micronutrient_goals
+from fit.web.common import database_service, micronutrient_goals
 
 
 def get_daily_overview(session, date: str = None):
@@ -105,10 +104,10 @@ def get_daily_nutrition_data(date: datetime, tracker: FitnessTracker, user_id: i
     """Get the current nutrition data for display"""
     calories_burned = tracker.get_daily_calories_burned(date)
     goals = calculate_macro_targets(calories_burned, WeightGoal.MAINTAIN)
-    daily_consumption = databases.get_daily_cumulative_nutrition(DB, date, user_id)
-    water_consumed = databases.get_daily_water_consumption(DB, date, user_id)
-    user_info = databases.get_profile_data(DB, user_id)
-    measurements = databases.get_latest_user_measurements(DB, user_id)
+    daily_consumption = database_service.get_daily_cumulative_nutrition(date, user_id)
+    water_consumed = database_service.get_daily_water_consumption(date, user_id)
+    user_info = database_service.get_profile_data(user_id)
+    measurements = database_service.get_latest_user_measurements(user_id)
     water_goal = estimate_daily_water_intake(measurements, user_info, calories_burned)
     
     return {
@@ -188,7 +187,7 @@ async def save_meal(session, request: fh.Request, date: str | None = None):
             micronutrients=micronutrients,
             conditional_nutrients=conditional_nutrients
         )    
-        databases.insert_meal(DB, form["title"], nutrition_info, date, meal_time, user_id=user_id)
+        database_service.insert_meal(form["title"], nutrition_info, date, meal_time, user_id)
         return fh.Response(headers={"HX-Redirect": "/nutrition"}, status_code=200)
     
     except Exception as e:
@@ -200,7 +199,7 @@ async def save_meal(session, request: fh.Request, date: str | None = None):
 async def delete_meal(meal_id: int):
     """Delete a meal from the database and return updated meals list"""
     try:
-        success = databases.delete_meal(DB, meal_id)
+        success = database_service.delete_meal(meal_id)
     except Exception as e:
         print(f"Error deleting meal: {e}")
         return fh.P(
@@ -236,8 +235,8 @@ async def save_supplement(session, request: fh.Request):
             potassium=form["potassium"],
             sodium=form["sodium"]
         )    
-        databases.insert_supplement(
-            DB, name=form["summary"], consumption_time=form["time_consumed"], nutritional_info=nutrition_info, user_id=user_id
+        database_service.insert_supplement(
+            name=form["summary"], consumption_time=form["time_consumed"], nutritional_info=nutrition_info, user_id=user_id
         )
         
         return fh.Div(
@@ -264,7 +263,7 @@ async def save_supplement(session, request: fh.Request):
 
 async def get_supplements(session):
     """Get all supplements for the dropdown"""
-    supplements = databases.get_supplement_names(DB, session["user_id"])
+    supplements = database_service.get_supplement_names(session["user_id"])
     return fh.Select(
         *[
             fh.Option(
@@ -285,9 +284,8 @@ async def log_supplement_consumption(session, request: fh.Request, date: str | N
         supplement_name = form["supplement_name"]
         time_consumed = form["time_consumed"]
         
-        supplement_info = databases.get_supplement(DB, supplement_name)
-        databases.insert_supplement(
-            DB, 
+        supplement_info = database_service.get_supplement(supplement_name)
+        database_service.insert_supplement(
             name=supplement_name,
             consumption_time=time_consumed,
             nutritional_info=supplement_info,
@@ -358,7 +356,7 @@ def generate_overview(session, date: str | None = None, weekly: bool = False):
     """Get the overview data for the given date or week"""
     if weekly:
         days = get_current_week_dates()
-        meals = databases.get_weekly_meals(DB, days, session["user_id"])
+        meals = database_service.get_weekly_meals(days, session["user_id"])
     else:
         if date is None:
             days = [datetime.today().date()] # put it in a fake list to make code invariant
@@ -367,7 +365,7 @@ def generate_overview(session, date: str | None = None, weekly: bool = False):
                 days = [datetime.strptime(date, "%Y-%m-%d").date()]
             except ValueError:
                 days = [datetime.today().date()]
-        meals = databases.get_daily_meals(DB, days[0], session["user_id"])
+        meals = database_service.get_daily_meals(days[0], session["user_id"])
     
     nutritional_data = get_user_nutritional_data_for_dates(session, days)
     if weekly:
@@ -387,10 +385,10 @@ async def nutrition_redirect(request: fh.Request):
 
 async def get_nutrient_suggestions(session, nutrient: str):
     """Generate meal suggestions based on a specific nutrient"""
-    daily_nutrition = databases.get_daily_cumulative_nutrition(DB, datetime.today().date(), session["user_id"])
+    daily_nutrition = database_service.get_daily_cumulative_nutrition(datetime.today().date(), session["user_id"])
     nutritional_data = get_user_nutritional_data_for_dates(session, [datetime.today().date()])
-    user_preferences = assistants.summarize_user_preferences(databases.get_all_meal_summaries(DB, session["user_id"])) # TODO: cache the output of this so that we aren't calling it every time
-    kitchen_inventory = databases.get_inventory(DB, session["user_id"])
+    user_preferences = assistants.summarize_user_preferences(database_service.get_all_meal_summaries(session["user_id"])) # TODO: cache the output of this so that we aren't calling it every time
+    kitchen_inventory = database_service.get_inventory(session["user_id"])
     recommendations = assistants.make_recommendations(
         consumption=daily_nutrition,
         targets=nutritional_data["targets"][0],
@@ -436,16 +434,16 @@ def get_user_nutritional_data_for_dates(session, dates: list[datetime.date]):
             - calories_burned: the user's calories burned for the given dates
     """
     tracker = tracker_factory(session["tracker"], session["access_token"])
-    weight_goal = WeightGoal(databases.get_weight_goal(DB, session["user_id"]))
+    weight_goal = WeightGoal(database_service.get_weight_goal(session["user_id"]))
     calories_burned = [tracker.get_daily_calories_burned(day) for day in dates]
     targets = [calculate_macro_targets(calories_burned, weight_goal) for calories_burned in calories_burned]
     [target.update(micronutrient_goals) for target in targets]
     
     return {
         "targets": targets,
-        "daily_nutrition": [databases.get_daily_cumulative_nutrition(DB, day, session["user_id"]) for day in dates],
+        "daily_nutrition": [database_service.get_daily_cumulative_nutrition(day, session["user_id"]) for day in dates],
         "weight_goal": weight_goal, 
-        "restrictions": databases.get_dietary_restrictions(DB, session["user_id"]),
+        "restrictions": database_service.get_dietary_restrictions(session["user_id"]),
         "calories_burned": calories_burned
     }
 
@@ -458,8 +456,8 @@ async def log_water(session, request: fh.Request, date: str | None = None):
         if date is None:
             date = datetime.today().date()
         time_obj = datetime.strptime(time_consumed, "%H:%M").time()
-        databases.insert_water_consumption(
-            database=DB, water_consumed_ml=form["amount"], date_consumed=date, time_consumed=time_obj, user_id=session["user_id"]
+        database_service.insert_water_consumption(
+            water_consumed_ml=form["amount"], date_consumed=date, time_consumed=time_obj, user_id=session["user_id"]
         )
         
         return fh.Div(

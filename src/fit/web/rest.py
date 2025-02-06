@@ -3,12 +3,11 @@ import datetime
 import fasthtml.common as fh
 
 import fit.rest.assistants as assistants
-import fit.web.databases as db
 from fit.trackers.base import FitnessTracker
 from fit.trackers.implementations.whoop import Whoop
 from fit.trackers.manager import tracker_factory
-from fit.web.common import (DB, create_fab_menu, create_text_generation_card,
-                            create_time_filter, page_outline)
+from fit.web.common import (create_fab_menu, create_text_generation_card,
+                            create_time_filter, database_service, page_outline)
 
 
 def get(session):
@@ -136,7 +135,7 @@ async def generate_overview(session):
         tracker = tracker_factory(session["tracker"], session["access_token"])
         yesterday = datetime.datetime.today().date() - datetime.timedelta(days=1)
         sleep_data = tracker.get_daily_sleep(yesterday)
-        meals = db.get_daily_meals(DB, yesterday, session["user_id"])
+        meals = database_service.get_daily_meals(yesterday, session["user_id"])
         formatted_meals = [(datetime.datetime.combine(yesterday, meal["meal_time"]), meal["meal"]) for meal in meals]
         activities = tracker.get_daily_workouts(yesterday)
         formatted_activities = [(activity.start_time, activity.type, activity.intensity) for activity in activities]

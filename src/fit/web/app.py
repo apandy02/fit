@@ -10,8 +10,7 @@ import fit.web.performance as performance
 import fit.web.progress as progress
 import fit.web.rest as rest
 import fit.web.user_profile as user_profile
-from fit.web.common import DB
-from fit.web.databases import get_profile_data
+from fit.web.common import database_service
 
 htmx_indicator_style = fh.Style("""
 .htmx-indicator {
@@ -41,7 +40,7 @@ def auth_before(req, session):
         return RedirectResponse('/login', status_code=303)
 
 def onboarding_before(req, session):
-    user_profile = get_profile_data(DB, session["user_id"])
+    user_profile = database_service.get_profile_data(session["user_id"])
 
     if user_profile["onboarding_stage"] == 0:
         return RedirectResponse('/onboarding/profile', status_code=303)
@@ -53,7 +52,7 @@ def onboarding_before(req, session):
         return RedirectResponse('/onboarding/activity', status_code=303)
     
 def onboarding_complete_before(req, session):
-    user_profile = get_profile_data(DB, session["user_id"])
+    user_profile = database_service.get_profile_data(session["user_id"])
     if user_profile["onboarding_stage"] != 3:
         return RedirectResponse('/nutrition', status_code=303)
 

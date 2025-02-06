@@ -1,7 +1,6 @@
 import fasthtml.common as fh
 
-from fit.web.common import DB, page_outline
-from fit.web.databases import get_profile_data
+from fit.web.common import database_service, page_outline
 
 
 def create_editable_input(name: str, value: str, input_type: str = "text", placeholder: str = "", required: bool = True):
@@ -148,9 +147,8 @@ def create_preferences_card(user_data):
 
 def get(session):
     """Return the profile page content"""
-    user_data = get_profile_data(DB, session["user_id"])
+    user_data = database_service.get_profile_data(session["user_id"])
     restrictions = user_data.get("dietary_restrictions", "")
-    print(f"restrictions: {restrictions}")
     if restrictions == "" or restrictions is None:
         restrictions = []
     else:
@@ -225,15 +223,13 @@ async def update_profile(session, request: fh.Request):
         if "existing_restrictions[]" in form_data:
             form_data.pop("existing_restrictions[]")
         
-        print(form_data)
-        DB.t.profile.update(form_data)
+        database_service.update_profile(form_data)
         
         return fh.P(
             "Profile updated successfully!",
             cls="text-success font-semibold text-center mt-4"
         )
     except Exception as e:
-        print(e)
         return fh.P(
             f"Error updating profile: {str(e)}",
             cls="text-error font-semibold text-center mt-4"

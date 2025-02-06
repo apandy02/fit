@@ -5,9 +5,9 @@ import fasthtml.common as fh
 import fit.nutrition.assistants as assistants
 import fit.web.nutrition.food_plots as food_plots
 from fit.nutrition.data_models import MealBreakdown, NutritionFeedback
-from fit.web.common import (DB, create_text_form_input,
-                            create_text_generation_card, create_time_filter)
-from fit.web.databases import get_daily_meals
+from fit.web.common import (create_text_form_input,
+                            create_text_generation_card, create_time_filter,
+                            database_service)
 
 
 def metric_card(
@@ -893,7 +893,7 @@ def supplement_modal(date: datetime.date):
 
 def create_meals_list(user_id, date: datetime.date):
     """Create an expandable list of meals for the given date"""
-    meals = get_daily_meals(DB, user_id=user_id, date=date)
+    meals = database_service.get_daily_meals(date, user_id)
     
     if not meals:
         content = fh.P("No meals logged for this day", cls="text-primary-content text-center")

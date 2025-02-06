@@ -3,7 +3,7 @@ import fh_bootstrap as fhb
 from markdown import markdown
 
 from fit.nutrition.targets import MICRO_GOALS
-from fit.web.databases import init_db
+from fit.web.databases import DatabaseService
 
 DB_PATH = "data/nutrition.db"
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
@@ -26,7 +26,7 @@ ALL_METRICS = [
 ]
 
 
-DB = init_db(DB_PATH)
+database_service = DatabaseService(DB_PATH)
 micronutrient_goals = MICRO_GOALS["male"]
 
 

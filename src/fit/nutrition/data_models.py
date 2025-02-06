@@ -13,9 +13,9 @@ class MealType(Enum):
 
 class WeightGoal(Enum):
     """An enum that contains the user's nutrition and fitness goals."""
-    LOSE_WEIGHT = "lose weight"
-    GAIN_MUSCLE = "gain muscle"
-    MAINTAIN = "maintain current weight and composition"
+    LOSE = "lose"
+    GAIN = "gain"
+    MAINTAIN = "maintain"
 
 
 class Carbohydrates(BaseModel):

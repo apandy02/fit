@@ -1,13 +1,14 @@
+import logging
 from datetime import datetime
 
 import fasthtml.common as fh
 from fasthtml.common import RedirectResponse
 from fasthtml.oauth import redir_url
+
 from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
 from fit.web.auth.clients import whoop_client_oauth as whoop_client
 from fit.web.auth.ui import get_login_page
-from fit.web.common import DB, page_outline
-from fit.web.databases import get_profile_data, get_user_id, insert_new_user
+from fit.web.common import database_service, page_outline
 from fit.web.user_profile import (create_basic_info_card,
                                   create_dietary_restrictions_card)
 
@@ -30,7 +31,7 @@ def fitbit_auth_redirect(code:str, request, session):
     redir = redir_url(request, f"{auth_callback_path}/fitbit")
     access_token_dict = fitbit_client.fetch_access_token(code, redir)
     provider_user_id = access_token_dict['user_id']
-    user_id = get_user_id(DB, provider_user_id, "fitbit")
+    user_id = database_service.get_user_id(provider_user_id, "fitbit")
     new_user = False
     if user_id is None:
         new_user = True
@@ -38,7 +39,7 @@ def fitbit_auth_redirect(code:str, request, session):
             "provider_user_id": provider_user_id,
             "provider": "fitbit"
         }
-        row = insert_new_user(DB, user_dict)
+        row = database_service.insert_new_user(user_dict)
         user_id = row['user_id']
         profile_info = fitbit_client.get_info(token=access_token_dict['access_token'])
         profile_dict = {
@@ -49,7 +50,7 @@ def fitbit_auth_redirect(code:str, request, session):
             "onboarding_stage": 0
         }
         
-        DB.t.profile.insert(profile_dict)
+        database_service.insert_profile(profile_dict)
 
     else:
         user_id = user_id[0] # TODO: assess if this is the best way to handle this
@@ -70,7 +71,7 @@ def whoop_auth_redirect(code:str, request, session):
     access_token_dict = whoop_client.fetch_access_token(code, redir)
     user_info = whoop_client.get_info()
     provider_user_id = user_info['user_id']
-    user_id = get_user_id(DB, provider_user_id, "whoop")
+    user_id = database_service.get_user_id(provider_user_id, "whoop")
     new_user = False
     if user_id is None:
         new_user = True
@@ -80,7 +81,7 @@ def whoop_auth_redirect(code:str, request, session):
         }
         # TODO: The whoop doesn't give me gender or dob, so when I implement the front end, 
         # there should be a form where the user must input this information
-        row = insert_new_user(DB, user_dict)
+        row = database_service.insert_new_user(user_dict)
         user_id = row['user_id']
         profile_info = whoop_client.get_info(token=access_token_dict['access_token'])
         profile_dict = {
@@ -89,7 +90,7 @@ def whoop_auth_redirect(code:str, request, session):
             "email": profile_info['email'],
             "onboarding_stage": 0
         }
-        DB.t.profile.insert(profile_dict)
+        database_service.insert_profile(profile_dict)
     else:
         user_id = user_id[0] # TODO: see if raising user doesnt exist error is better than returning None
     
@@ -106,7 +107,7 @@ def whoop_auth_redirect(code:str, request, session):
 
 def get_profile_page(session):
     """Return the profile completion page"""
-    user_data = get_profile_data(DB, session["user_id"])
+    user_data = database_service.get_profile_data(session["user_id"])
     if user_data["onboarding_stage"] == 4:
         return RedirectResponse('/nutrition', status_code=303)
     content = fh.Article(
@@ -135,7 +136,7 @@ def get_profile_page(session):
 
 def get_activity_page(session):
     """Return the activity selection page"""
-    user_data = get_profile_data(DB, session["user_id"])
+    user_data = database_service.get_profile_data(session["user_id"])
     if user_data["onboarding_stage"] == 4:
         return RedirectResponse('/nutrition', status_code=303)
     content = fh.Article(
@@ -217,7 +218,7 @@ async def handle_profile_completion(session, request: fh.Request):
         form_data = dict(form)
         form_data["user_id"] = session["user_id"]
         form_data["onboarding_stage"] = 1
-        DB.t.profile.update(form_data)
+        database_service.update_profile(form_data)
         return fh.Response(headers={"HX-Redirect": "/onboarding/dietary"})
 
     except Exception as e:
@@ -234,11 +235,9 @@ async def handle_dietary_completion(session, request: fh.Request):
         
         restrictions_str = ",".join(restrictions) if restrictions else ""
         
-        DB.t.profile.update({
-            "user_id": session["user_id"],
-            "dietary_restrictions": restrictions_str,
-            "onboarding_stage": 2
-        })
+        database_service.update_profile(
+            {"user_id": session["user_id"], "dietary_restrictions": restrictions_str, "onboarding_stage": 2}
+        )
         
         return fh.Response(headers={"HX-Redirect": "/onboarding/activity"})
     except Exception as e:
@@ -252,15 +251,13 @@ async def handle_activity_selection(session, request: fh.Request):
     try:
         form = await request.form()
         activity_level = form.get("activity_level")
-        DB.t.profile.update({
-            "user_id": session["user_id"],
-            "activity_level": activity_level,
-            "onboarding_stage": 3
-        })
+        database_service.update_profile(
+            {"user_id": session["user_id"], "activity_level": activity_level, "onboarding_stage": 3}
+        )
         
         return fh.Response(headers={"HX-Redirect": "/onboarding/goals"})
     except Exception as e:
-        print(f"Error updating activity level: {e}")
+        logging.error(f"Error updating activity level: {e}")
         return fh.P(
             f"Error updating activity level: {str(e)}",
             cls="text-error font-semibold text-center mt-4"
@@ -268,7 +265,7 @@ async def handle_activity_selection(session, request: fh.Request):
 
 def get_dietary_page(session):
     """Return the dietary restrictions page"""
-    user_data = get_profile_data(DB, session["user_id"])
+    user_data = database_service.get_profile_data(session["user_id"])
     if user_data["onboarding_stage"] == 3:
         return RedirectResponse('/nutrition', status_code=303)
     
@@ -301,7 +298,7 @@ def get_dietary_page(session):
 
 def get_goals_page(session):
     """Return the goals selection page"""
-    user_data = get_profile_data(DB, session["user_id"])
+    user_data = database_service.get_profile_data(session["user_id"])
     if user_data["onboarding_stage"] == 4:
         return RedirectResponse('/nutrition', status_code=303)
     
@@ -389,24 +386,18 @@ async def handle_goals_selection(session, request: fh.Request):
         form = await request.form()
         weight_goal = form.get("weight_goal")
         fitness_goal = form.get("fitness_goal")
-        
-        # Map weight goal values to numeric targets
-        weight_goal_map = {
-            "lose": -0.5,  # Lose 0.5 kg per week
-            "maintain": 0,  # Maintain current weight
-            "gain": 0.5    # Gain 0.5 kg per week
-        }
-        
-        DB.t.profile.update({
-            "user_id": session["user_id"],
-            "weight_goal": weight_goal_map[weight_goal],
-            "fitness_goal": fitness_goal,
-            "onboarding_stage": 4
-        })
+        database_service.update_profile(
+            {
+                "user_id": session["user_id"],
+                "weight_goal": weight_goal,
+                "fitness_goal": fitness_goal,
+                "onboarding_stage": 4
+            }
+        )
         
         return fh.Response(headers={"HX-Redirect": "/nutrition"})
     except Exception as e:
-        print(f"Error updating goals: {e}")
+        logging.error(f"Error updating goals: {e}")
         return fh.P(
             f"Error updating goals: {str(e)}",
             cls="text-error font-semibold text-center mt-4"

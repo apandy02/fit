@@ -4,14 +4,12 @@ from datetime import datetime
 import fasthtml.common as fh
 
 from fit.nutrition.data_models import WeightGoal
-from fit.web.common import DB, page_outline
-from fit.web.databases import (get_latest_user_measurements,
-                               get_user_measurements, insert_user_measurements)
+from fit.web.common import database_service, page_outline
 
 
 def get(session):
     """Return the progress tracking page content"""
-    measurements = get_user_measurements(DB, session["user_id"])
+    measurements = database_service.get_user_measurements(session["user_id"])
     plot_data, plot_layout = create_weight_plot(measurements)
     
     content = fh.Article(
@@ -65,7 +63,7 @@ def get(session):
 
 def get_latest_measurements(user_id: int):
     """Get the latest measurements from the database"""
-    latest = get_latest_user_measurements(DB, user_id)
+    latest = database_service.get_latest_user_measurements(user_id)
     
     if latest:
         weight = latest["weight"] if latest["weight"] is not None else 0
@@ -335,8 +333,7 @@ async def update_measurements(session, request: fh.Request):
     height_feet = float(form["height_feet"])
     height_inches = float(form["height_inches"])
     total_height = (height_feet * 12) + height_inches
-    insert_user_measurements(
-        database=DB,
+    database_service.insert_user_measurements(
         height=total_height,
         weight=weight,
         datetime=datetime.now(),

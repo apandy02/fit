@@ -26,9 +26,9 @@ def calculate_caloric_target(calories_burned: float, goal: WeightGoal) -> float:
     Calculate daily caloric target based on calories burned and goal.
     Returns a 10% surplus for gaining, maintenance for maintaining, or 10% deficit for losing.
     """
-    if goal == WeightGoal.GAIN_MUSCLE:
+    if goal == WeightGoal.GAIN:
         return calories_burned * 1.1
-    elif goal == WeightGoal.LOSE_WEIGHT:
+    elif goal == WeightGoal.LOSE:
         return calories_burned * 0.9
     else:
         return calories_burned

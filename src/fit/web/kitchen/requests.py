@@ -4,17 +4,16 @@ import logging
 import fasthtml.common as fh
 from PIL import Image
 
-import fit.web.common as common
-import fit.web.databases as db
 import fit.web.kitchen.ui as ui
 from fit.nutrition import assistants as assistants
+from fit.web.common import database_service, page_outline
 
 
 def get(session):
     """Return the kitchen inventory page content"""
     inventory = get_inventory(session["user_id"])
     content = ui.kitchen_page_content(inventory)
-    return common.page_outline(1, "Kitchen Inventory", True, True, content) 
+    return page_outline(1, "Kitchen Inventory", True, True, content) 
 
 async def add_item(session, request: fh.Request):
     """Add an item to the kitchen inventory"""
@@ -25,7 +24,7 @@ async def add_item(session, request: fh.Request):
         quantity = form.get("quantity")
         unit = form.get("unit")
         category = form.get("category")
-        db.insert_inventory_item(common.DB, item, quantity, unit, category, user_id=user_id)
+        database_service.insert_inventory_item(item, quantity, unit, category, user_id)
         return fh.Response(status=200)
     except Exception as e:
         logging.error(f"Error adding item: {e}")
@@ -59,13 +58,12 @@ async def save_inventory(session, request: fh.Request):
             i += 1
         
         for item in items:
-            db.insert_inventory_item(
-                common.DB,
+            database_service.insert_inventory_item(
                 item["title"],
                 item["quantity"],
                 item["unit"],
                 item["category"],
-                user_id=user_id
+                user_id
             )
         
         return fh.Div(
@@ -90,7 +88,7 @@ async def save_inventory(session, request: fh.Request):
 def get_inventory(user_id: int):
     """Get the inventory from the database"""
     try:
-        inventory = db.get_inventory(common.DB, user_id)
+        inventory = database_service.get_inventory(user_id)
         return inventory
     except Exception:
         logging.e
@@ -132,7 +130,7 @@ async def add_inventory_from_text(request: fh.Request):
 async def delete_inventory_item(rowid: int):
     """Delete an inventory item"""
     try:
-        common.DB.t.inventory.delete(rowid)
+        database_service.delete_inventory_item(rowid)
         # Return an empty div that will replace the card
         return fh.Div()
     except Exception:
@@ -144,9 +142,9 @@ async def generate_inventory_additions(session, request: fh.Request):
     try:
         user_id = session["user_id"]
         current_inventory = get_inventory(user_id)
-        user_meals = db.get_all_meal_summaries(common.DB, user_id)
+        user_meals = database_service.get_all_meal_summaries(user_id)
         user_preferences = assistants.summarize_user_preferences(user_meals)
-        dietary_restrictions = db.get_dietary_restrictions(common.DB, user_id)
+        dietary_restrictions = database_service.get_dietary_restrictions(user_id)
         grocery_list = assistants.generate_grocery_list(
             current_inventory, user_preferences, dietary_restrictions
         ).content[0].parsed
