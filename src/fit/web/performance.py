@@ -1,6 +1,7 @@
 import datetime
 
 import fasthtml.common as fh
+
 import fit.performance.assistants as assistants
 from fit.nutrition.targets import WeightGoal, calculate_caloric_target
 from fit.trackers.base import FitnessTracker

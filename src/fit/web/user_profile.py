@@ -1,4 +1,5 @@
 import fasthtml.common as fh
+
 from fit.web.common import database_service, page_outline
 
 

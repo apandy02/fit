@@ -1,4 +1,5 @@
 import fasthtml.common as fh
+
 from fit.web.common import page_outline
 from fit.web.user_profile import (create_basic_info_card,
                                   create_dietary_restrictions_card)
