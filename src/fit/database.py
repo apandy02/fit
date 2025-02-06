@@ -9,140 +9,6 @@ from fit.nutrition.data_models import (KITCHEN_ITEM_CATEGORIES, Carbohydrates,
                                        Micronutrients, NutritionalInformation)
 
 
-def init_db(database_path: str) -> fh.Database:
-    """
-    Initialize the database and create tables if they don't exist.
-    Returns a handle to the underlying database.
-    """
-    db = fh.database(database_path)
-
-    users_table = db.t.users
-    if users_table not in db.t:
-        users_table.create(
-            user_id=int,
-            email=str,
-            provider=str,
-            provider_user_id=str,
-            pk='user_id'
-        )
-
-    meals_table = db.t.meals
-    if meals_table not in db.t:
-        meals_table.create(
-            date_entered=str,
-            ingredients=str,
-            meal_time=str,
-            user_description=str,
-            llm_summary=str,
-            calories=float,
-            protein=float,
-            carbohydrates=float,
-            fat=float,
-            fiber=float,
-            vitamin_a=float,
-            vitamin_c=float,
-            vitamin_d=float,
-            calcium=float,
-            iron=float,
-            potassium=float,
-            sodium=float,
-            creatine=float,
-            is_supplement=bool,
-            user_id=int,  # foreign key
-            pk="rowid",
-            not_null=["user_id"]
-        )
-
-    supplements_table = db.t.supplements
-    if supplements_table not in db.t:
-        supplements_table.create(
-            user_id=int,  # foreign key
-            name=str,
-            description=str,
-            calories=float,
-            protein=float,
-            carbohydrates=float,
-            fat=float,
-            fiber=float,
-            vitamin_a=float,
-            vitamin_c=float,
-            vitamin_d=float,
-            calcium=float,
-            iron=float,
-            potassium=float,
-            sodium=float,
-            pk='name',
-            not_null=["user_id"]
-        )
-
-    measurements_table = db.t.measurements
-    if measurements_table not in db.t:
-        measurements_table.create(
-            datetime=str,
-            height=float,
-            weight=float,
-            user_id=int,  # foreign key
-            pk='uuid',
-            not_null=["user_id"]
-        )
-
-    water_table = db.t.water
-    if water_table not in db.t:
-        water_table.create(
-            date=str,
-            user_id=int,  # foreign key
-            time=str,
-            water_consumed_ml=float,
-            pk='uuid',
-            not_null=["user_id"]
-        )
-
-    profile_table = db.t.profile
-    if profile_table not in db.t:
-        profile_table.create(
-            user_id=int,  # foreign key
-            name=str,
-            email=str,
-            gender=str,
-            date_of_birth=str,
-            units=str,
-            dietary_restrictions=str,
-            activity_level=str,
-            weight_goal=float,
-            fitness_goal=str,
-            onboarding_stage=int,
-            pk='user_id',
-            not_null=["user_id"],
-        )
-
-    inventory_table = db.t.inventory
-    if inventory_table not in db.t:
-        inventory_table.create(
-            user_id=int,  # foreign key
-            title=str,
-            quantity=float,
-            unit=str,
-            category=str,
-            pk='rowid',
-            not_null=["user_id"]
-        )
-
-    # Ensure that any additional tables (supplement_entries) are created
-    supplement_entries_table = db.t.supplement_entries
-    if supplement_entries_table not in db.t:
-        supplement_entries_table.create(
-            user_id=int,  # foreign key
-            supplement_name=str,
-            date_consumed=str,
-            time_consumed=str,
-            servings=float,
-            pk='uuid',
-            not_null=["user_id"]
-        )
-
-    return db
-
-
 class DatabaseService:
     """
     A high-level service class that encapsulates all database operations.
@@ -670,3 +536,136 @@ class DatabaseService:
             return True
         except Exception as e:
             logging.error(f"Error updating profile: {e}")
+
+
+def init_db(database_path: str) -> fh.Database:
+    """
+    Initialize the database and create tables if they don't exist.
+    Returns a handle to the underlying database.
+    """
+    db = fh.database(database_path)
+
+    users_table = db.t.users
+    if users_table not in db.t:
+        users_table.create(
+            user_id=int,
+            email=str,
+            provider=str,
+            provider_user_id=str,
+            pk='user_id'
+        )
+
+    meals_table = db.t.meals
+    if meals_table not in db.t:
+        meals_table.create(
+            date_entered=str,
+            ingredients=str,
+            meal_time=str,
+            user_description=str,
+            llm_summary=str,
+            calories=float,
+            protein=float,
+            carbohydrates=float,
+            fat=float,
+            fiber=float,
+            vitamin_a=float,
+            vitamin_c=float,
+            vitamin_d=float,
+            calcium=float,
+            iron=float,
+            potassium=float,
+            sodium=float,
+            creatine=float,
+            is_supplement=bool,
+            user_id=int,
+            pk="rowid",
+            not_null=["user_id"]
+        )
+
+    supplements_table = db.t.supplements
+    if supplements_table not in db.t:
+        supplements_table.create(
+            user_id=int,
+            name=str,
+            description=str,
+            calories=float,
+            protein=float,
+            carbohydrates=float,
+            fat=float,
+            fiber=float,
+            vitamin_a=float,
+            vitamin_c=float,
+            vitamin_d=float,
+            calcium=float,
+            iron=float,
+            potassium=float,
+            sodium=float,
+            pk='name',
+            not_null=["user_id"]
+        )
+
+    measurements_table = db.t.measurements
+    if measurements_table not in db.t:
+        measurements_table.create(
+            datetime=str,
+            height=float,
+            weight=float,
+            user_id=int,
+            pk='uuid',
+            not_null=["user_id"]
+        )
+
+    water_table = db.t.water
+    if water_table not in db.t:
+        water_table.create(
+            date=str,
+            user_id=int,
+            time=str,
+            water_consumed_ml=float,
+            pk='uuid',
+            not_null=["user_id"]
+        )
+
+    profile_table = db.t.profile
+    if profile_table not in db.t:
+        profile_table.create(
+            user_id=int,
+            name=str,
+            email=str,
+            gender=str,
+            date_of_birth=str,
+            units=str,
+            dietary_restrictions=str,
+            activity_level=str,
+            weight_goal=float,
+            fitness_goal=str,
+            onboarding_stage=int,
+            pk='user_id',
+            not_null=["user_id"],
+        )
+
+    inventory_table = db.t.inventory
+    if inventory_table not in db.t:
+        inventory_table.create(
+            user_id=int,
+            title=str,
+            quantity=float,
+            unit=str,
+            category=str,
+            pk='rowid',
+            not_null=["user_id"]
+        )
+
+    supplement_entries_table = db.t.supplement_entries
+    if supplement_entries_table not in db.t:
+        supplement_entries_table.create(
+            user_id=int,
+            supplement_name=str,
+            date_consumed=str,
+            time_consumed=str,
+            servings=float,
+            pk='uuid',
+            not_null=["user_id"]
+        )
+
+    return db

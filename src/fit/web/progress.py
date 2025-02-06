@@ -327,7 +327,6 @@ def measurements_modal(user_id: int):
 
 async def update_measurements(session, request: fh.Request):
     """Handle measurements update"""
-    # Insert weight measurement
     form = await request.form()
     weight = float(form["weight"])
     height_feet = float(form["height_feet"])

@@ -160,5 +160,3 @@ def get(path: str):
     return fh.FileResponse(f"{path}")
 
 fh.serve() 
-
-

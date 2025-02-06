@@ -65,7 +65,6 @@ class FitbitAppClient(WebApplicationClient):
             "grant_type": "authorization_code",
             "code_verifier": self.code_verifier,
         }
-        print(f"data: {data}")
         r = httpx.post(self.token_url, data=data)
         r.raise_for_status()
         self.parse_request_body_response(r.text)
@@ -249,9 +248,7 @@ class Fitbit(FitnessTracker):
 
         try:
             data = self._make_request(endpoint)
-            print(f"data: {data}")
             intraday_data = data.get("activities-heart-intraday", {}).get("dataset", [])
-            print(f"intraday_data: {intraday_data}")
             return [
                 {"time": entry.get("time"), "value": entry.get("value")}
                 for entry in intraday_data

@@ -5,12 +5,10 @@ from markdown import markdown
 from fit.database import DatabaseService
 from fit.nutrition.targets import MICRO_GOALS
 
-DB_PATH = "data/nutrition.db"
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
 
-database_service = DatabaseService(DB_PATH)
+database_service = DatabaseService("data/nutrition.db")
 micronutrient_goals = MICRO_GOALS["male"]
-
 
 def create_fab_menu(buttons):
     """
@@ -194,7 +192,6 @@ def create_text_generation_card(endpoint: str, button_text: str = "Generate Anal
         ),
         cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mb-12 text-primary-content"
     )
-
 
 def create_time_filter(current_view: str):
     """Create the time filter toggle"""
