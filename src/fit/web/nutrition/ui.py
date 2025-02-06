@@ -50,7 +50,7 @@ def metric_card(
             fh.Div(
                 fh.Button(
                     "Get Suggestions",
-                    cls="btn btn-sm btn-primary outline outline-1 outline-primary-content mt-4 rounded-md text-xs",
+                    cls="btn btn-sm btn-primary outline outline-1 outline-base-content mt-4 rounded-md text-xs",
                     hx_post=f"/get_nutrient_suggestions/{title.lower()}",
                     hx_target=f"#{plot_id}-suggestions",
                     hx_indicator=f"#{plot_id}-suggestions-loading-indicator"
@@ -70,7 +70,7 @@ def metric_card(
     return fh.Card(
         fh.Div(
             fh.Div(
-                fh.H3(display_title, cls="text-xl font-bold text-primary-content text-center mb-8"),
+                fh.H3(display_title, cls="text-xl font-bold text-base-content text-center mb-8"),
                 fh.Div(id=plot_id, cls="w-full h-[300px]"),
                 cls="w-full"
             ),
@@ -84,7 +84,7 @@ def metric_card(
                     """
                 ),
             ),
-            fh.P(analysis_text, cls="text-md text-primary-content mb-2 text-center") if analysis_text else None,
+            fh.P(analysis_text, cls="text-md text-base-content mb-2 text-center") if analysis_text else None,
             fh.Div(
                 suggestions_button,
                 cls="flex justify-center"
@@ -92,7 +92,7 @@ def metric_card(
             fh.Div(id=f"{plot_id}-suggestions"),
             cls="p-4 relative"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg h-full text-primary-content",
+        cls="bg-base-200 outline outline-2 mx-4 my-2 outline-base-content rounded-2xl h-full text-base-content shadow-none",
         id=f"{plot_id}-container"
     )
 
@@ -108,7 +108,7 @@ def create_meal_prompt_form(
     rows: int = 3
 ):
     """Create a form for meal description or refinement input."""
-    header_content = fh.H3(title, cls="text-xl font-bold text-primary-content")
+    header_content = fh.H3(title, cls="text-xl font-bold text-base-content")
     if header_buttons:
         header_content = fh.Div(
             header_content,
@@ -129,23 +129,23 @@ def create_meal_prompt_form(
                 cls="space-y-4"
             )(
                 fh.Div(
-                    fh.Label(textarea_label, cls="label text-primary-content"),
+                    fh.Label(textarea_label, cls="label text-base-content"),
                     fh.Textarea(
                         name="meal_description" if "analyze" in hx_post_url else "feedback",
                         placeholder=textarea_placeholder,
                         rows=rows,
-                        cls="textarea textarea-bordered w-full bg-base-200 outline text-primary-content placeholder-slate-400"
+                        cls="textarea textarea-bordered w-full bg-base-200 outline text-base-content placeholder-slate-400"
                     ),
                     cls="form-control"
                 ),
                 fh.Div(
-                    fh.Label("Meal Time", cls="label text-primary-content"),
+                    fh.Label("Meal Time", cls="label text-base-content"),
                     fh.Input(
                         type="time",
                         name="meal_time",
                         value=datetime.now().strftime("%H:%M"),
                         required=True,
-                        cls="input input-bordered w-full bg-base-200 text-primary-content"
+                        cls="input input-bordered w-full bg-base-200 text-base-content"
                     ),
                     cls="form-control"
                 ) if "analyze" in hx_post_url else None,
@@ -158,7 +158,7 @@ def create_meal_prompt_form(
             ),            
             cls="p-6"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-12 shadow-none "
+        cls="bg-base-200 outline outline-1 outline-base-content rounded-lg mt-12 shadow-none "
     )
 
 def create_text_input_form(is_feedback: bool = False, original_description: str = None, date: str | None = None, original_breakdown: MealBreakdown | None = None):
@@ -202,7 +202,7 @@ def create_text_input_form(is_feedback: bool = False, original_description: str 
                     "↺",
                     hx_post="/reset_text_form",
                     hx_target="#text-input",
-                    cls="btn btn-ghost text-xl text-primary-content"
+                    cls="btn btn-ghost text-xl text-base-content"
                 )
             ]
         )
@@ -212,7 +212,7 @@ def create_image_upload_form():
     return fh.Card(
         fh.Div(
             fh.Header(
-                fh.H3("Upload Food Image", cls="text-xl font-bold text-primary-content"),
+                fh.H3("Upload Food Image", cls="text-xl font-bold text-base-content"),
                 cls="mb-6"
             ),
             fh.Form(
@@ -223,7 +223,7 @@ def create_image_upload_form():
                 cls="space-y-4"
             )(
                 fh.Div(
-                    fh.Label("Food Image", cls="label text-primary-content"),
+                    fh.Label("Food Image", cls="label text-base-content"),
                     fh.Input(
                         type="file",
                         name="food_image",
@@ -233,22 +233,22 @@ def create_image_upload_form():
                     cls="form-control"
                 ),
                 fh.Div(
-                    fh.Label("Additional Context", cls="label text-primary-content"),
+                    fh.Label("Additional Context", cls="label text-base-content"),
                     fh.Textarea(
                         name="additional_context",
                         placeholder="Example: The sandwich in the image contains a fried chicken patty, not a grilled one",
-                        cls="textarea textarea-bordered w-full bg-base-200 text-primary-content"
+                        cls="textarea textarea-bordered w-full bg-base-200 text-base-content"
                     ),
                     cls="form-control"
                 ),
                 fh.Div(
-                    fh.Label("Meal Time", cls="label text-primary-content"),
+                    fh.Label("Meal Time", cls="label text-base-content"),
                     fh.Input(
                         type="time",
                         name="meal_time",
                         value=datetime.now().strftime("%H:%M"),
                         required=True,
-                        cls="input input-bordered w-full bg-base-200 text-primary-content"
+                        cls="input input-bordered w-full bg-base-200 text-base-content"
                     ),
                     cls="form-control"
                 ),
@@ -269,14 +269,14 @@ def create_modal_content(date: str | None = None):
         # Close button
         fh.Button(
             "×",
-            cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 focus:ring-offset-0 border-none outline-none z-10",
+            cls="absolute right-4 top-4 text-xl font-light text-base-content hover:text-base-content focus:outline-none focus:ring-0 focus:ring-offset-0 border-none outline-none z-10",
             onclick="closeModal()",
             style="outline: none; box-shadow: none;"
         ),
         # Back button (shown only when a form is visible)
         fh.Button(
             "←",
-            cls="absolute left-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 focus:ring-offset-0 border-none outline-none hidden z-10",
+            cls="absolute left-4 top-4 text-xl font-light text-base-content hover:text-base-content focus:outline-none focus:ring-0 focus:ring-offset-0 border-none outline-none hidden z-10",
             onclick="showInputSelection()",
             style="outline: none; box-shadow: none;",
             id="back-button"
@@ -284,7 +284,7 @@ def create_modal_content(date: str | None = None):
         # Initial selection view
         fh.Div(
             fh.Div(
-                fh.H3("How would you like to log your meal?", cls="text-xl font-bold text-center mb-8 text-primary-content"),
+                fh.H3("How would you like to log your meal?", cls="text-xl font-bold text-center mb-8 text-base-content"),
                 fh.Div(
                     # Image upload option
                     fh.Button(
@@ -293,16 +293,16 @@ def create_modal_content(date: str | None = None):
                                 src="/static/images/camera.png",
                                 cls="h-12 w-auto object-contain mb-3"
                             ),
-                            fh.P("Upload an image", cls="text-primary-content mb-2"),
+                            fh.P("Upload an image", cls="text-base-content mb-2"),
                             cls="flex flex-col items-center justify-center h-full"
                         ),
-                        cls="p-6 bg-base-200 bg-opacity-70 outline outline-1 outline-primary-content rounded-lg hover:bg-base-200 hover:bg-opacity-90 transition-colors w-full focus:outline-none mb-4 h-32",
+                        cls="p-6 bg-base-200 bg-opacity-70 outline outline-1 outline-base-content rounded-lg hover:bg-base-200 hover:bg-opacity-90 transition-colors w-full focus:outline-none mb-4 h-32",
                         onclick="showInputForm('image')"
                     ),
                     # Text description option
                     fh.Button(
-                        fh.P("Describe it", cls="text-primary-content text-lg"),
-                        cls="p-6 bg-base-200 bg-opacity-70 outline outline-1 outline-primary-content rounded-lg hover:bg-base-200 hover:bg-opacity-90 transition-colors w-full flex items-center justify-center focus:outline-none h-32",
+                        fh.P("Describe it", cls="text-base-content text-lg"),
+                        cls="p-6 bg-base-200 bg-opacity-70 outline outline-1 outline-base-content rounded-lg hover:bg-base-200 hover:bg-opacity-90 transition-colors w-full flex items-center justify-center focus:outline-none h-32",
                         onclick="showInputForm('text')"
                     ),
                     cls="flex flex-col space-y-4"
@@ -411,18 +411,18 @@ def water_tracking_modal(date: datetime | None = None):
                 fh.Div(
                     fh.Button(
                         "×",
-                        cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                        cls="absolute right-4 top-4 text-xl font-light text-base-content hover:text-base-content focus:outline-none focus:ring-0 border-none outline-none",
                         onclick="closeWaterModal()",
                         style="outline: none; box-shadow: none;"
                     ),
-                    fh.H3("Log Water", cls="text-xl font-bold text-center mt-4 mb-8 text-primary-content"),
+                    fh.H3("Log Water", cls="text-xl font-bold text-center mt-4 mb-8 text-base-content"),
                     fh.Form(
                         hx_post=log_water_endpoint,
                         hx_target="#water-log-result",
                         cls="w-[90%] mx-auto space-y-6"
                     )(
                         fh.Div(
-                            fh.Label("Amount (ml)", cls="label text-primary-content"),
+                            fh.Label("Amount (ml)", cls="label text-base-content"),
                             fh.Input(
                                 type="number",
                                 name="amount",
@@ -430,18 +430,18 @@ def water_tracking_modal(date: datetime | None = None):
                                 step="50",
                                 min="0",
                                 required=True,
-                                cls="input input-bordered w-full bg-base-200 text-primary-content"
+                                cls="input input-bordered w-full bg-base-200 text-base-content"
                             ),
                             cls="form-control"
                         ),
                         fh.Div(
-                            fh.Label("Time", cls="label text-primary-content"),
+                            fh.Label("Time", cls="label text-base-content"),
                             fh.Input(
                                 type="time",
                                 name="time_consumed",
                                 value=datetime.now().strftime("%H:%M"),
                                 required=True,
-                                cls="input input-bordered w-full bg-base-200 text-primary-content"
+                                cls="input input-bordered w-full bg-base-200 text-base-content"
                             ),
                             cls="form-control"
                         ),
@@ -455,7 +455,7 @@ def water_tracking_modal(date: datetime | None = None):
                     ),
                     cls="p-6"
                 ),
-                cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg relative w-full"
+                cls="bg-base-200 outline outline-1 outline-base-content rounded-lg relative w-full"
             ),
             id="water-modal",
             cls="modal"
@@ -485,22 +485,22 @@ def create_page_header(current_view: str, date: datetime.date = None):
             fh.A(
                 "←",
                 href=f"/nutrition/{prev_date.strftime('%Y-%m-%d')}",
-                cls="text-xl font-light text-primary-content hover:text-primary-content"
+                cls="text-xl font-light text-base-content hover:text-base-content"
             ),
             fh.P(
                 date.strftime("%B %d, %Y"),
-                cls="text-lg text-primary-content mx-4"
+                cls="text-lg text-base-content mx-4"
             ),
             fh.A(
                 "→",
                 href=f"/nutrition/{next_date.strftime('%Y-%m-%d')}" if date < today else "#",
-                cls=f"text-xl font-light {'text-primary-content hover:text-primary-content' if date < today else 'text-gray-400 cursor-not-allowed'}"
+                cls=f"text-xl font-light {'text-base-content hover:text-base-content' if date < today else 'text-gray-400 cursor-not-allowed'}"
             ),
             cls="flex items-center justify-center mt-4"
         )
     
     return fh.Div(
-        fh.P("Nutrition", cls="text-3xl font-bold text-center mb-6 text-primary-content"),
+        fh.P("Nutrition Center", cls="text-3xl font-bold text-center mb-6 text-base-content"),
         fh.Div(
             create_time_filter(current_view),
             cls="flex justify-center mb-8"
@@ -515,6 +515,7 @@ def create_metric_overview_section(title, data, metrics, view_type: str = "daily
     """Create a metrics overview section with configurable metrics"""    
     return fh.Section(
         fh.Div(
+            fh.H2(title, cls="text-4xl my-8 text-base-content text-center"),
             fh.Div(
                 *[fh.Div(
                     metric_card(
@@ -616,7 +617,7 @@ def create_nutrition_section(title: str, items: list, cls: str = "mb-4"):
 def create_form_section(title, inputs, cls="mb-6"):
     """Helper function to create a form section with a title and inputs"""
     return fh.Section(
-        fh.H4(title, cls="font-medium mb-4 text-primary-content"),
+        fh.H4(title, cls="font-medium mb-4 text-base-content"),
         fh.Div(
             *inputs,
             cls="grid grid-cols-2 gap-4"
@@ -628,10 +629,10 @@ def create_meal_breakdown(nutrition_info, meal_time: str, date: str | None = Non
     save_meal_endpoint = f"/save_meal/{date}" if date is not None else "/save_meal"
     return fh.Card(
         fh.Div(
-            fh.H4("Ingredients", cls="font-medium mb-2 text-primary-content"),
+            fh.H4("Ingredients", cls="font-medium mb-2 text-base-content"),
             fh.P(
                 nutrition_info.ingredients,
-                cls="mb-6 text-primary-content"
+                cls="mb-6 text-base-content"
             ),
             fh.Form(
                 hx_post=save_meal_endpoint,
@@ -664,7 +665,7 @@ def create_meal_breakdown(nutrition_info, meal_time: str, date: str | None = Non
             ),
             cls="p-6"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg shadow-none mt-4 w-full"
+        cls="bg-base-200 outline outline-1 outline-base-content rounded-lg shadow-none mt-4 w-full"
     )
 
 
@@ -701,21 +702,21 @@ def supplement_modal(date: datetime.date):
                     fh.Div(
                         fh.Button(
                             "×",
-                            cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                            cls="absolute right-4 top-4 text-xl font-light text-base-content hover:text-base-content focus:outline-none focus:ring-0 border-none outline-none",
                             onclick="closeSupplementModal()",
                             style="outline: none; box-shadow: none;"
                         ),
                         cls="relative"  # Removed h-8 to fix top spacing
                     ),
-                    fh.H3("Suppementation", cls="text-xl font-bold text-center mb-8 text-primary-content"),
+                    fh.H3("Suppementation", cls="text-xl font-bold text-center mb-8 text-base-content"),
                     fh.Div(
                         # Log existing supplement option
                         fh.Button(
                             fh.Div(
-                                fh.P("Log an existing supplement", cls="text-primary-content mb-2"),
+                                fh.P("Log an existing supplement", cls="text-base-content mb-2"),
                                 cls="flex flex-col items-center justify-center h-full"
                             ),
-                            cls="p-6 bg-base-200 bg-opacity-70 outline outline-1 outline-primary-content rounded-lg hover:bg-base-200 hover:bg-opacity-90 transition-colors w-full focus:outline-none mb-4 h-32",
+                            cls="p-6 bg-base-200 bg-opacity-70 outline outline-1 outline-base-content rounded-lg hover:bg-base-200 hover:bg-opacity-90 transition-colors w-full focus:outline-none mb-4 h-32",
                             onclick="""
                                 document.getElementById('supplement-options').classList.add('hidden');
                                 document.getElementById('log-supplement-form').classList.remove('hidden');
@@ -725,10 +726,10 @@ def supplement_modal(date: datetime.date):
                         # Add new supplement option
                         fh.Button(
                             fh.Div(
-                                fh.P("Add and log new supplement", cls="text-primary-content mb-2"),
+                                fh.P("Add and log new supplement", cls="text-base-content mb-2"),
                                 cls="flex flex-col items-center justify-center h-full"
                             ),
-                            cls="p-6 bg-base-200 bg-opacity-70 outline outline-1 outline-primary-content rounded-lg hover:bg-base-200 hover:bg-opacity-90 transition-colors w-full focus:outline-none h-32",
+                            cls="p-6 bg-base-200 bg-opacity-70 outline outline-1 outline-base-content rounded-lg hover:bg-base-200 hover:bg-opacity-90 transition-colors w-full focus:outline-none h-32",
                             onclick="""
                                 document.getElementById('supplement-options').classList.add('hidden');
                                 document.getElementById('supplement-form').classList.remove('hidden');
@@ -745,7 +746,7 @@ def supplement_modal(date: datetime.date):
                     fh.Div(
                         fh.Button(
                             "←",
-                            cls="text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                            cls="text-xl font-light text-base-content hover:text-base-content focus:outline-none focus:ring-0 border-none outline-none",
                             onclick="""
                                 document.getElementById('supplement-options').classList.remove('hidden');
                                 document.getElementById('log-supplement-form').classList.add('hidden');
@@ -754,14 +755,14 @@ def supplement_modal(date: datetime.date):
                             style="outline: none; box-shadow: none;",
                             id="supplement-back-button"
                         ),
-                        fh.H3("Log Supplement", cls="text-xl font-bold text-primary-content"),
+                        fh.H3("Log Supplement", cls="text-xl font-bold text-base-content"),
                         fh.Button(
                             "×",
-                            cls="text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                            cls="text-xl font-light text-base-content hover:text-base-content focus:outline-none focus:ring-0 border-none outline-none",
                             onclick="closeSupplementModal()",
                             style="outline: none; box-shadow: none;"
                         ),
-                        cls="flex justify-between items-center px-6 py-4 border-b border-primary-content bg-base-200 sticky top-0"
+                        cls="flex justify-between items-center px-6 py-4 border-b border-base-content bg-base-200 sticky top-0"
                     ),
                     fh.Div(
                         fh.Form(
@@ -770,10 +771,10 @@ def supplement_modal(date: datetime.date):
                             cls="w-[90%] mx-auto space-y-6"
                         )(
                             fh.Div(
-                                fh.Label("Select Supplement", cls="label text-primary-content"),
+                                fh.Label("Select Supplement", cls="label text-base-content"),
                                 fh.Select(
                                     name="supplement_name",
-                                    cls="select select-bordered w-full bg-base-200 text-primary-content",
+                                    cls="select select-bordered w-full bg-base-200 text-base-content",
                                     hx_get="/get_supplements",
                                     hx_trigger="load",
                                     hx_target="#supplement-select",
@@ -782,18 +783,18 @@ def supplement_modal(date: datetime.date):
                                 cls="form-control"
                             ),
                             fh.Div(
-                                fh.Label("Time Consumed", cls="label text-primary-content"),
+                                fh.Label("Time Consumed", cls="label text-base-content"),
                                 fh.Input(
                                     type="time",
                                     name="time_consumed",
                                     value=datetime.now().strftime("%H:%M"),
                                     required=True,
-                                    cls="input input-bordered w-full bg-base-200 text-primary-content"
+                                    cls="input input-bordered w-full bg-base-200 text-base-content"
                                 ),
                                 cls="form-control"
                             ),
                             fh.Div(
-                                fh.Label("Servings", cls="label text-primary-content"),
+                                fh.Label("Servings", cls="label text-base-content"),
                                 fh.Input(
                                     type="number",
                                     name="servings",
@@ -801,7 +802,7 @@ def supplement_modal(date: datetime.date):
                                     step="0.5",
                                     min="0",
                                     required=True,
-                                    cls="input input-bordered w-full bg-base-200 text-primary-content"
+                                    cls="input input-bordered w-full bg-base-200 text-base-content"
                                 ),
                                 cls="form-control"
                             ),
@@ -822,7 +823,7 @@ def supplement_modal(date: datetime.date):
                     fh.Div(
                         fh.Button(
                             "←",
-                            cls="text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                            cls="text-xl font-light text-base-content hover:text-base-content focus:outline-none focus:ring-0 border-none outline-none",
                             onclick="""
                                 document.getElementById('supplement-options').classList.remove('hidden');
                                 document.getElementById('supplement-form').classList.add('hidden');
@@ -831,14 +832,14 @@ def supplement_modal(date: datetime.date):
                             style="outline: none; box-shadow: none;",
                             id="add-supplement-back-button"
                         ),
-                        fh.H3("Add New Supplement", cls="text-xl font-bold text-primary-content"),
+                        fh.H3("Add New Supplement", cls="text-xl font-bold text-base-content"),
                         fh.Button(
                             "×",
-                            cls="text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                            cls="text-xl font-light text-base-content hover:text-base-content focus:outline-none focus:ring-0 border-none outline-none",
                             onclick="closeSupplementModal()",
                             style="outline: none; box-shadow: none;"
                         ),
-                        cls="flex justify-between items-center px-6 py-4 border-b border-primary-content bg-base-200 sticky top-0"
+                        cls="flex justify-between items-center px-6 py-4 border-b border-base-content bg-base-200 sticky top-0"
                     ),
                     fh.Div(
                         fh.Form(
@@ -847,13 +848,13 @@ def supplement_modal(date: datetime.date):
                             cls="w-[90%] mx-auto"
                         )(
                             fh.Div(
-                                fh.Label("Time Taken", cls="label text-primary-content"),
+                                fh.Label("Time Taken", cls="label text-base-content"),
                                 fh.Input(
                                     type="time",
                                     name="time_consumed",
                                     value=datetime.now().strftime("%H:%M"),
                                     required=True,
-                                    cls="input input-bordered w-full bg-base-200 text-primary-content"
+                                    cls="input input-bordered w-full bg-base-200 text-base-content"
                                 ),
                                 cls="form-control mb-4"
                             ),
@@ -896,14 +897,14 @@ def create_meals_list(user_id, date: datetime.date):
     meals = database_service.get_daily_meals(date, user_id)
     
     if not meals:
-        content = fh.P("No meals logged for this day", cls="text-primary-content text-center")
+        content = fh.P("No meals logged for this day", cls="text-base-content text-center")
     else:
         content = fh.Div(
             *[
                 fh.Div(
                     fh.Div(
                         fh.Div(
-                            fh.P(meal["meal"].title, cls="text-lg font-bold text-primary-content"),
+                            fh.P(meal["meal"].title, cls="text-lg font-bold text-base-content"),
                             fh.Div(
                                 fh.Button(
                                     "🗑",  
@@ -918,15 +919,15 @@ def create_meals_list(user_id, date: datetime.date):
                         ),
                         fh.P(
                             f"Time: {meal['meal_time'].strftime('%I:%M %p')}",
-                            cls="text-sm text-primary-content opacity-80"
+                            cls="text-sm text-base-content opacity-80"
                         ),
                         cls="mb-2"
                     ),
                     fh.Div(
-                        fh.P(f"Calories: {meal['meal'].calories:.0f} kcal", cls="text-primary-content"),
-                        fh.P(f"Protein: {meal['meal'].macronutrients.protein:.1f}g", cls="text-primary-content"),
-                        fh.P(f"Carbs: {meal['meal'].macronutrients.carbohydrates.total:.1f}g", cls="text-primary-content"),
-                        fh.P(f"Fat: {meal['meal'].macronutrients.fat.total:.1f}g", cls="text-primary-content"),
+                        fh.P(f"Calories: {meal['meal'].calories:.0f} kcal", cls="text-base-content"),
+                        fh.P(f"Protein: {meal['meal'].macronutrients.protein:.1f}g", cls="text-base-content"),
+                        fh.P(f"Carbs: {meal['meal'].macronutrients.carbohydrates.total:.1f}g", cls="text-base-content"),
+                        fh.P(f"Fat: {meal['meal'].macronutrients.fat.total:.1f}g", cls="text-base-content"),
                         cls="grid grid-cols-2 gap-2 mt-2 text-sm"
                     ),
                     cls="p-4 bg-base-300 rounded-lg mb-4 last:mb-0 meal-card"
@@ -939,13 +940,13 @@ def create_meals_list(user_id, date: datetime.date):
     return fh.Div(
         fh.Details(
             fh.Summary(
-                fh.H3("Meals Logged", cls="text-xl font-bold text-primary-content inline-block"),
+                fh.H3("Meals Logged", cls="text-xl font-bold text-base-content inline-block"),
                 cls="cursor-pointer hover:opacity-80"
             ),
             content,
             cls="p-6"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
+        cls="bg-base-200 outline outline-2 outline-base-content rounded-lg mt-8"
     )
 
 def feedback_form(meal_description: str, meal_time, nutrition_info: MealBreakdown, date: str | None = None):
@@ -962,15 +963,15 @@ def feedback_form(meal_description: str, meal_time, nutrition_info: MealBreakdow
 def overview_text(analysis: NutritionFeedback):
     return fh.Card(
         fh.Div(
-            fh.P("Summary", cls="text-primary-content mb-1 font-bold"),
-            fh.P(analysis.summary, cls="text-primary-content mb-1"),
-            fh.P("Macronutrients", cls="text-primary-content mb-1 font-bold"),
-            fh.P(analysis.macronutrients, cls="text-primary-content mb-1"),
-            fh.P("Micronutrients", cls="text-primary-content mb-1 font-bold"),
-            fh.P(analysis.micronutrients, cls="text-primary-content mb-1"),
-            fh.P("Suggestions", cls="text-primary-content mb-1 font-bold"),
-            fh.P(analysis.suggestions, cls="text-primary-content mb-1"),
+            fh.P("Summary", cls="text-base-content mb-1 font-bold"),
+            fh.P(analysis.summary, cls="text-base-content mb-1"),
+            fh.P("Macronutrients", cls="text-base-content mb-1 font-bold"),
+            fh.P(analysis.macronutrients, cls="text-base-content mb-1"),
+            fh.P("Micronutrients", cls="text-base-content mb-1 font-bold"),
+            fh.P(analysis.micronutrients, cls="text-base-content mb-1"),
+            fh.P("Suggestions", cls="text-base-content mb-1 font-bold"),
+            fh.P(analysis.suggestions, cls="text-base-content mb-1"),
             cls="p-4 space-y-2 mt-2"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
+        cls="bg-base-200 outline outline-1 outline-base-content rounded-lg mt-8"
     )
