@@ -22,23 +22,3 @@ def get_login_page(req, fitbit_login_link: str, whoop_login_link: str):
         )
     )
     return page_outline(7, "Login", False, False, page_content)
-
-
-def create_editable_input(name: str, value: str, input_type: str = "text", placeholder: str = "", required: bool = True):
-    """Create an input field for the onboarding form"""
-    return fh.Input(
-        type=input_type,
-        name=name,
-        value=value if value else "",
-        placeholder=placeholder,
-        required=required,
-        cls="input input-bordered w-full bg-base-200 text-primary-content focus:bg-base-200 focus:text-primary-content"
-    )
-
-def create_form_row(label: str, input_element):
-    """Create a form row with label on the left and input on the right"""
-    return fh.Div(
-        fh.Label(label, cls="text-primary-content w-1/3 h-12 flex items-center"),
-        fh.Div(input_element, cls="w-2/3"),
-        cls="flex gap-4"
-    )

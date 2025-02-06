@@ -6,6 +6,7 @@ from fasthtml.common import RedirectResponse
 import fit.web.auth.requests as auth
 import fit.web.kitchen.requests as kitchen
 import fit.web.nutrition.requests as nutrition
+import fit.web.onboarding.requests as onboarding
 import fit.web.performance as performance
 import fit.web.progress as progress
 import fit.web.rest as rest
@@ -93,7 +94,6 @@ onboarding_bware = fh.Beforeware(
 
 app = fh.FastHTML(before=[auth_bware, onboarding_bware], hdrs=(htmx_indicator_style, tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
 
-# Food routes
 app.get("/nutrition/weekly")(nutrition.get_weekly_overview)
 app.get("/nutrition/{date}")(nutrition.get_daily_overview)
 app.get("/nutrition")(nutrition.get_daily_overview)
@@ -118,7 +118,6 @@ app.post("/log_supplement_consumption/{date:str}")(nutrition.log_supplement_cons
 app.post("/log_water")(nutrition.log_water)
 app.post("/log_water/{date:str}")(nutrition.log_water)
 
-# Kitchen routes
 app.get("/kitchen")(kitchen.get)
 app.post("/add_item")(kitchen.add_item)
 app.post("/decipher_text_inventory_addition")(kitchen.add_inventory_from_text)
@@ -126,33 +125,29 @@ app.post("/save_inventory")(kitchen.save_inventory)
 app.get("/get_inventory")(kitchen.get_inventory)
 app.route("/delete_inventory_item/{rowid:int}", methods=["POST"])(kitchen.delete_inventory_item)
 app.post("/generate_inventory_additions")(kitchen.generate_inventory_additions)
-# Progress routes
+
 app.get("/progress")(progress.get)
 app.post("/update_measurements")(progress.update_measurements)
 
-# Profile routes
 app.get("/profile")(user_profile.get)
 app.post("/update_profile")(user_profile.update_profile)
 app.post("/add_restriction")(user_profile.add_restriction)
 app.post("/remove_restriction")(user_profile.remove_restriction)
 
-# rest routes
 app.get("/rest")(rest.get)
 app.post("/generate_rest_overview")(rest.generate_overview)
 
-# performance routes
 app.get("/performance")(performance.get)
 app.post("/generate_performance_overview")(performance.generate_overview)
 
-# Add onboarding routes
-app.get("/onboarding/profile")(auth.get_profile_page)
-app.get("/onboarding/activity")(auth.get_activity_page)
-app.get("/onboarding/dietary")(auth.get_dietary_page)
-app.post("/onboarding/complete_profile")(auth.handle_profile_completion)
-app.post("/onboarding/complete_dietary")(auth.handle_dietary_completion)
-app.post("/onboarding/handle_activity_selection")(auth.handle_activity_selection)
-app.get("/onboarding/goals")(auth.get_goals_page)
-app.post("/onboarding/handle_goals_selection")(auth.handle_goals_selection)
+app.get("/onboarding/profile")(onboarding.get_profile_page)
+app.get("/onboarding/activity")(onboarding.get_activity_page)
+app.get("/onboarding/dietary")(onboarding.get_dietary_page)
+app.post("/onboarding/complete_profile")(onboarding.handle_profile_completion)
+app.post("/onboarding/complete_dietary")(onboarding.handle_dietary_completion)
+app.post("/onboarding/handle_activity_selection")(onboarding.handle_activity_selection)
+app.get("/onboarding/goals")(onboarding.get_goals_page)
+app.post("/onboarding/handle_goals_selection")(onboarding.handle_goals_selection)
 
 fh.reg_re_param("imgext", "png")
 
@@ -163,7 +158,6 @@ app.get(auth.whoop_auth_callback_path)(auth.whoop_auth_redirect)
 @app.get(r"/static/{path:path}")
 def get(path: str):
     return fh.FileResponse(f"{path}")
-
 
 fh.serve() 
 

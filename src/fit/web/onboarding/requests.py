@@ -24,7 +24,6 @@ def get_dietary_page(session):
     block_onboarded_users(session)
     return ui.create_dietary_page(session)
 
-
 def get_goals_page(session):
     """Return the goals selection page"""
     block_onboarded_users(session)
