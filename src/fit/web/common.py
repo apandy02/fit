@@ -2,8 +2,8 @@ import fasthtml.common as fh
 import fh_bootstrap as fhb
 from markdown import markdown
 
-from fit.nutrition.targets import MICRO_GOALS
 from fit.database import DatabaseService
+from fit.nutrition.targets import MICRO_GOALS
 
 DB_PATH = "data/nutrition.db"
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
