@@ -70,7 +70,7 @@ def metric_card(
     return fh.Card(
         fh.Div(
             fh.Div(
-                fh.H3(display_title, cls="text-xl font-bold text-base-content text-center mb-8"),
+                fh.H3(display_title, cls="text-xl font-bold text-base-content text-center mt-4 mb-12"),
                 fh.Div(id=plot_id, cls="w-full h-[300px]"),
                 cls="w-full"
             ),
@@ -90,7 +90,7 @@ def metric_card(
                 cls="flex justify-center"
             ) if suggestions_button else None,
             fh.Div(id=f"{plot_id}-suggestions"),
-            cls="p-4 relative"
+            cls="relative"
         ),
         cls="bg-base-200 outline outline-2 mx-4 my-2 outline-base-content rounded-2xl h-full text-base-content shadow-none",
         id=f"{plot_id}-container"
@@ -500,7 +500,8 @@ def create_page_header(current_view: str, date: datetime.date = None):
         )
     
     return fh.Div(
-        fh.P("Nutrition Center", cls="text-4xl font-light text-center mb-6 text-base-content"),
+        fh.H1("Nutrition Center", cls="text-4xl font-light text-center mb-4 text-base-content"),
+        fh.P("Track your nutrition, get insights and suggestions", cls="text-md font-light text-base-content/60 text-center mb-6"),
         fh.Div(
             create_time_filter(current_view),
             cls="flex justify-center mb-8"
@@ -946,7 +947,7 @@ def create_meals_list(user_id, date: datetime.date):
             content,
             cls="p-6"
         ),
-        cls="bg-base-200 outline outline-2 outline-base-content rounded-lg mt-8"
+        cls="bg-base-200 outline outline-2 outline-base-content rounded-xl mt-8"
     )
 
 def feedback_form(meal_description: str, meal_time, nutrition_info: MealBreakdown, date: str | None = None):

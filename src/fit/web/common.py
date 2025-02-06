@@ -174,7 +174,7 @@ def create_text_generation_card(endpoint: str, button_text: str = "Generate Anal
                 fh.Div(
                     fh.Button(
                         button_text,
-                        cls="btn btn-neutral outline outline-1 text-base-content font-light outline-base-content mt-4 rounded-md",
+                        cls="btn btn-neutral outline outline-1 text-base-content font-light outline-base-content mt-4 rounded-xl",
                         hx_post=endpoint,
                         hx_target="#analysis-content",
                         hx_indicator="#loading-indicator"
@@ -195,7 +195,7 @@ def create_text_generation_card(endpoint: str, button_text: str = "Generate Anal
             ),
             cls="px-6 py-4"
         ),
-        cls="bg-base-200 outline outline-2 outline-base-content rounded-2xl mb-12 text-base-content shadow-none"
+        cls="bg-base-200 outline outline-2 outline-base-content rounded-3xl mb-12 text-base-content shadow-none"
     )
 
 def create_time_filter(current_view: str):

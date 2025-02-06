@@ -55,7 +55,7 @@ def create_apex_donut(data_points: tuple[list, ...]):
                 series: [chartData.consumed, chartData.remaining],
                 colors: ["rgb(34, 197, 94)", "rgb(239, 68, 68)"],
                 chart: {{
-                    height: 250,
+                    height: 270,
                     width: "100%",
                     type: "donut",
                 }},
@@ -85,7 +85,7 @@ def create_apex_donut(data_points: tuple[list, ...]):
                                 value: {{
                                     show: true,
                                     fontFamily: "Inter, sans-serif",
-                                    offsetY: -20,
+                                    offsetY: 20,
                                     formatter: function (value) {{
                                         return value.toFixed(1)
                                     }},
