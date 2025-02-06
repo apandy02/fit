@@ -3,7 +3,6 @@ from datetime import datetime
 import fasthtml.common as fh
 from fasthtml.common import RedirectResponse
 from fasthtml.oauth import redir_url
-
 from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
 from fit.web.auth.clients import whoop_client_oauth as whoop_client
 from fit.web.auth.ui import get_login_page
@@ -108,7 +107,7 @@ def whoop_auth_redirect(code:str, request, session):
 def get_profile_page(session):
     """Return the profile completion page"""
     user_data = get_profile_data(DB, session["user_id"])
-    if user_data["onboarding_stage"] == 3:
+    if user_data["onboarding_stage"] == 4:
         return RedirectResponse('/nutrition', status_code=303)
     content = fh.Article(
         fh.Div(
@@ -137,7 +136,7 @@ def get_profile_page(session):
 def get_activity_page(session):
     """Return the activity selection page"""
     user_data = get_profile_data(DB, session["user_id"])
-    if user_data["onboarding_stage"] == 3:
+    if user_data["onboarding_stage"] == 4:
         return RedirectResponse('/nutrition', status_code=303)
     content = fh.Article(
         fh.Div(
@@ -222,7 +221,6 @@ async def handle_profile_completion(session, request: fh.Request):
         return fh.Response(headers={"HX-Redirect": "/onboarding/dietary"})
 
     except Exception as e:
-        print(f"Error updating profile: {e}")
         return fh.P(
             f"Error updating profile: {str(e)}",
             cls="text-error font-semibold text-center mt-4"
@@ -244,7 +242,6 @@ async def handle_dietary_completion(session, request: fh.Request):
         
         return fh.Response(headers={"HX-Redirect": "/onboarding/activity"})
     except Exception as e:
-        print(f"Error updating dietary restrictions: {e}")
         return fh.P(
             f"Error updating dietary restrictions: {str(e)}",
             cls="text-error font-semibold text-center mt-4"
@@ -255,17 +252,13 @@ async def handle_activity_selection(session, request: fh.Request):
     try:
         form = await request.form()
         activity_level = form.get("activity_level")
-        user_profile = get_profile_data(DB, session["user_id"])
-        print(f"user_profile: {user_profile}")
-        print(f"activity_level: {activity_level}")
-        # Store activity level in profile
         DB.t.profile.update({
             "user_id": session["user_id"],
             "activity_level": activity_level,
             "onboarding_stage": 3
         })
         
-        return fh.Response(headers={"HX-Redirect": "/nutrition"})
+        return fh.Response(headers={"HX-Redirect": "/onboarding/goals"})
     except Exception as e:
         print(f"Error updating activity level: {e}")
         return fh.P(
@@ -304,4 +297,117 @@ def get_dietary_page(session):
         cls="bg-base-100 min-h-screen flex items-center"
     )
     
-    return page_outline(None, "Dietary Restrictions", False, False, content) 
+    return page_outline(None, "Dietary Restrictions", False, False, content)
+
+def get_goals_page(session):
+    """Return the goals selection page"""
+    user_data = get_profile_data(DB, session["user_id"])
+    if user_data["onboarding_stage"] == 4:
+        return RedirectResponse('/nutrition', status_code=303)
+    
+    content = fh.Article(
+        fh.Div(
+            fh.Card(
+                fh.Div(
+                    fh.Header(
+                        fh.H3("What are your goals?", cls="text-2xl font-bold text-center mb-6 text-primary-content"),
+                        cls="mb-6 bg-base-200"
+                    ),
+                    fh.Form(
+                        hx_post="/onboarding/handle_goals_selection",
+                        cls="space-y-6"
+                    )(
+                        fh.Div(
+                            fh.H4("Weight Goal", cls="text-xl font-bold text-primary-content mb-4"),
+                            fh.Div(
+                                fh.Button(
+                                    fh.Div(
+                                        fh.H4("Lose Weight", cls="text-lg font-bold mb-2 text-primary-content"),
+                                        fh.P("I want to reduce my body weight", cls="text-sm"),
+                                        cls="text-center"
+                                    ),
+                                    type="submit",
+                                    name="weight_goal",
+                                    value="lose",
+                                    cls="btn btn-ghost outline outline-1 outline-primary-content w-full h-24 mb-4"
+                                ),
+                                fh.Button(
+                                    fh.Div(
+                                        fh.H4("Maintain Weight", cls="text-lg font-bold mb-2 text-primary-content"),
+                                        fh.P("I want to maintain my current weight", cls="text-sm"),
+                                        cls="text-center"
+                                    ),
+                                    type="submit",
+                                    name="weight_goal",
+                                    value="maintain",
+                                    cls="btn btn-ghost outline outline-1 outline-primary-content w-full h-24 mb-4"
+                                ),
+                                fh.Button(
+                                    fh.Div(
+                                        fh.H4("Gain Weight", cls="text-lg font-bold mb-2 text-primary-content"),
+                                        fh.P("I want to increase my body weight", cls="text-sm"),
+                                        cls="text-center"
+                                    ),
+                                    type="submit",
+                                    name="weight_goal",
+                                    value="gain",
+                                    cls="btn btn-ghost outline outline-1 outline-primary-content w-full h-24 mb-4"
+                                ),
+                                cls="space-y-4"
+                            ),
+                            cls="mb-8"
+                        ),
+                        fh.Div(
+                            fh.H4("Fitness Goal", cls="text-xl font-bold text-primary-content mb-4"),
+                            fh.Select(
+                                fh.Option("Select a fitness goal", value="", selected=True, disabled=True),
+                                fh.Option("Build Muscle", value="muscle"),
+                                fh.Option("Improve Endurance", value="endurance"),
+                                fh.Option("Increase Strength", value="strength"),
+                                fh.Option("Improve Overall Health", value="health"),
+                                name="fitness_goal",
+                                required=True,
+                                cls="select select-bordered w-full bg-base-200 text-primary-content mb-4"
+                            ),
+                        ),
+                        cls="p-6"
+                    ),
+                    cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6"
+                ),
+                cls="bg-base-200 shadow-lg rounded-lg"
+            ),
+            cls="max-w-2xl mx-auto p-6"
+        ),
+        cls="bg-base-100 min-h-screen flex items-center"
+    )
+    
+    return page_outline(None, "Goals", False, False, content)
+
+async def handle_goals_selection(session, request: fh.Request):
+    """Handle goals selection"""
+    try:
+        form = await request.form()
+        weight_goal = form.get("weight_goal")
+        fitness_goal = form.get("fitness_goal")
+        
+        # Map weight goal values to numeric targets
+        weight_goal_map = {
+            "lose": -0.5,  # Lose 0.5 kg per week
+            "maintain": 0,  # Maintain current weight
+            "gain": 0.5    # Gain 0.5 kg per week
+        }
+        
+        DB.t.profile.update({
+            "user_id": session["user_id"],
+            "weight_goal": weight_goal_map[weight_goal],
+            "fitness_goal": fitness_goal,
+            "onboarding_stage": 4
+        })
+        
+        return fh.Response(headers={"HX-Redirect": "/nutrition"})
+    except Exception as e:
+        print(f"Error updating goals: {e}")
+        return fh.P(
+            f"Error updating goals: {str(e)}",
+            cls="text-error font-semibold text-center mt-4"
+        ) 

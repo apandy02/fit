@@ -152,6 +152,8 @@ app.get("/onboarding/dietary")(auth.get_dietary_page)
 app.post("/onboarding/complete_profile")(auth.handle_profile_completion)
 app.post("/onboarding/complete_dietary")(auth.handle_dietary_completion)
 app.post("/onboarding/handle_activity_selection")(auth.handle_activity_selection)
+app.get("/onboarding/goals")(auth.get_goals_page)
+app.post("/onboarding/handle_goals_selection")(auth.handle_goals_selection)
 
 fh.reg_re_param("imgext", "png")
 
