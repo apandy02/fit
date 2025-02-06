@@ -15,14 +15,19 @@ def create_fab_menu(buttons):
     Create a floating action button menu with custom buttons.
     
     Args:
-        buttons: List of tuples (label, emoji, onclick_handler)
+        buttons: List of tuples (label, emoji_or_svg, onclick_handler)
     """
+    def create_button_content(content):
+        if content.strip().startswith('<svg'):
+            return fh.NotStr(content)
+        return fh.Span(content, cls="text-lg")
+
     return fh.Div(
         fh.Div(
             *[
                 fh.Div(
                     fh.Button(
-                        fh.Span(emoji, cls="text-lg"),
+                        create_button_content(emoji_or_svg),
                         cls="btn btn-primary btn-circle shadow-lg ml-3",
                         onclick=onclick
                     ),
@@ -30,7 +35,7 @@ def create_fab_menu(buttons):
                     id=f"{label.lower()}-button",
                     _hidden=True
                 )
-                for label, emoji, onclick in buttons
+                for label, emoji_or_svg, onclick in buttons
             ],
             cls="absolute bottom-16 right-0"
         ),
@@ -130,20 +135,20 @@ def page_outline(selidx, title, logged_in: bool, display_nav: bool, *c):
     return (
         fh.Title(title),
         fh.Body(
-            fh.Html(data_theme="black"),
+            fh.Html(data_theme="forest"),
             fh.Div(
                 fh.Div(
                     *[
                         fh.A(
                             title,
                             href=link,
-                            cls="btn btn-ghost text-white",
+                            cls="btn btn-ghost text-base-content",
                         )
                         for title, link in pages
                     ],
                     cls=f"flex justify-{justify} items-center flex-1",
                 ),
-                cls=f"navbar bg-base-100 bg-opacity-100 rounded-m h-[5vh] flex justify-{justify} outline outline-1 outline-primary-content",
+                cls=f"navbar bg-base-100 bg-opacity-100 rounded-md h-[5vh] flex justify-{justify} outline outline-1 outline-base-content",
             ),
             fh.Div(
                 fh.Div(*c, cls="min-h-[calc(100vh-8vh)] pb-[3vh]"),
@@ -169,7 +174,7 @@ def create_text_generation_card(endpoint: str, button_text: str = "Generate Anal
                 fh.Div(
                     fh.Button(
                         button_text,
-                        cls="btn btn-primary outline outline-1 outline-primary-content mt-4 rounded-md",
+                        cls="btn btn-neutral outline outline-1 text-base-content font-light outline-base-content mt-4 rounded-xl",
                         hx_post=endpoint,
                         hx_target="#analysis-content",
                         hx_indicator="#loading-indicator"
@@ -190,7 +195,7 @@ def create_text_generation_card(endpoint: str, button_text: str = "Generate Anal
             ),
             cls="px-6 py-4"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mb-12 text-primary-content"
+        cls="bg-base-200 outline outline-2 outline-base-content rounded-3xl mb-12 text-base-content shadow-none"
     )
 
 def create_time_filter(current_view: str):
@@ -216,13 +221,13 @@ def create_text_form_input(label_text, input_name, input_value, input_type="numb
         formatted_value = input_value
 
     return fh.Div(
-        fh.Label(label_text, cls="label text-primary-content"),
+        fh.Label(label_text, cls="label text-base-content"),
         fh.Input(
             type=input_type,
             name=input_name,
             value=formatted_value,
             step=step if input_type == "number" else None,
-            cls="input input-bordered w-full bg-base-200 outline  text-primary-content"
+            cls="input input-bordered w-full bg-base-200 outline  text-base-content"
         ),
         cls="form-control"
     )
