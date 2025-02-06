@@ -325,7 +325,6 @@ async def regenerate_analysis(feedback: str, original_description: str, original
     meal_datetime = datetime.combine(datetime.today().date(), meal_time_obj).isoformat()
     return ui.feedback_form(original_description, meal_datetime, improved_info)
 
-# TODO: the next two functions are doing a lot of the same work, find a way to refactor
 async def generate_weekly_overview(session):
     """
     Generate the weekly overview analysis by getting the user's meals for the week,
@@ -359,7 +358,7 @@ def generate_overview(session, date: str | None = None, weekly: bool = False):
         meals = database_service.get_weekly_meals(days, session["user_id"])
     else:
         if date is None:
-            days = [datetime.today().date()] # put it in a fake list to make code invariant
+            days = [datetime.today().date()]
         else:
             try:
                 days = [datetime.strptime(date, "%Y-%m-%d").date()]
