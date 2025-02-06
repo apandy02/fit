@@ -142,7 +142,7 @@ def create_goals_page(session):
             fh.Card(
                 fh.Div(
                     fh.Header(
-                        fh.H3("What are your goals?", cls="text-2xl font-bold text-center mb-6 text-primary-content"),
+                        fh.H3("What are your weight goals?", cls="text-2xl font-bold text-center mb-6 text-primary-content"),
                         cls="mb-6 bg-base-200"
                     ),
                     fh.Form(
@@ -150,11 +150,10 @@ def create_goals_page(session):
                         cls="space-y-6"
                     )(
                         fh.Div(
-                            fh.H4("Weight Goal", cls="text-xl font-bold text-primary-content mb-4"),
                             fh.Div(
                                 fh.Button(
                                     fh.Div(
-                                        fh.H4("Lose Weight", cls="text-lg font-bold mb-2 text-primary-content"),
+                                        fh.H4("Lose", cls="text-lg font-bold mb-2 text-primary-content"),
                                         fh.P("I want to reduce my body weight", cls="text-sm"),
                                         cls="text-center"
                                     ),
@@ -165,7 +164,7 @@ def create_goals_page(session):
                                 ),
                                 fh.Button(
                                     fh.Div(
-                                        fh.H4("Maintain Weight", cls="text-lg font-bold mb-2 text-primary-content"),
+                                        fh.H4("Maintain", cls="text-lg font-bold mb-2 text-primary-content"),
                                         fh.P("I want to maintain my current weight", cls="text-sm"),
                                         cls="text-center"
                                     ),
@@ -176,7 +175,7 @@ def create_goals_page(session):
                                 ),
                                 fh.Button(
                                     fh.Div(
-                                        fh.H4("Gain Weight", cls="text-lg font-bold mb-2 text-primary-content"),
+                                        fh.H4("Gain", cls="text-lg font-bold mb-2 text-primary-content"),
                                         fh.P("I want to increase my body weight", cls="text-sm"),
                                         cls="text-center"
                                     ),
