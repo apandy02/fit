@@ -1,7 +1,8 @@
-from fit.web.common import (create_fab_menu, create_text_generation_card,
-                            create_time_filter)
 import fasthtml.common as fh
-from fit.web.common import page_outline
+
+from fit.web.common import (create_fab_menu, create_text_generation_card,
+                            create_time_filter, page_outline)
+
 
 def create_performance_page(performance_info: tuple[dict, list[dict]], is_whoop: bool, text_generation_endpoint: str, fab_buttons: list[tuple[str, str, str]]):
     content = fh.Div(
