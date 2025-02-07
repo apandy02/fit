@@ -1,9 +1,8 @@
 import fasthtml.common as fh
 import fh_bootstrap as fhb
-from markdown import markdown
-
 from fit.database import DatabaseService
 from fit.nutrition.targets import MICRO_GOALS
+from markdown import markdown
 
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
 
@@ -28,7 +27,7 @@ def create_fab_menu(buttons):
                 fh.Div(
                     fh.Button(
                         create_button_content(emoji_or_svg),
-                        cls="btn btn-primary btn-circle shadow-lg ml-3",
+                        cls="btn btn-neutral btn-circle shadow-lg ml-3",
                         onclick=onclick
                     ),
                     cls="flex items-center justify-end mb-2",
@@ -142,7 +141,7 @@ def page_outline(selidx, title, logged_in: bool, display_nav: bool, *c):
                         fh.A(
                             title,
                             href=link,
-                            cls="btn btn-ghost text-base-content",
+                            cls="btn btn-ghost text-base-content font-light",
                         )
                         for title, link in pages
                     ],
@@ -202,8 +201,8 @@ def create_time_filter(current_view: str):
     """Create the time filter toggle"""
     return fh.Div(
         fh.Select(
-            fh.Option("Today", value="daily", selected=current_view == "daily"),
-            fh.Option("This Week", value="weekly", selected=current_view == "weekly"),
+            fh.Option("Daily", value="daily", selected=current_view == "daily"),
+            fh.Option("Weekly", value="weekly", selected=current_view == "weekly"),
             name="time_filter",
             cls="select select-bordered w-full max-w-xs",
             hx_post="/nutrition_redirect",

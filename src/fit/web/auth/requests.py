@@ -2,7 +2,6 @@ from datetime import datetime
 
 from fasthtml.common import RedirectResponse
 from fasthtml.oauth import redir_url
-
 from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
 from fit.web.auth.clients import whoop_client_oauth as whoop_client
 from fit.web.auth.ui import get_login_page

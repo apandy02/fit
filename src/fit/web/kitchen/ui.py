@@ -1,5 +1,4 @@
 import fasthtml.common as fh
-
 from fit.nutrition.data_models import KitchenInventory, KitchenItem
 from fit.web.common import create_text_form_input, create_text_generation_card
 from fit.web.kitchen.constants import INVENTORY_CATEGORIES, INVENTORY_UNITS
@@ -9,7 +8,7 @@ def kitchen_page_content(inventory: dict):
     """Create the main kitchen page content"""
     content = fh.Article(
         fh.Div(
-            fh.H2("Your Kitchen", cls="text-4xl font-light text-primary-content mb-8 text-center"),
+            fh.H2("Your Kitchen", cls="text-4xl font-light text-base-content mb-8 text-center"),
             create_text_generation_card("/generate_inventory_additions", "Grocery Recommendations"),
             create_kitchen_sections(inventory),
             create_add_items_modal(),
@@ -48,7 +47,7 @@ def create_fab():
 def create_expandable_section(title: str, items: list):
     """Create an expandable section with a title and optional content"""
     if len(items) == 0:
-        content = fh.P("No items added yet", cls="text-primary-content text-center")
+        content = fh.P("No items added yet", cls="text-base-content text-center")
     else:
         content = fh.Div(
             *[create_item_card(item) for item in items],
@@ -58,13 +57,13 @@ def create_expandable_section(title: str, items: list):
     return fh.Div(
         fh.Details(
             fh.Summary(
-                fh.H3(title, cls="text-xl font-light text-primary-content inline-block"),
+                fh.H3(title, cls="text-xl font-light text-base-content inline-block"),
                 cls="cursor-pointer hover:opacity-80"
             ),
             content,
             cls="p-6"
         ),
-        cls="bg-base-200 outline outline-2 outline-primary-content rounded-xl mt-8"
+        cls="bg-base-200 outline outline-1 outline-base-content rounded-xl mt-8"
     )
 
 def create_item_card(item: tuple):
@@ -196,16 +195,16 @@ def create_add_items_modal():
                             onclick="closeKitchenModal()",
                             style="outline: none; box-shadow: none;"
                         ),
-                        fh.H3("Add Items to Kitchen", cls="text-xl font-bold text-center mt-4 mb-8 text-primary-content"),
+                        fh.H3("Add Items to Kitchen", cls="text-xl text-center mt-4 mb-8 text-base-content"),
                         fh.Div(
                             fh.Button(
                                 "Add Single Item",
-                                cls="btn btn-primary w-full mb-4",
+                                cls="btn btn-neutral text-lg font-light w-full mb-4 rounded-lg",
                                 onclick="/* Add single item functionality will be added later */"
                             ),
                             fh.Button(
                                 "Add Multiple Items",
-                                cls="btn btn-primary w-full",
+                                cls="btn btn-neutral text-lg font-light w-full rounded-lg",
                                 onclick="showBulkView()"
                             ),
                             cls="space-y-4 mx-8"
