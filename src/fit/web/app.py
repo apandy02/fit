@@ -5,9 +5,9 @@ import fit.web.auth.requests as auth
 import fit.web.kitchen.requests as kitchen
 import fit.web.nutrition.requests as nutrition
 import fit.web.onboarding.requests as onboarding
-import fit.web.performance as performance
+import fit.web.performance.requests as requests
 import fit.web.progress as progress
-import fit.web.rest as rest
+import fit.web.rest.requests as rest
 import fit.web.user_profile as user_profile
 from fasthtml.common import RedirectResponse
 from fit.web.common import database_service
@@ -136,8 +136,8 @@ app.post("/remove_restriction")(user_profile.remove_restriction)
 app.get("/rest")(rest.get)
 app.post("/generate_rest_overview")(rest.generate_overview)
 
-app.get("/performance")(performance.get)
-app.post("/generate_performance_overview")(performance.generate_overview)
+app.get("/performance")(requests.get)
+app.post("/generate_performance_overview")(requests.generate_overview)
 
 app.get("/onboarding/profile")(onboarding.get_profile_page)
 app.get("/onboarding/activity")(onboarding.get_activity_page)

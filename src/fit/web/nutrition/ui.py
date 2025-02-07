@@ -38,33 +38,11 @@ def metric_card(
     else:
         analysis_text = None
     
-    # Extract unit from y_axis_title if present
     unit = y_axis_title.split('(')[-1].strip(')') if '(' in y_axis_title else None
     display_title = f"{title} ({unit})" if unit else title
-    
-    # Create suggestions button separately to place at bottom
     suggestions_button = None
     if title.lower() != "water":
-        suggestions_button = fh.Div(
-            fh.Div(
-                fh.Button(
-                    "Get Suggestions",
-                    cls="btn btn-sm btn-neutral outline outline-1 outline-base-content mt-4 rounded-md font-light text-xs",
-                    hx_post=f"/get_nutrient_suggestions/{title.lower()}",
-                    hx_target=f"#{plot_id}-suggestions",
-                    hx_indicator=f"#{plot_id}-suggestions-loading-indicator"
-                ),
-                fh.Div(
-                    fh.Span(
-                        cls="loading loading-dots loading-md mt-2"
-                    ),
-                    id=f"{plot_id}-suggestions-loading-indicator",
-                    cls="htmx-indicator"
-                ),
-                cls="flex flex-col items-center"
-            ),
-            cls="flex justify-center"
-        )
+        suggestions_button = create_suggestions_button(plot_id, title)
     
     return fh.Card(
         fh.Div(
@@ -95,6 +73,28 @@ def metric_card(
         id=f"{plot_id}-container"
     )
 
+def create_suggestions_button(plot_id: str, title: str):
+    return fh.Div(
+            fh.Div(
+                fh.Button(
+                    "Get Suggestions",
+                    cls="btn btn-sm btn-neutral outline outline-1 outline-base-content mt-4 rounded-md font-light text-xs",
+                    hx_post=f"/get_nutrient_suggestions/{title.lower()}",
+                    hx_target=f"#{plot_id}-suggestions",
+                    hx_indicator=f"#{plot_id}-suggestions-loading-indicator"
+                ),
+                fh.Div(
+                    fh.Span(
+                        cls="loading loading-dots loading-md mt-2"
+                    ),
+                    id=f"{plot_id}-suggestions-loading-indicator",
+                    cls="htmx-indicator"
+                ),
+                cls="flex flex-col items-center"
+            ),
+            cls="flex justify-center"
+        )
+
 def create_meal_prompt_form(
     title: str,
     textarea_label: str,
@@ -114,7 +114,7 @@ def create_meal_prompt_form(
             *header_buttons,
             cls="flex justify-between items-center"
         )
-    
+    textarea_name = "meal_description" if "analyze" in hx_post_url else "feedback"
     return fh.Card(
         fh.Div(
             fh.Header(
@@ -127,27 +127,8 @@ def create_meal_prompt_form(
                 hx_swap="outerHTML",
                 cls="space-y-4"
             )(
-                fh.Div(
-                    fh.Label(textarea_label, cls="label text-base-content"),
-                    fh.Textarea(
-                        name="meal_description" if "analyze" in hx_post_url else "feedback",
-                        placeholder=textarea_placeholder,
-                        rows=rows,
-                        cls="textarea textarea-bordered w-full bg-base-200 outline text-base-content placeholder-slate-400"
-                    ),
-                    cls="form-control"
-                ),
-                fh.Div(
-                    fh.Label("Meal Time", cls="label text-base-content"),
-                    fh.Input(
-                        type="time",
-                        name="meal_time",
-                        value=datetime.now().strftime("%H:%M"),
-                        required=True,
-                        cls="input input-bordered w-full bg-base-200 text-base-content"
-                    ),
-                    cls="form-control"
-                ) if "analyze" in hx_post_url else None,
+                text_area(textarea_label, textarea_placeholder, rows, textarea_name),
+                time_input("meal_time", "Meal Time") if "analyze" in hx_post_url else None,
                 *(extra_fields or []),
                 fh.Button(
                     submit_text,
@@ -158,6 +139,18 @@ def create_meal_prompt_form(
             cls="p-6"
         ),
         cls="bg-base-200 outline outline-1 outline-base-content rounded-lg mt-12 shadow-none "
+    )
+
+def text_area(textarea_label: str, textarea_placeholder: str, rows: int, name: str):
+    return fh.Div(
+        fh.Label(textarea_label, cls="label text-base-content"),
+        fh.Textarea(
+            name=name,
+            placeholder=textarea_placeholder,
+            rows=rows,
+            cls="textarea textarea-bordered w-full bg-base-200 outline text-base-content placeholder-slate-400"
+        ),
+        cls="form-control"
     )
 
 def create_text_input_form(is_feedback: bool = False, original_description: str = None, date: str | None = None, original_breakdown: MealBreakdown | None = None):
@@ -231,26 +224,13 @@ def create_image_upload_form():
                     ),
                     cls="form-control"
                 ),
-                fh.Div(
-                    fh.Label("Additional Context", cls="label text-base-content"),
-                    fh.Textarea(
-                        name="additional_context",
-                        placeholder="Example: The sandwich in the image contains a fried chicken patty, not a grilled one",
-                        cls="textarea textarea-bordered w-full bg-base-200 text-base-content"
-                    ),
-                    cls="form-control"
+                text_area(
+                    "Additional Context",
+                    "Example: The sandwich in the image contains a fried chicken patty, not a grilled one",
+                    3,
+                    "additional_context"
                 ),
-                fh.Div(
-                    fh.Label("Meal Time", cls="label text-base-content"),
-                    fh.Input(
-                        type="time",
-                        name="meal_time",
-                        value=datetime.now().strftime("%H:%M"),
-                        required=True,
-                        cls="input input-bordered w-full bg-base-200 text-base-content"
-                    ),
-                    cls="form-control"
-                ),
+                time_input("meal_time", "Meal Time"),
                 fh.Button(
                     "Upload & Analyze",
                     type="submit",
@@ -426,17 +406,7 @@ def water_tracking_modal(date: datetime | None = None):
                             ),
                             cls="form-control"
                         ),
-                        fh.Div(
-                            fh.Label("Time", cls="label text-base-content"),
-                            fh.Input(
-                                type="time",
-                                name="time_consumed",
-                                value=datetime.now().strftime("%H:%M"),
-                                required=True,
-                                cls="input input-bordered w-full bg-base-200 text-base-content"
-                            ),
-                            cls="form-control"
-                        ),
+                        time_input("time_consumed", "Time Consumed"),
                         fh.Button(
                             "Log Water",
                             type="submit",
@@ -461,6 +431,19 @@ def water_tracking_modal(date: datetime | None = None):
                 document.getElementById('water-modal').close();
             }
         """)
+    )
+
+def time_input(name: str, label: str):
+    return fh.Div(
+        fh.Label(label, cls="label text-base-content"),
+        fh.Input(
+            type="time",
+            name=name,
+            value=datetime.now().strftime("%H:%M"),
+            required=True,
+            cls="input input-bordered w-full bg-base-200 text-base-content"
+        ),
+        cls="form-control"
     )
 
 def create_page_header(current_view: str, date: datetime.date = None):
@@ -757,17 +740,7 @@ def supplement_modal(date: datetime.date):
                             id="supplement-select",
                             cls="form-control"
                         ),
-                        fh.Div(
-                            fh.Label("Time Consumed", cls="label text-base-content"),
-                            fh.Input(
-                                type="time",
-                                name="time_consumed",
-                                value=datetime.now().strftime("%H:%M"),
-                                required=True,
-                                cls="input input-bordered w-full bg-base-200 text-base-content"
-                            ),
-                            cls="form-control"
-                        ),
+                        time_input("time_consumed", "Time Consumed"),
                         fh.Div(
                             fh.Label("Servings", cls="label text-base-content"),
                             fh.Input(
@@ -820,17 +793,7 @@ def supplement_modal(date: datetime.date):
                             hx_target="#save-supplement-result",
                             cls="w-[90%] mx-auto"
                         )(
-                            fh.Div(
-                                fh.Label("Time Taken", cls="label text-base-content"),
-                                fh.Input(
-                                    type="time",
-                                    name="time_consumed",
-                                    value=datetime.now().strftime("%H:%M"),
-                                    required=True,
-                                    cls="input input-bordered w-full bg-base-200 text-base-content"
-                                ),
-                                cls="form-control mb-4"
-                            ),
+                            time_input("time_consumed", "Time Taken"),
                             create_nutrition_card(None, title_field="Supplement Name", card_title="Supplement Information"),
                             fh.Button(
                                 "Save Supplement",
@@ -869,7 +832,6 @@ def supplement_modal(date: datetime.date):
 def create_meals_list(user_id, date: datetime.date):
     """Create an expandable list of meals for the given date"""
     meals = database_service.get_daily_meals(date, user_id)
-    
     if not meals:
         content = fh.P("No meals logged for this day", cls="text-base-content text-center")
     else:
@@ -948,4 +910,13 @@ def overview_text(analysis: NutritionFeedback):
             cls="p-4 space-y-2 mt-2"
         ),
         cls="bg-base-200 outline outline-1 outline-base-content rounded-lg mt-8"
+    )
+
+def analysis_card(analysis: str):
+    return fh.Card(
+        fh.Div(
+            fh.P(analysis, cls="text-base-content"),
+            cls="p-4 space-y-2"
+        ),
+        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
     )

@@ -271,7 +271,7 @@ async def get_supplements(session):
             ) for name in supplements
         ],
         name="supplement_name",
-        cls="select select-bordered w-full bg-base-200 text-primary-content",
+        cls="select select-bordered w-full bg-base-200 text-base-content",
         required=True
     )
 
@@ -290,7 +290,6 @@ async def log_supplement_consumption(session, request: fh.Request, date: str | N
             nutritional_info=supplement_info,
             user_id=user_id
         )
-        
         return fh.Div(
             fh.P(
                 "Supplement logged successfully!",
@@ -333,7 +332,7 @@ async def generate_weekly_overview(session):
     analysis = generate_overview(session, None, weekly=True)
 
     if isinstance(analysis, str):
-        return fh.P(analysis, cls="text-primary-content mt-2")
+        return fh.P(analysis, cls="text-base-content mt-2")
     
     return ui.overview_text(analysis)
 
@@ -346,7 +345,7 @@ async def generate_daily_overview(session, date: str | None = None):
     try:
         analysis = generate_overview(session, date, weekly=False)
     except assistants.NoMealsLoggedError as e:
-        return fh.P(str(e), cls="text-primary-content mt-2")
+        return fh.P(str(e), cls="text-base-content mt-2")
         
     return ui.overview_text(analysis)
 
@@ -397,14 +396,14 @@ async def get_nutrient_suggestions(session, nutrient: str):
     ).content[0].parsed
 
     return fh.Div(
-        fh.H4("Suggestions", cls="text-lg font-bold mb-1 text-primary-content text-center"),
+        fh.H4("Suggestions", cls="text-lg font-bold mb-1 text-base-content text-center"),
         fh.Div(
             fh.Ul(
                 *[
                     fh.Li(
                         fh.Div(
-                            fh.P(meal.title, cls="font-medium text-primary-content text-sm text-center font-bold mb-1"),
-                            fh.P(meal.ingredients, cls="text-primary-content text-xs text-center"),
+                            fh.P(meal.title, cls="font-medium text-base-content text-sm text-center font-bold mb-1"),
+                            fh.P(meal.ingredients, cls="text-base-content text-xs text-center"),
                             cls="mb-3"
                         ),
                         cls="list-none"
@@ -412,7 +411,7 @@ async def get_nutrient_suggestions(session, nutrient: str):
                 ],
                 cls="list-none p-0"
             ),
-            cls="outline outline-1 outline-primary-content rounded-lg p-4 max-h-[200px] overflow-y-auto mt-3"
+            cls="outline outline-1 outline-base-content rounded-lg p-4 max-h-[200px] overflow-y-auto mt-3"
         ),
         cls="bg-base-200 p-4 rounded-lg"
     )
