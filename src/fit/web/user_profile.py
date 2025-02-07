@@ -15,7 +15,7 @@ def create_editable_input(name: str, value: str, input_type: str = "text", place
                 placeholder=placeholder,
                 required=required,
                 readonly=bool(value), 
-                cls="input input-bordered w-full bg-base-200 text-primary-content focus:bg-base-200 focus:text-primary-content"
+                cls="input input-bordered w-full bg-base-200 text-base-content focus:bg-base-200 focus:text-base-content"
             ),
             cls="w-11/12" 
         ),
@@ -32,7 +32,7 @@ def create_basic_info_card(user_data):
     """Create the basic information card section"""
     return fh.Card(
         fh.Header(
-            fh.H3("Basic Information", cls="text-xl font-bold text-center mb-2 text-primary-content"),
+            fh.H3("Basic Information", cls="text-xl text-center mb-2 text-base-content"),
             cls="mb-6 bg-base-200"
         ),
         fh.Div(
@@ -53,7 +53,7 @@ def create_basic_info_card(user_data):
                 fh.Option("Female", value="female", selected=user_data.get("gender") == "female"),
                 name="gender",
                 required=True,
-                cls="select select-bordered w-full bg-base-200 text-primary-content"
+                cls="select select-bordered w-full bg-base-200 text-base-content"
             )),
             create_form_row("Date of Birth", create_editable_input(
                 "date_of_birth",
@@ -63,14 +63,14 @@ def create_basic_info_card(user_data):
             )),
             cls="space-y-4"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6 mb-8"
+        cls="bg-base-200 outline outline-1 outline-base-content rounded-lg p-6 mb-8 shadow-none"
     )
 
 def create_dietary_restrictions_card(restrictions, hx_target="restrictions-list"):
     """Create the dietary restrictions card section"""
     return fh.Card(
         fh.Header(
-            fh.H3("Dietary Restrictions", cls="text-xl font-bold text-center mb-2 text-primary-content"),
+            fh.H3("Dietary Restrictions", cls="text-xl text-center mb-2 text-base-content"),
             cls="mb-6 bg-base-200"
         ),
         fh.Div(
@@ -87,7 +87,7 @@ def create_dietary_restrictions_card(restrictions, hx_target="restrictions-list"
                     name="dietary_restrictions",
                     hx_post="/add_restriction",
                     hx_target=f"#{hx_target}",
-                    cls="select select-bordered w-full bg-base-200 text-primary-content mb-4"
+                    cls="select select-bordered w-full bg-base-200 text-base-content mb-4"
                 ),
                 fh.Div(
                     *[
@@ -122,14 +122,14 @@ def create_dietary_restrictions_card(restrictions, hx_target="restrictions-list"
             )),
             cls="space-y-4"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6 mb-8"
+        cls="bg-base-200 outline outline-1 outline-base-content rounded-lg p-6 mb-8 shadow-none"
     )
 
 def create_preferences_card(user_data):
     """Create the preferences card section"""
     return fh.Card(
         fh.Header(
-            fh.H3("Preferences", cls="text-xl font-bold text-center mb-2 text-primary-content"),
+            fh.H3("Preferences", cls="text-xl text-center mb-2 text-base-content"),
             cls="mb-6 bg-base-200"
         ),
         fh.Div(
@@ -137,11 +137,11 @@ def create_preferences_card(user_data):
                 fh.Option("Imperial (lbs, inches)", value="imperial", selected=user_data.get("units") == "imperial"),
                 fh.Option("Metric (kg, cm)", value="metric", selected=user_data.get("units") == "metric"),
                 name="units",
-                cls="select select-bordered w-full bg-base-200 text-primary-content"
+                cls="select select-bordered w-full bg-base-200 text-base-content"
             )),
             cls="space-y-4"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg p-6 mb-8"
+        cls="bg-base-200 outline outline-1 outline-base-content rounded-lg p-6 mb-8 shadow-none"
     )
 
 def get(session):
@@ -157,7 +157,7 @@ def get(session):
         fh.Div(
             fh.Card(
                 fh.Header(
-                    fh.H3("User Profile", cls="text-2xl font-bold text-center mb-2 text-primary-content"),
+                    fh.H3("User Profile", cls="text-2xl text-center mb-2 text-base-content"),
                     cls="mb-6 bg-base-200"
                 ),
                 fh.Form(
@@ -175,7 +175,7 @@ def get(session):
                     ),
                     fh.Div(id="profile-result")
                 ),
-                cls="bg-base-200 shadow-lg rounded-lg p-6 mb-8"
+                cls="bg-base-200 shadow-none rounded-lg p-6 mb-8"
             ),
             cls="max-w-2xl mx-auto p-6 space-y-6"
         ),
@@ -187,7 +187,7 @@ def get(session):
 def create_form_row(label: str, input_element):
     """Create a form row with label on the left and input on the right"""
     return fh.Div(
-        fh.Label(label, cls="text-primary-content w-1/3 h-12 flex items-center"),
+        fh.Label(label, cls="text-base-content w-1/3 h-12 flex items-center"),
         fh.Div(input_element, cls="w-2/3"),
         cls="flex gap-4"
     )
@@ -197,11 +197,11 @@ def create_form_row(label: str, input_element):
 def create_login_input_section(label: str, name: str, input_type: str = "text", **input_props):
     """Create a form input section with label and input, styled for login forms"""
     return fh.Div(
-        fh.Label(label, cls="label text-primary-content"),
+        fh.Label(label, cls="label text-base-content"),
         fh.Input(
             type=input_type,
             name=name,
-            cls="input input-bordered w-full bg-base-200 outline outline-1 outline-primary-content text-primary-content placeholder-primary-content placeholder-opacity-50",
+            cls="input input-bordered w-full bg-base-200 outline outline-1 outline-primary-content text-base-content placeholder-primary-content placeholder-opacity-50",
             required=True,
             **input_props
         ),

@@ -15,7 +15,7 @@ def get(session):
         fh.Div(
             fh.Card(
                 fh.Header(
-                    fh.H3("Your Progress", cls="text-2xl font-bold text-center mb-2 text-primary-content"),
+                    fh.H3("Your Progress", cls="text-2xl font-bold text-center mb-2 text-base-content"),
                     fh.P(
                         "Track your weight changes over time",
                         cls="text-slate-400 text-center"
@@ -38,7 +38,7 @@ def get(session):
                 ),
                 fh.Div(
                     fh.Div(
-                        fh.H3("Statistics", cls="text-2xl font-semibold mb-4 text-primary-content text-center"),
+                        fh.H3("Statistics", cls="text-2xl font-semibold mb-4 text-base-content text-center"),
                         create_stats_grid(measurements),
                     ),
                     cls="mt-8"
@@ -48,7 +48,7 @@ def get(session):
             fh.Div(
                 fh.Button(
                     fh.Span("+", cls="text-2xl"),
-                    cls="btn btn-circle btn-primary",
+                    cls="btn btn-circle btn-neutral",
                     onclick="openMeasurementsModal()"
                 ),
                 cls="fixed bottom-8 right-8"
@@ -88,7 +88,7 @@ def create_weight_form(session):
         fh.Button(
             "Update Weight",
             type="submit",
-            cls="btn btn-primary w-full"
+            cls="btn btn-neutral w-full"
         ),
         fh.Div(id="weight-result")
     )
@@ -102,7 +102,7 @@ def create_height_form():
         cls="space-y-4"
     )(
         fh.Div(
-            fh.Label("Height", cls="label text-primary-content"),
+            fh.Label("Height", cls="label text-base-content"),
             fh.Div(
                 create_measurement_input_section("Feet", "height_feet", "w-24", step="1", min="0", max="9", placeholder="ft", value=str(feet)),
                 create_measurement_input_section("Inches", "height_inches", "w-24", min="0", max="11", placeholder="in", value=str(inches)),
@@ -112,7 +112,7 @@ def create_height_form():
         fh.Button(
             "Update Height",
             type="submit",
-            cls="btn btn-primary w-full"
+            cls="btn btn-neutral w-full"
         ),
         fh.Div(id="height-result")
     )
@@ -120,11 +120,11 @@ def create_height_form():
 def create_measurement_input_section(label: str, name: str, width: str = "w-full", **input_props):
     """Create a form input section with label and input"""
     return fh.Div(
-        fh.Label(label, cls="label text-primary-content"),
+        fh.Label(label, cls="label text-base-content"),
         fh.Input(
             type="number",
             name=name,
-            cls=f"input input-bordered {width} bg-base-200 text-primary-content placeholder-slate-400",
+            cls=f"input input-bordered {width} bg-base-200 text-base-content placeholder-slate-400",
             **input_props
         ),
         cls="form-control"
@@ -185,19 +185,19 @@ def create_stats_grid(measurements: list[tuple[str, float]]):
 def create_stats_card(title: str, value: str):
     """Create a card displaying a statistic with title and value"""
     return fh.Card(
-        fh.H5(title, cls="text-sm text-primary-content"),
+        fh.H5(title, cls="text-sm text-base-content"),
         fh.P(
             value,
-            cls="text-lg font-bold text-secondary-content"
+            cls="text-lg font-bold text-base-content"
         ),
-        cls="p-4 text-center bg-base-300"
+        cls="p-4 text-center bg-base-300 shadow-none"
     ) 
 
 def create_progress_modal_card(title: str, create_fn, modal_id: str):
     """Create a modal card"""
     return (
         fh.Card(
-            fh.Header(fh.H3(title, cls="text-xl font-bold mb-4 text-primary-content")),
+            fh.Header(fh.H3(title, cls="text-xl font-bold mb-4 text-base-content")),
             create_fn(),
             cls="bg-base-200 shadow-lg rounded-lg"
         ),
@@ -212,21 +212,21 @@ def create_goal_form():
         cls="space-y-4"
     )(
         fh.Div(
-            fh.Label("Fitness Goal", cls="label text-primary-content"),
+            fh.Label("Fitness Goal", cls="label text-base-content"),
             fh.Select(
                 *[
                     fh.Option(goal.value.title(), value=goal.value)
                     for goal in WeightGoal
                 ],
                 name="fitness_goal",
-                cls="select select-bordered w-full bg-base-200 text-primary-content"
+                cls="select select-bordered w-full bg-base-200 text-base-content"
             ),
             cls="form-control"
         ),
         fh.Button(
             "Update Goal",
             type="submit",
-            cls="btn btn-primary w-full"
+            cls="btn btn-neutral w-full"
         ),
         fh.Div(id="goal-result")
     )
@@ -240,18 +240,18 @@ def measurements_modal(user_id: int):
                 fh.Div(
                     fh.Button(
                         "×",
-                        cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                        cls="absolute right-4 top-4 text-xl font-light text-base-content hover:text-base-content focus:outline-none focus:ring-0 border-none outline-none",
                         onclick="closeMeasurementsModal()",
                         style="outline: none; box-shadow: none;"
                     ),
-                    fh.H3("Update Measurements", cls="text-xl font-bold text-center mt-4 mb-8 text-primary-content"),
+                    fh.H3("Update Measurements", cls="text-xl font-bold text-center mt-4 mb-8 text-base-content"),
                     fh.Form(
                         hx_post="/update_measurements",
                         hx_target="#measurements-result",
                         cls="w-[90%] mx-auto space-y-6"
                     )(
                         fh.Div(
-                            fh.Label("Weight (lbs)", cls="label text-primary-content"),
+                            fh.Label("Weight (lbs)", cls="label text-base-content"),
                             fh.Input(
                                 type="number",
                                 name="weight",
@@ -260,15 +260,15 @@ def measurements_modal(user_id: int):
                                 required=True,
                                 placeholder="Enter your weight",
                                 value=str(weight),
-                                cls="input input-bordered w-full bg-base-200 text-primary-content"
+                                cls="input input-bordered w-full bg-base-200 text-base-content"
                             ),
                             cls="form-control"
                         ),
                         fh.Div(
-                            fh.Label("Height", cls="label text-primary-content"),
+                            fh.Label("Height", cls="label text-base-content"),
                             fh.Div(
                                 fh.Div(
-                                    fh.Label("Feet", cls="label text-primary-content"),
+                                    fh.Label("Feet", cls="label text-base-content"),
                                     fh.Input(
                                         type="number",
                                         name="height_feet",
@@ -277,12 +277,12 @@ def measurements_modal(user_id: int):
                                         max="9",
                                         placeholder="ft",
                                         value=str(feet),
-                                        cls="input input-bordered w-full bg-base-200 text-primary-content"
+                                        cls="input input-bordered w-full bg-base-200 text-base-content"
                                     ),
                                     cls="form-control"
                                 ),
                                 fh.Div(
-                                    fh.Label("Inches", cls="label text-primary-content"),
+                                    fh.Label("Inches", cls="label text-base-content"),
                                     fh.Input(
                                         type="number",
                                         name="height_inches",
@@ -290,7 +290,7 @@ def measurements_modal(user_id: int):
                                         max="11",
                                         placeholder="in",
                                         value=str(inches),
-                                        cls="input input-bordered w-full bg-base-200 text-primary-content"
+                                        cls="input input-bordered w-full bg-base-200 text-base-content"
                                     ),
                                     cls="form-control"
                                 ),
@@ -301,7 +301,7 @@ def measurements_modal(user_id: int):
                         fh.Button(
                             "Save Measurements",
                             type="submit",
-                            cls="btn btn-primary w-full mt-6"
+                            cls="btn btn-neutral w-full mt-6"
                         ),
                         fh.Div(id="measurements-result", cls="mt-4"),
                         cls="mx-8"

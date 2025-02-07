@@ -23,7 +23,7 @@ def get(session):
 
     content = fh.Div(
             fh.Card(
-                fh.H3("Performance Overview", cls="text-2xl font-bold text-center mb-2 text-primary-content"),
+                fh.H3("Performance Overview", cls="text-2xl font-bold text-center mb-2 text-base-content"),
                 fh.P(
                     "Track your athletic performance and training",
                     cls="text-slate-400 text-center"
@@ -33,7 +33,7 @@ def get(session):
                 fh.Div(
                     get_performance_metrics_section(tracker)
                 ),
-                cls="bg-black shadow-lg rounded-lg p-6"
+                cls="bg-base-100 shadow-none rounded-lg p-6"
             ),
             # Add FAB menu
             create_fab_menu(fab_buttons),
@@ -45,11 +45,11 @@ def get(session):
 def performance_card(title: str, value: str):
     return fh.Card(
         fh.Div(
-            fh.H4(title, cls="text-lg font-semibold text-primary-content mb-4 text-center"),
-            fh.P(value, cls="text-4xl font-bold text-secondary-content text-center"),
+            fh.H4(title, cls="text-lg font-semibold text-base-content mb-4 text-center"),
+            fh.P(value, cls="text-4xl font-bold text-base-content text-center"),
             cls="p-6 flex flex-col"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg"
+        cls="bg-base-200 outline outline-1 outline-base-content rounded-lg shadow-none"
     )
 
 def get_performance_metrics_section(tracker: FitnessTracker):
@@ -58,7 +58,7 @@ def get_performance_metrics_section(tracker: FitnessTracker):
     return fh.Div(
         # Cycle Metrics Grid
         fh.Div(
-            fh.H3("Today's Overview", cls="text-xl font-bold text-primary-content mb-6 text-center"),
+            fh.H3("Today's Overview", cls="text-xl font-bold text-base-content mb-6 text-center"),
             fh.Div(
                 performance_card("Strain", f"{daily_stats['strain']:.2f}") if isinstance(tracker, Whoop) else None,
                 performance_card("Calories", f"{int(daily_stats['calories'])}"),
@@ -69,8 +69,8 @@ def get_performance_metrics_section(tracker: FitnessTracker):
             cls="mb-8"
         ),
         fh.Div(
-            fh.H3("Today's Workouts", cls="text-xl font-bold text-primary-content mb-6 text-center"),
-            create_workout_cards(workouts) if workouts else fh.P("No workouts recorded today", cls="text-primary-content text-center italic"),
+            fh.H3("Today's Workouts", cls="text-xl font-bold text-base-content mb-6 text-center"),
+            create_workout_cards(workouts) if workouts else fh.P("No workouts recorded today", cls="text-base-content text-center italic"),
             cls="mb-8"
         ),
         cls="p-6"
@@ -104,7 +104,7 @@ def create_workout_cards(workouts: list[dict]) -> fh.Div:
         *[
             fh.Div(
                 fh.Div(
-                    fh.H4(workout["sport"], cls="text-lg font-semibold text-primary-content"),
+                    fh.H4(workout["sport"], cls="text-lg font-semibold text-base-content"),
                     cls="collapse-title"
                 ),
                 fh.Div(
@@ -145,7 +145,7 @@ async def generate_overview(session):
         )
         return fh.Card(
             fh.Div(
-                fh.P(analysis, cls="text-primary-content"),
+                fh.P(analysis, cls="text-base-content"),
                 cls="p-4 space-y-2"
             ),
             cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"

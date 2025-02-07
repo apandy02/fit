@@ -152,16 +152,7 @@ async def generate_inventory_additions(session, request: fh.Request):
         grocery_cards = []
         for item in grocery_list.items:
             grocery_cards.append(
-                fh.Card(
-                    fh.Div(
-                        fh.H2(item.name.capitalize(), cls="card-title justify-center text-lg mb-2 text-primary-content"),
-                        fh.P(f"Category: {item.category}", cls="text-center text-primary-content text-sm"),
-                        fh.P(f"Quantity: {item.quantity} {item.unit}", cls="text-center text-primary-content text-sm"),
-                        fh.P(f"{item.value}", cls="text-center text-primary-content text-sm mt-2"),
-                        cls="card-body items-center text-center py-4 px-4"
-                    ),
-                    cls="card bg-base-200 shadow-xl rounded-xl outline outline-1 outline-primary-content mt-4 max-w-[250px]"
-                )
+                ui.grocery_suggestion_card(item)
             )
         
         return fh.Div(

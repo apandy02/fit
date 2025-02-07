@@ -1,4 +1,5 @@
 import fasthtml.common as fh
+
 from fit.nutrition.data_models import KitchenInventory, KitchenItem
 from fit.web.common import create_text_form_input, create_text_generation_card
 from fit.web.kitchen.constants import INVENTORY_CATEGORIES, INVENTORY_UNITS
@@ -72,21 +73,21 @@ def create_item_card(item: tuple):
     return fh.Card(
         fh.Button(
             "×",
-            cls="absolute top-2 right-2 flex items-center justify-center h-8 w-8 hover:bg-base-300 focus:bg-base-300 rounded-lg bg-base-400 border-none outline-none text-primary-content text-xl font-light",
+            cls="absolute top-2 right-2 flex items-center justify-center h-8 w-8 hover:bg-base-300 focus:bg-base-300 rounded-lg bg-base-400 border-none outline-none text-base-content text-xl font-light",
             hx_post=f"/delete_inventory_item/{item['rowid']}",
             hx_target="closest .card",
             hx_swap="outerHTML"
         ),
         fh.Div(
-            fh.H2(item['title'], cls="card-title justify-center text-lg mb-2 text-primary-content"),
-            fh.P(f"Quantity: {item['quantity']} {item['unit']}", cls="text-center text-primary-content text-sm"),
+            fh.H2(item['title'], cls="card-title justify-center text-lg mb-2 text-base-content"),
+            fh.P(f"Quantity: {item['quantity']} {item['unit']}", cls="text-center text-base-content text-sm"),
             fh.Div(
-                fh.Button("Edit", cls="px-4 py-2 bg-base-200 hover:bg-base-100 rounded-lg text-primary-content text-sm outline outline-1 outline-primary-content"),
+                fh.Button("Edit", cls="px-4 py-2 bg-base-200 hover:bg-base-100 rounded-lg text-base-content text-sm outline outline-1 outline-base-content"),
                 cls="card-actions justify-center mt-3"
             ),
             cls="card-body items-center text-center py-4 px-4"
         ),
-        cls="card bg-base-300 shadow-xl rounded-xl outline outline-1 outline-primary-content mt-4 max-w-[250px] relative"
+        cls="card bg-base-300 shadow-xl rounded-xl outline outline-1 outline-base-content mt-4 max-w-[250px] relative"
     )
 
 
@@ -109,10 +110,10 @@ def create_text_input_form(
   
     return fh.Div(
         fh.Div(
-            fh.H3(title, cls="text-2xl font-bold text-primary-content inline-block"),
             *header_buttons,
-            cls="flex justify-between items-center mb-4"
+            cls="flex justify-between items-center mb-4 mt-4"
         ),
+        fh.H3(title, cls="text-xl text-center mb-4 mt-4 text-base-content"),
         fh.Form(
             hx_post=hx_post_url,
             hx_target=hx_target,
@@ -120,19 +121,18 @@ def create_text_input_form(
             cls="space-y-4 w-[90%] mx-auto"
         )(
             fh.Div(
-                fh.Label(textarea_label, cls="label text-lg text-primary-content mb-1"),
                 fh.Textarea(
                     name="items_description",
                     placeholder=textarea_placeholder,
                     rows=rows,
-                    cls="textarea textarea-bordered w-full bg-base-200 text-primary-content text-lg"
+                    cls="textarea textarea-bordered w-full bg-base-200 text-base-content text-md"
                 ),
                 cls="form-control"
             ),
             fh.Button(
                 submit_text,
                 type="submit",
-                cls="btn btn-primary w-full text-lg mt-2"
+                cls="btn btn-neutral text-lg font-light w-full mt-2"
             )
         ),
         cls="w-full mx-auto px-4 py-2"
@@ -142,7 +142,7 @@ def create_text_input_form(
 def create_image_upload_form():
     """Create a form for uploading images of kitchen items"""
     return fh.Div(
-        fh.H3("Upload Image", cls="text-2xl font-bold text-primary-content mb-8"),
+        fh.H3("Upload Image", cls="text-2xl text-base-content mb-8"),
         fh.Form(
             hx_post="/analyze_kitchen_image",  # This endpoint will be implemented later
             hx_target="#image-input",
@@ -150,23 +150,23 @@ def create_image_upload_form():
             cls="space-y-6 w-[90%] mx-auto"
         )(
             fh.Div(
-                fh.Label("Upload a photo of your kitchen items", cls="label text-lg text-primary-content mb-2"),
+                fh.Label("Upload a photo of your kitchen items", cls="label text-lg text-neutral mb-2"),
                 fh.Input(
                     type="file",
                     name="kitchen_image",
                     accept="image/*",
                     required=True,
-                    cls="file-input file-input-bordered w-full bg-base-200 text-primary-content text-lg"
+                    cls="file-input file-input-bordered w-full bg-base-200 text-neutral text-lg"
                 ),
                 cls="form-control"
             ),
             fh.Div(
-                fh.Label("Additional Context (optional)", cls="label text-lg text-primary-content mb-2"),
+                fh.Label("Additional Context (optional)", cls="label text-lg text-neutral mb-2"),
                 fh.Textarea(
                     name="additional_context",
                     placeholder="Add any additional details about the items in the image (e.g., quantities, brands)",
                     rows=2,
-                    cls="textarea textarea-bordered w-full bg-base-200 text-primary-content text-lg"
+                    cls="textarea textarea-bordered w-full bg-base-200 text-neutral text-lg"
                 ),
                 cls="form-control"
             ),
@@ -180,6 +180,22 @@ def create_image_upload_form():
         cls="w-[600px] mx-auto px-8 py-6"
     )
 
+def navigation_buttons(onclick_back: str, onclick_close: str):
+    return (
+        fh.Button(
+        "←",
+        cls="absolute left-4 top-4 text-xl font-light text-base-content hover:text-neutral focus:outline-none focus:ring-0 border-none outline-none",
+        onclick=onclick_back,
+        style="outline: none; box-shadow: none;"
+    ),
+    fh.Button(
+        "×",
+        cls="absolute right-4 top-4 text-xl font-light text-base-content hover:text-neutral focus:outline-none focus:ring-0 border-none outline-none",
+        onclick=onclick_close,
+            style="outline: none; box-shadow: none;"
+        )
+    )
+
 
 def create_add_items_modal():
     """Create the modal for adding kitchen items"""
@@ -191,7 +207,7 @@ def create_add_items_modal():
                     fh.Div(
                         fh.Button(
                             "×",
-                            cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                            cls="absolute right-4 top-4 text-xl font-light text-base-content hover:text-neutral focus:outline-none focus:ring-0 border-none outline-none",
                             onclick="closeKitchenModal()",
                             style="outline: none; box-shadow: none;"
                         ),
@@ -216,26 +232,26 @@ def create_add_items_modal():
                     fh.Div(
                         fh.Button(
                             "←",
-                            cls="absolute left-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                            cls="absolute left-4 top-4 text-xl font-light text-base-content hover:text-neutral focus:outline-none focus:ring-0 border-none outline-none",
                             onclick="showMainView()",
                             style="outline: none; box-shadow: none;"
                         ),
                         fh.Button(
                             "×",
-                            cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                            cls="absolute right-4 top-4 text-xl font-light text-base-content hover:text-neutral focus:outline-none focus:ring-0 border-none outline-none",
                             onclick="closeKitchenModal()",
                             style="outline: none; box-shadow: none;"
                         ),
-                        fh.H3("Add Multiple Items", cls="text-xl font-bold text-center mt-4 mb-8 text-primary-content"),
+                        fh.H3("Add Multiple Items", cls="text-xl text-center mt-4 mb-8 text-base-content font-light"),
                         fh.Div(
                             fh.Button(
                                 "List Items",
-                                cls="btn btn-primary w-full mb-4",
+                                cls="btn btn-neutral text-lg font-light w-full mb-4 rounded-xl",
                                 onclick="showDescribeView()"
                             ),
                             fh.Button(
                                 "Upload a Picture",
-                                cls="btn btn-primary w-full",
+                                cls="btn btn-neutral text-lg font-light w-full rounded-xl",
                                 onclick="showImageView()"
                             ),
                             cls="space-y-4 mx-8"
@@ -245,18 +261,7 @@ def create_add_items_modal():
                     ),
                     # Describe Items View
                     fh.Div(
-                        fh.Button(
-                            "←",
-                            cls="absolute left-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
-                            onclick="showBulkView()",
-                            style="outline: none; box-shadow: none;"
-                        ),
-                        fh.Button(
-                            "×",
-                            cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
-                            onclick="closeKitchenModal()",
-                            style="outline: none; box-shadow: none;"
-                        ),
+                        *navigation_buttons(onclick_back="showBulkView()", onclick_close="closeKitchenModal()"),
                         create_text_input_form(
                             title="List Your Items",
                             textarea_label="Items List",
@@ -271,25 +276,14 @@ def create_add_items_modal():
                     ),
                     # Image Upload View
                     fh.Div(
-                        fh.Button(
-                            "←",
-                            cls="absolute left-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
-                            onclick="showBulkView()",
-                            style="outline: none; box-shadow: none;"
-                        ),
-                        fh.Button(
-                            "×",
-                            cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
-                            onclick="closeKitchenModal()",
-                            style="outline: none; box-shadow: none;"
-                        ),
+                        *navigation_buttons(onclick_back="showBulkView()", onclick_close="closeKitchenModal()"),
                         create_image_upload_form(),
                         cls="p-6 hidden",
                         id="image-view"
                     ),
                     cls="relative overflow-y-auto max-h-[80vh]"
                 ),
-                cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg relative w-full max-w-lg"
+                cls="bg-base-200 outline outline-1 outline-base-content rounded-lg relative w-full max-w-lg"
             ),
             id="kitchen-modal",
             cls="modal modal-middle"
@@ -378,7 +372,7 @@ def create_editable_inventory_card(inventory: KitchenItem, index: int):
     return fh.Card(
         fh.Button(
             "×",
-            cls="absolute right-2 top-2 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+            cls="absolute right-2 top-2 text-xl font-light text-neutral hover:text-neutral focus:outline-none focus:ring-0 border-none outline-none",
             onclick=f"removeInventoryItem({index})",
             style="outline: none; box-shadow: none;"
         ),
@@ -386,7 +380,7 @@ def create_editable_inventory_card(inventory: KitchenItem, index: int):
             create_item_form(inventory, index),
             cls="p-4"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg shadow-none mt-4 w-full relative",
+        cls="bg-base-200 outline outline-1 outline-base-content rounded-lg shadow-none mt-4 w-full relative",
         id=f"inventory-item-{index}"
     )
 
@@ -427,4 +421,17 @@ def create_item_form(item: KitchenItem, index: int):
         ),
         cls="space-y-4",
         id="describe-view"
+    )
+
+def grocery_suggestion_card(item: KitchenItem):
+    """Create a card for a grocery suggestion"""
+    return fh.Card(
+        fh.Div(
+            fh.H2(item.name.capitalize(), cls="card-title justify-center text-lg mb-2 text-base-content"),
+            fh.P(f"Category: {item.category}", cls="text-center text-base-content text-sm"),
+            fh.P(f"Quantity: {item.quantity} {item.unit}", cls="text-center text-base-content text-sm"),
+            fh.P(f"{item.value}", cls="text-center text-base-content text-sm mt-2"),
+            cls="card-body items-center text-center py-4 px-4"
+        ),
+        cls="card bg-base-300 shadow-xl rounded-xl outline outline-1 outline-base-content mt-4 max-w-[250px]"
     )
