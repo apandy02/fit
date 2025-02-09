@@ -14,48 +14,26 @@ evals/
 
 ## Evals
 
-### Meal Breakdown eval
-Tests the accuracy of extracting nutritional information from meal descriptions:
-- Macro/micronutrient identification
-- Calorie consistency checking
-- Ingredient parsing accuracy
-- Unit and portion size accuracy
-
-Metrics:
-- `macro_calorie_consistency`: Validates caloric values match macronutrient totals
-- `ingredients_score`: Measures ingredient identification accuracy
-- `basic_accuracy`: Compares predicted vs reference nutrient values
-
-### Inventory Breakdown eval
-Tests parsing and categorization of kitchen inventory items:
-- Item name recognition
-- Unit and quantity parsing
-- Category classification
-- Inventory completeness
-
-Metrics:
-- `item_precision/recall`: Accuracy of item identification
-- `category_accuracy`: Correct categorization of items
-- `quantity_accuracy`: Accuracy of parsed quantities
-- `unit_accuracy`: Correct unit identification
-
-### Recommendation eval
-Tests meal recommendation quality and constraint satisfaction:
-- Target nutrient optimization
-- Overall nutritional balance
-- User preference alignment
-- Dietary restriction compliance
-
-Metrics:
-- `target_nutrient_accuracy`: Measures optimization of specified nutrients
-- `non_target_nutrient_accuracy`: Checks maintenance of other nutrient levels
-- `semantic_similarity`: Evaluates alignment with user preferences
+- **Meal Breakdown eval**: Tests the accuracy of extracting nutritional information from meal descriptions.
+- **Inventory Breakdown eval**: Tests parsing and categorization of kitchen inventory items.
+- **Recommendation eval**: Tests meal recommendation quality and constraint satisfaction.
+- **Inventory completeness eval**: Tests the completeness of the kitchen inventory. 
 
 ## Test Data
 
+Datasets for each eval are stored in the `data` directory. 
 - `kitchen.json`: Sample kitchen inventory descriptions with ground truth parsing
-- `meal_breakdowns.csv`: Meal descriptions with validated nutritional information
 - `recommendations.json`: Test cases for meal recommendations with user preferences and nutritional targets
+
+Results for evals are stored in `./logdir` for tracking performance over time. 
+
+We can use the ell-studio tool to visualize and better understand eval results. 
+
+Run ell studio as follows:
+
+```
+ell-studio --storage ./logdir
+```
 
 ## Running Evaluations
 
@@ -67,4 +45,4 @@ python -m fit.nutrition.evals.inventory_breakdown_eval
 python -m fit.nutrition.evals.recommendation_eval
 ```
 
-Results are stored in `./logdir` for tracking performance over time. 
+
