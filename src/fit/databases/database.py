@@ -223,9 +223,8 @@ class DatabaseService:
         Returns a list of tuples: (name, description, NutritionalInformation).
         """
         query = """
-            SELECT name, description, calories, protein, carbohydrates, fat, fiber, vitamin_a,
-                   vitamin_c, vitamin_d, calcium, iron, potassium, sodium
-            FROM supplements WHERE user_id = ?
+        SELECT name, description, calories, protein, carbohydrates, fat, fiber, vitamin_a,
+        vitamin_c, vitamin_d, calcium, iron, potassium, sodium FROM supplements WHERE user_id = ?
         """
         results = self._db.q(query, (user_id,))
         return [(row["name"], row["description"], self.__nutritional_info_from_row(row)) for row in results]
@@ -263,19 +262,16 @@ class DatabaseService:
         return self._db.execute(query, (user_id,)).fetchall()
 
     def get_latest_user_measurements(self, user_id: int) -> dict | None:
-        query = """
-            SELECT weight, height FROM measurements WHERE user_id = ? ORDER BY datetime DESC LIMIT 1
-        """
+        query = "SELECT weight, height FROM measurements WHERE user_id = ? ORDER BY datetime DESC LIMIT 1"
         result = self._db.q(query, (user_id,))
         return None if not result else {"weight": result[0]["weight"], "height": result[0]["height"]}
 
     def insert_user_measurements(self, height: float, weight: float, dt: datetime, user_id: int):
-        self._db.t.measurements.insert(
-            datetime=dt.isoformat(),
-            height=height,
-            weight=weight,
-            user_id=user_id
-        )
+        try:
+            self._db.t.measurements.insert(datetime=dt.isoformat(), height=height, weight=weight, user_id=user_id)
+        except Exception as e:
+            logging.error(f"Error inserting user measurements: {e}")
+            raise e
 
     def delete_meal(self, meal_id: int) -> bool:
         try:
@@ -347,13 +343,8 @@ class DatabaseService:
                 fat=dm.Fats(total=result["fat"], saturated=0, trans=0),
             ),
             micronutrients=dm.Micronutrients(
-                vitamin_a=result["vitamin_a"],
-                vitamin_c=result["vitamin_c"],
-                vitamin_d=result["vitamin_d"],
-                calcium=result["calcium"],
-                iron=result["iron"],
-                potassium=result["potassium"],
-                sodium=result["sodium"]
+                vitamin_a=result["vitamin_a"], vitamin_c=result["vitamin_c"], vitamin_d=result["vitamin_d"],
+                calcium=result["calcium"], iron=result["iron"], potassium=result["potassium"], sodium=result["sodium"]
             ),
             conditional_nutrients=dm.ConditionalNutrients(creatine=result["creatine"])
         )
