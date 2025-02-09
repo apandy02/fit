@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from fit.database import DatabaseService, KITCHEN_ITEM_CATEGORIES
+from fit.database import KITCHEN_ITEM_CATEGORIES, DatabaseService
 
 
 class TestDatabaseService(unittest.TestCase):

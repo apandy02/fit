@@ -2,10 +2,26 @@ import fasthtml.common as fh
 import fh_bootstrap as fhb
 from markdown import markdown
 
-from fit.database import DatabaseService
+from fit.databases.database import DatabaseService
+from fit.databases.dataclasses import (Inventory, Meal, Measurement, Profile,
+                                       Supplement, SupplementEntry, User,
+                                       Water)
 from fit.nutrition.targets import MICRO_GOALS
 
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
+
+
+tables = [
+    ("users", User, ["user_id"], "user_id"),
+    ("meals", Meal, ["rowid", "user_id"], "rowid"),
+    ("supplements", Supplement, ["name", "user_id"], "name"),
+    ("measurements", Measurement, ["uuid", "user_id"], "uuid"),
+    ("water", Water, ["uuid", "user_id"], "uuid"),
+    ("profile", Profile, ["user_id"], "user_id"),
+    ("inventory", Inventory, ["rowid", "user_id"], "rowid"),
+    ("supplement_entries", SupplementEntry, ["uuid", "user_id"], "uuid"),
+]
+
 
 database_service = DatabaseService("data/nutrition.db")
 micronutrient_goals = MICRO_GOALS["male"]
