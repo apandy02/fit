@@ -19,7 +19,7 @@ def create_profile_page(user_data):
             ),
         cls="p-6"
     )
-    return onboarding_page(form, "Profile")
+    return onboarding_page(form, "Profile", "Profile")
 
 def create_dietary_page(session):
     """Create the dietary page"""
@@ -35,7 +35,7 @@ def create_dietary_page(session):
         ),
         cls="p-6"
     )
-    return onboarding_page(form, "Dietary Restrictions")
+    return onboarding_page(form, "Dietary Restrictions", "Dietary Restrictions")
 
 def onboarding_page(form: fh.Form, page_title: str, header: str):
     content = fh.Article(
@@ -43,7 +43,7 @@ def onboarding_page(form: fh.Form, page_title: str, header: str):
             fh.Card(
                 fh.Div(
                     fh.Header(
-                        fh.H3(header, cls="text-2xl font-bold text-center mb-6 text-base-content"),
+                        fh.H3(header, cls="text-2xl text-center mb-6 text-base-content"),
                         cls="mb-6 bg-base-200"
                     ),
                     form,
@@ -79,26 +79,27 @@ def create_activity_page(session):
     )
     return onboarding_page(form, "Activity Level", header)
 
-def onboarding_form_option(title, description, value, is_last=False):
+def onboarding_form_option(title, description, form_name, value, is_last=False):
     return fh.Button(
         fh.Div(
-            fh.H4(title, cls="text-lg font-bold mb-2 text-base-content"),
-            fh.P(description, cls="text-sm"),
+            fh.H4(title, cls="text-lg mb-2 text-base-content"),
+            fh.P(description, cls="text-sm text-slate"),
             cls="text-center"
         ),
         type="submit",
-        name="activity_level", 
+        name=form_name, 
         value=value,
-        cls=f"btn btn-ghost outline outline-1 outline-primary-content w-full h-24{' mb-4' if not is_last else ''}"
+        cls=f"btn btn-ghost outline outline-1 outline-base-content w-full h-24{' mb-4' if not is_last else ''}"
     )
 
 def create_goals_page(session):
     """Create the goals page"""
     header = "What are your weight goals?"
+    form_name = "weight_goal"
     button_options = [
-        ("Lose", "I want to reduce my body weight", "lose"),
-        ("Maintain", "I want to maintain my current weight", "maintain"),
-        ("Gain", "I want to increase my body weight", "gain")
+        ("Lose", "I want to reduce my body weight", form_name, "lose"),
+        ("Maintain", "I want to maintain my current weight", form_name, "maintain"),
+        ("Gain", "I want to increase my body weight", form_name, "gain")
     ]
     form = fh.Form(
         hx_post="/onboarding/handle_goals_selection",
@@ -106,8 +107,8 @@ def create_goals_page(session):
     )(
         fh.Div(
             fh.Div(
-                *[onboarding_form_option(title, desc, val, i == len(button_options)-1) 
-                    for i, (title, desc, val) in enumerate(button_options)],
+                *[onboarding_form_option(title, desc, form_name, val, i == len(button_options)-1) 
+                    for i, (title, desc, form_name, val) in enumerate(button_options)],
                 cls="space-y-4"
             ),
             cls="mb-8"

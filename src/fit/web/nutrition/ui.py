@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 import fasthtml.common as fh
-
 import fit.nutrition.assistants as assistants
 import fit.web.nutrition.food_plots as food_plots
 from fit.nutrition.data_models import MealBreakdown, NutritionFeedback
@@ -154,7 +153,7 @@ def text_area(textarea_label: str, textarea_placeholder: str, rows: int, name: s
         cls="form-control"
     )
 
-def create_text_input_form(is_feedback: bool = False, original_description: str = None, date: str | None = None, original_breakdown: MealBreakdown | None = None):
+def create_text_input_form(is_feedback: bool = False, original_description: str = None, date: str | None = None, original_breakdown: MealBreakdown | None = None, meal_time: str | None = None):
     """Create the text input form for meal description"""
     analyze_endpoint = f"/analyze_text/{date}" if date is not None else "/analyze_text"
     if not is_feedback:
@@ -188,6 +187,12 @@ def create_text_input_form(is_feedback: bool = False, original_description: str 
                     name="original_breakdown",
                     id="original_breakdown",
                     value=original_breakdown.model_dump_json()
+                ),
+                fh.Input(
+                    type="hidden",
+                    name="date",
+                    id="date",
+                    value=date
                 )
             ],
             header_buttons=[
@@ -253,7 +258,6 @@ def create_modal_content(date: str | None = None):
             onclick="closeModal()",
             style="outline: none; box-shadow: none;"
         ),
-        # Back button (shown only when a form is visible)
         fh.Button(
             "←",
             cls="absolute left-4 top-4 text-xl font-light text-base-content hover:text-base-content focus:outline-none focus:ring-0 focus:ring-offset-0 border-none outline-none hidden z-10",
@@ -261,18 +265,15 @@ def create_modal_content(date: str | None = None):
             style="outline: none; box-shadow: none;",
             id="back-button"
         ),
-        # Initial selection view
         fh.Div(
             fh.Div(
                 fh.H3("How would you like to log your meal?", cls="text-xl font-bold text-center mb-8 text-base-content"),
                 fh.Div(
-                    # Image upload option
                     fh.Button(
                         "Upload an image",
                         cls="btn btn-neutral w-full justify-center text-lg font-light rounded-xl mb-4 outline outline-1 outline-primary-content",
                         onclick="showInputForm('image')"
                     ),
-                    # Text description option
                     fh.Button(
                         "Describe it",
                         cls="btn btn-neutral w-full justify-center text-lg font-light rounded-xl mb-4 outline outline-1 outline-primary-content",
@@ -283,7 +284,6 @@ def create_modal_content(date: str | None = None):
                 id="input-selection",
                 cls="py-12 px-6"
             ),
-            # Hidden forms that will be shown when selected
             fh.Div(
                 create_image_upload_form(),
                 cls="hidden",
@@ -604,6 +604,7 @@ def create_form_section(title, inputs, cls="mb-6"):
 
 def create_meal_breakdown(nutrition_info, meal_time: str, date: str | None = None):
     save_meal_endpoint = f"/save_meal/{date}" if date is not None else "/save_meal"
+    print(f"meal_time: {meal_time}")
     return fh.Card(
         fh.Div(
             fh.H4("Ingredients", cls="font-medium mb-2 text-base-content"),
@@ -632,7 +633,6 @@ def create_meal_breakdown(nutrition_info, meal_time: str, date: str | None = Non
                     value=meal_time
                 ),
                 create_nutrition_card(nutrition_info),
-
                 fh.Button(
                     "Save Meal",
                     type="submit",
@@ -648,23 +648,25 @@ def create_meal_breakdown(nutrition_info, meal_time: str, date: str | None = Non
 
 def create_nutrition_card(nutrition_info: MealBreakdown | None, card_title: str = "Nutrition Information", title_field: str = "Meal Title"):
     """Create a card containing ingredients text and editable nutrition form"""
+
     return (
-            create_form_section(card_title, [# separate the title from the actual nutriotioanl form so it can be used for multiple purposes
-                    create_text_form_input(title_field, "title", nutrition_info.title if nutrition_info else None, input_type="text"),
-                    create_text_form_input("Calories (kcal)", "calories", nutrition_info.calories if nutrition_info else None),
-                    create_text_form_input("Protein (g)", "protein", nutrition_info.macronutrients.protein if nutrition_info else None),
-                    create_text_form_input("Carbohydrates (g)", "carbohydrates", nutrition_info.macronutrients.carbohydrates.total if nutrition_info else None),
-                    create_text_form_input("Fat (g)", "fat", nutrition_info.macronutrients.fat.total if nutrition_info else None),
-                    create_text_form_input("Fiber (g)", "fiber", nutrition_info.macronutrients.carbohydrates.fiber if nutrition_info else None),
-                    create_text_form_input("Vitamin A (IU)", "vitamin_a", nutrition_info.micronutrients.vitamin_a if nutrition_info else None),
-                    create_text_form_input("Vitamin C (mg)", "vitamin_c", nutrition_info.micronutrients.vitamin_c if nutrition_info else None),
-                    create_text_form_input("Vitamin D (IU)", "vitamin_d", nutrition_info.micronutrients.vitamin_d if nutrition_info else None),
-                    create_text_form_input("Calcium (mg)", "calcium", nutrition_info.micronutrients.calcium if nutrition_info else None),
-                    create_text_form_input("Iron (mg)", "iron", nutrition_info.micronutrients.iron if nutrition_info else None),
-                    create_text_form_input("Potassium (mg)", "potassium", nutrition_info.micronutrients.potassium if nutrition_info else None),
-                    create_text_form_input("Sodium (mg)", "sodium", nutrition_info.micronutrients.sodium if nutrition_info else None),
-                    create_text_form_input("Creatine (g)", "creatine", nutrition_info.conditional_nutrients.creatine if nutrition_info else None),
-                ]
+            create_form_section(
+                card_title, [# separate the title from the actual nutriotioanl form so it can be used for multiple purposes
+                create_text_form_input(title_field, "title", nutrition_info.title if nutrition_info else None, input_type="text"),
+                create_text_form_input("Calories (kcal)", "calories", nutrition_info.calories if nutrition_info else None),
+                create_text_form_input("Protein (g)", "protein", nutrition_info.macronutrients.protein if nutrition_info else None),
+                create_text_form_input("Carbohydrates (g)", "carbohydrates", nutrition_info.macronutrients.carbohydrates.total if nutrition_info else None),
+                create_text_form_input("Fat (g)", "fat", nutrition_info.macronutrients.fat.total if nutrition_info else None),
+                create_text_form_input("Fiber (g)", "fiber", nutrition_info.macronutrients.carbohydrates.fiber if nutrition_info else None),
+                create_text_form_input("Vitamin A (IU)", "vitamin_a", nutrition_info.micronutrients.vitamin_a if nutrition_info else None),
+                create_text_form_input("Vitamin C (mg)", "vitamin_c", nutrition_info.micronutrients.vitamin_c if nutrition_info else None),
+                create_text_form_input("Vitamin D (IU)", "vitamin_d", nutrition_info.micronutrients.vitamin_d if nutrition_info else None),
+                create_text_form_input("Calcium (mg)", "calcium", nutrition_info.micronutrients.calcium if nutrition_info else None),
+                create_text_form_input("Iron (mg)", "iron", nutrition_info.micronutrients.iron if nutrition_info else None),
+                create_text_form_input("Potassium (mg)", "potassium", nutrition_info.micronutrients.potassium if nutrition_info else None),
+                create_text_form_input("Sodium (mg)", "sodium", nutrition_info.micronutrients.sodium if nutrition_info else None),
+                create_text_form_input("Creatine (g)", "creatine", nutrition_info.conditional_nutrients.creatine if nutrition_info else None),
+            ]
             )
     ) #TODO: make this more dynamic
 
@@ -674,18 +676,15 @@ def supplement_modal(date: datetime.date):
     return fh.Div(
         fh.Dialog(
             fh.Div(
-                # Close button
                 fh.Button(
                     "×",
                     cls="absolute right-6 top-6 text-2xl font-light text-base-content hover:text-base-content focus:outline-none focus:ring-0 border-none outline-none z-20",
                     onclick="closeSupplementModal()",
                     style="outline: none; box-shadow: none;"
                 ),
-                # Initial selection view
                 fh.Div(
                     fh.H3("Supplementation", cls="text-xl text-center mb-8 text-base-content mt-4"),
                     fh.Div(
-                        # Log existing supplement option
                         fh.Button(
                             "Log existing supplement",
                             cls="btn btn-neutral w-full justify-center text-lg font-light rounded-xl mb-4 outline outline-1 outline-primary-content h-auto py-4",
@@ -695,7 +694,6 @@ def supplement_modal(date: datetime.date):
                                 document.getElementById('supplement-back-button').classList.remove('hidden');
                             """
                         ),
-                        # Add new supplement option
                         fh.Button(
                             "Log new supplement",
                             cls="btn btn-neutral w-full justify-center text-lg font-light rounded-xl mb-4 outline outline-1 outline-primary-content h-auto py-4",
@@ -710,7 +708,6 @@ def supplement_modal(date: datetime.date):
                     id="supplement-options",
                     cls="p-12 px-12"
                 ),
-                # Form for logging existing supplement
                 fh.Div(
                     fh.Button(
                         "←",
@@ -802,13 +799,13 @@ def supplement_modal(date: datetime.date):
                                 cls="btn btn-primary w-full mt-6"
                             ),
                         ),
-                        cls="p-6 overflow-y-auto max-h-[70vh]"  # Added overflow and max height
+                        cls="p-6 overflow-y-auto max-h-[70vh]"
                     ),
                     id="supplement-form",
                     cls="hidden"
                 ),
                 fh.Div(id="save-supplement-result", cls="mt-4"),
-                cls="bg-base-200 rounded-lg relative w-full max-w-lg"  # Reverted to max-w-lg
+                cls="bg-base-200 rounded-lg relative w-full max-w-lg"
             ),
             id="supplement-modal",
             cls="modal",
@@ -833,6 +830,7 @@ def supplement_modal(date: datetime.date):
 def create_meals_list(user_id, date: datetime.date):
     """Create an expandable list of meals for the given date"""
     meals = database_service.get_daily_meals(date, user_id)
+    print(meals)
     if not meals:
         content = fh.P("No meals logged for this day", cls="text-base-content text-center")
     else:
@@ -890,7 +888,7 @@ def feedback_form(meal_description: str, meal_time, nutrition_info: MealBreakdow
     """Create a consistent feedback form layout used by both analyze and regenerate functions"""
     return fh.Div(
         fh.Div(
-            create_text_input_form(is_feedback=True, original_description=meal_description, original_breakdown=nutrition_info),
+            create_text_input_form(is_feedback=True, original_description=meal_description, original_breakdown=nutrition_info, meal_time=meal_time, date=date),
             create_meal_breakdown(nutrition_info, meal_time=meal_time, date=date),
             cls="space-y-4 w-[90%] mx-auto"
         ),
@@ -911,13 +909,4 @@ def overview_text(analysis: NutritionFeedback):
             cls="p-4 space-y-2 mt-2"
         ),
         cls="bg-base-200 outline outline-1 outline-base-content rounded-lg mt-8"
-    )
-
-def analysis_card(analysis: str):
-    return fh.Card(
-        fh.Div(
-            fh.P(analysis, cls="text-base-content"),
-            cls="p-4 space-y-2"
-        ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
     )

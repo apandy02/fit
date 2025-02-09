@@ -130,7 +130,6 @@ async def analyze_text(request: fh.Request, date: str | None = None):
     meal_time = form["meal_time"]
     nutrition_info = assistants.natural_language_nutritional_breakdown(meal_description).content[0].parsed
     meal_time_obj = datetime.strptime(meal_time, "%H:%M").time()
-    
     return ui.feedback_form(meal_description, meal_time_obj, nutrition_info, date)
 
 async def analyze_image(food_image: fh.UploadFile, additional_context: str, meal_time: str, date: str | None = None):
@@ -317,12 +316,19 @@ async def reset_text_form():
     """Reset the text form to its original state"""
     return ui.create_text_input_form(is_feedback=False)
 
-async def regenerate_analysis(feedback: str, original_description: str, original_breakdown: str):
+async def regenerate_analysis(request: fh.Request, feedback: str, original_description: str, original_breakdown: str):
     """Regenerate analysis based on feedback"""
+    form = await request.form()
+    feedback = form["feedback"]
+    original_description = form["original_description"]
+    original_breakdown = form["original_breakdown"]
+
     improved_info = assistants.improve_breakdown(original_breakdown, feedback).content[0].parsed
     meal_time_obj = datetime.now().time()
     meal_datetime = datetime.combine(datetime.today().date(), meal_time_obj).isoformat()
-    return ui.feedback_form(original_description, meal_datetime, improved_info)
+    date = datetime.today().date()
+    
+    return ui.feedback_form(original_description, meal_datetime, improved_info, date)
 
 async def generate_weekly_overview(session):
     """
@@ -350,11 +356,13 @@ async def generate_daily_overview(session, date: str | None = None):
         
     return ui.overview_text(analysis)
 
+
+
 def generate_overview(session, date: str | None = None, weekly: bool = False):
     """Get the overview data for the given date or week"""
     if weekly:
         days = get_current_week_dates()
-        meals = database_service.get_weekly_meals(days, session["user_id"])
+        meals = get_weekly_meals(days, session["user_id"])
     else:
         if date is None:
             days = [datetime.today().date()]
@@ -479,3 +487,12 @@ async def log_water(session, request: fh.Request, date: str | None = None):
             f"Error logging water: {str(e)}",
             cls="text-red-500 font-semibold text-center"
         )
+    
+def get_weekly_meals(week: list[datetime], user_id: int):
+    """
+    Get the meals for a given week.
+    Returns a dict mapping "date_str" -> [list of meals].
+    """
+    return {
+        str(day): database_service.get_daily_meals(day, user_id) for day in week
+    }

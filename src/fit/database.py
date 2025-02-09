@@ -20,11 +20,9 @@ class DatabaseService:
 
     def get_user_id(self, provider_user_id: str, provider: str) -> int | None:
         """Get the user id for a given provider user id and provider."""
-        query = """
-            SELECT user_id FROM users WHERE provider_user_id = ? AND provider = ?
-        """
-        result = self._db.execute(query, (provider_user_id, provider)).fetchone()
-        return result
+        query = "SELECT user_id FROM users WHERE provider_user_id = ? AND provider = ? limit 1"
+        result = self._db.q(query, (provider_user_id, provider))
+        return result[0]["user_id"] # TODO: error handling (for all these queries tbh)
 
     def insert_new_user(self, user_dict: dict) -> int:
         """Insert a new user into the database."""
@@ -47,63 +45,61 @@ class DatabaseService:
             WHERE date_entered = ? AND is_supplement = 0 AND user_id = ?
             ORDER BY meal_time ASC
         """
-        results = self._db.execute(query, (str(date), user_id)).fetchall()
+        results = self._db.q(query, (str(date), user_id))
         meals = []
         for row in results:
             rowid = row[0]
-            meal = MealBreakdown(
-                title=row[1],
-                ingredients=row[2],
-                calories=row[4],
-                macronutrients=Macronutrients(
-                    protein=row[5],
-                    carbohydrates=Carbohydrates(
-                        total=row[6],
-                        fiber=row[8],
-                        total_sugar=0,
-                        added_sugar=0
-                    ),
-                    fat=Fats(
-                        total=row[7],
-                        saturated=0,
-                        trans=0
-                    )
+            macronutrients = Macronutrients(
+                protein=row["protein"],
+                carbohydrates=Carbohydrates(
+                    total= row["carbohydrates"],
+                    fiber=row["fiber"],
+                    total_sugar=0,
+                    added_sugar=0
                 ),
-                micronutrients=Micronutrients(
-                    vitamin_a=row[9],
-                    vitamin_c=row[10],
-                    vitamin_d=row[11],
-                    calcium=row[12],
-                    iron=row[13],
-                    potassium=row[14],
-                    sodium=row[15]
-                ),
-                conditional_nutrients=ConditionalNutrients(
-                    creatine=row[16]
+                fat=Fats(
+                    total=row["fat"],
+                    saturated=0,
+                    trans=0
                 )
             )
-            meal_time = datetime.strptime(row[3], "%H:%M:%S").time()
+            micronutrients = Micronutrients(
+                vitamin_a=row["vitamin_a"],
+                vitamin_c=row["vitamin_c"],
+                vitamin_d=row["vitamin_d"],
+                calcium=row["calcium"],
+                iron=row["iron"],
+                potassium=row["potassium"],
+                sodium=row["sodium"]
+            )
+            conditional_nutrients = ConditionalNutrients(
+                creatine=row["creatine"]
+            )
+            meal = MealBreakdown(
+                title=row["llm_summary"],
+                ingredients=row["ingredients"],
+                calories=row["calories"],
+                macronutrients=macronutrients,
+                micronutrients=micronutrients,
+                conditional_nutrients=conditional_nutrients
+            )
+            try:
+                meal_time = datetime.strptime(row["meal_time"], "%H:%M:%S").time()
+            except ValueError:
+                meal_time = datetime.fromisoformat(row["meal_time"]).time()
+                
             meals.append({
                 "meal": meal,
                 "meal_time": meal_time,
                 "rowid": rowid
             })
+
         return meals
 
     def get_all_meal_summaries(self, user_id: int):
         """Get the meals for a given user."""
-        query = "SELECT llm_summary, ingredients FROM meals WHERE user_id = ?"
-        result = self._db.execute(query, (user_id,)).fetchall()
-        return [row[0] for row in result]
-
-    def get_weekly_meals(self, week: list[datetime], user_id: int):
-        """
-        Get the meals for a given week.
-        Returns a dict mapping "date_str" -> [list of meals].
-        """
-        return {
-            str(day): self.get_daily_meals(day, user_id) for day in week
-        }
+        result = self._db.q("SELECT llm_summary, ingredients FROM meals WHERE user_id = ?", (user_id,))
+        return [row["llm_summary"] for row in result]
 
     def get_daily_cumulative_nutrition(self, date: datetime, user_id: int) -> NutritionalInformation:
         """
@@ -111,52 +107,42 @@ class DatabaseService:
         """
         query = """
             SELECT 
-                SUM(calories),
-                SUM(protein),
-                SUM(carbohydrates),
-                SUM(fat),
-                SUM(fiber),
-                SUM(vitamin_a),
-                SUM(vitamin_c),
-                SUM(vitamin_d),
-                SUM(calcium),
-                SUM(iron),
-                SUM(potassium),
-                SUM(sodium),
+                SUM(calories), SUM(protein), SUM(carbohydrates), SUM(fat), SUM(fiber), SUM(vitamin_a), 
+                SUM(vitamin_c), SUM(vitamin_d), SUM(calcium), SUM(iron), SUM(potassium), SUM(sodium),
                 SUM(creatine)
             FROM meals 
             WHERE date_entered = ? AND user_id = ?
         """
-        result = self._db.execute(query, (str(date), user_id)).fetchone()
+        result = self._db.q(query, (str(date), user_id))
         if result is None or result[0] is None:
             return NutritionalInformation()
 
         return NutritionalInformation(
-            calories=result[0],
+            calories=result["calories"],
             macronutrients=Macronutrients(
-                protein=result[1],
+                protein=result["protein"],
                 carbohydrates=Carbohydrates(
-                    total=result[2],
-                    fiber=result[4],
+                    total=result["carbohydrates"],
+                    fiber=result["fiber"],
                     total_sugar=0,
                     added_sugar=0
                 ),
                 fat=Fats(
-                    total=result[3],
+                    total=result["fat"],
                     saturated=0,
                     trans=0
                 ),
             ),
             micronutrients=Micronutrients(
-                vitamin_a=result[5],
-                vitamin_c=result[6],
-                vitamin_d=result[7],
-                calcium=result[8],
-                iron=result[9],
-                potassium=result[10],
-                sodium=result[11]
+                vitamin_a=result["vitamin_a"],
+                vitamin_c=result["vitamin_c"],
+                vitamin_d=result["vitamin_d"],
+                calcium=result["calcium"],
+                iron=result["iron"],
+                potassium=result["potassium"],
+                sodium=result["sodium"]
             ),
-            conditional_nutrients=ConditionalNutrients(creatine=result[12])
+            conditional_nutrients=ConditionalNutrients(creatine=result["creatine"])
         )
 
     def insert_meal(
@@ -205,25 +191,25 @@ class DatabaseService:
             FROM profile
             WHERE user_id = ?
         """
-        result = self._db.execute(query, (user_id,)).fetchone()
+        result = self._db.q(query, (user_id,))
         if result:
             return {
-                "name": result[0],
-                "email": result[1],
-                "date_of_birth": result[2],
-                "units": result[3],
-                "gender": result[4],
-                "dietary_restrictions": result[5],
-                "activity_level": result[6],
-                "onboarding_stage": result[7]
+                "name": result["name"],
+                "email": result["email"],
+                "date_of_birth": result["date_of_birth"],
+                "units": result["units"],
+                "gender": result["gender"],
+                "dietary_restrictions": result["dietary_restrictions"],
+                "activity_level": result["activity_level"],
+                "onboarding_stage": result["onboarding_stage"]
             }
         return {}
 
     def get_dietary_restrictions(self, user_id: int):
         """Get the dietary restrictions from the database."""
         query = "SELECT dietary_restrictions FROM profile WHERE user_id = ?"
-        result = self._db.execute(query, (user_id,)).fetchone()
-        return result[0] if result else None
+        result = self._db.q(query, (user_id,))
+        return result[0]["dietary_restrictions"] if result else None
 
     def insert_supplement(
         self,
@@ -300,33 +286,25 @@ class DatabaseService:
             FROM supplements 
             WHERE name = ? AND user_id = ?
         """
-        result = self._db.execute(query, (name, user_id)).fetchone()
+
+        result = self._db.q(query, (name, user_id))
         if result is None:
             return None
         return NutritionalInformation(
-            calories=result[0],
+            calories=result["calories"],
             macronutrients=Macronutrients(
-                protein=result[1],
-                carbohydrates=Carbohydrates(
-                    total=result[2],
-                    fiber=result[4],
-                    total_sugar=0,
-                    added_sugar=0
-                ),
-                fat=Fats(
-                    total=result[3],
-                    saturated=0,
-                    trans=0
-                ),
+                protein=result["protein"],
+                carbohydrates=Carbohydrates(result["carbohydrates"], result["fiber"], 0, 0),
+                fat=Fats(result["fat"], 0, 0),
             ),
             micronutrients=Micronutrients(
-                vitamin_a=result[5],
-                vitamin_c=result[6],
-                vitamin_d=result[7],
-                calcium=result[8],
-                iron=result[9],
-                potassium=result[10],
-                sodium=result[11]
+                vitamin_a=result["vitamin_a"],
+                vitamin_c=result["vitamin_c"],
+                vitamin_d=result["vitamin_d"],
+                calcium=result["calcium"],
+                iron=result["iron"],
+                potassium=result["potassium"],
+                sodium=result["sodium"]
             )
         )
 
@@ -334,9 +312,8 @@ class DatabaseService:
         """
         Get all supplement names from the database.
         """
-        query = "SELECT name FROM supplements WHERE user_id = ?"
-        result = self._db.execute(query, (user_id,)).fetchall()
-        return [row[0] for row in result]
+        result = self._db.q("SELECT name FROM supplements WHERE user_id = ?", (user_id,))
+        return [row["name"] for row in result]
 
     def get_all_supplements(self, user_id: int) -> list[tuple[str, str, NutritionalInformation]]:
         """
@@ -349,31 +326,26 @@ class DatabaseService:
             FROM supplements
             WHERE user_id = ?
         """
-        results = self._db.execute(query, (user_id,)).fetchall()
+        results = self._db.q(query, (user_id,))
         return [
             (
-                row[0],
-                row[1],
+                row["name"],
+                row["description"],
                 NutritionalInformation(
-                    calories=row[2],
+                    calories=row["calories"],
                     macronutrients=Macronutrients(
-                        protein=row[3],
-                        carbohydrates=Carbohydrates(
-                            total=row[4],
-                            fiber=row[6],
-                            total_sugar=0,
-                            added_sugar=0
-                        ),
-                        fat=Fats(total=row[5], saturated=0, trans=0),
+                        protein=row["protein"],
+                        carbohydrates=Carbohydrates(row["carbohydrates"], row["fiber"], 0, 0),
+                        fat=Fats(row["fat"], 0, 0),
                     ),
                     micronutrients=Micronutrients(
-                        vitamin_a=row[7],
-                        vitamin_c=row[8],
-                        vitamin_d=row[9],
-                        calcium=row[10],
-                        iron=row[11],
-                        potassium=row[12],
-                        sodium=row[13]
+                        vitamin_a=row["vitamin_a"],
+                        vitamin_c=row["vitamin_c"],
+                        vitamin_d=row["vitamin_d"],
+                        calcium=row["calcium"],
+                        iron=row["iron"],
+                        potassium=row["potassium"],
+                        sodium=row["sodium"]
                     )
                 )
             )
@@ -390,13 +362,11 @@ class DatabaseService:
         Returns a list of tuples: (supplement_name, servings, time_consumed).
         """
         query = """
-            SELECT supplement_name, servings, time_consumed
-            FROM supplement_entries
-            WHERE user_id = ? AND date_consumed = ?
-            ORDER BY time_consumed
+            SELECT supplement_name, servings, time_consumed FROM supplement_entries
+            WHERE user_id = ? AND date_consumed = ? ORDER BY time_consumed
         """
-        results = self._db.execute(query, (user_id, date)).fetchall()
-        return [(row[0], row[1], row[2]) for row in results]
+        results = self._db.q(query, (user_id, date))
+        return [(row["supplement_name"], row["servings"], row["time_consumed"]) for row in results]
 
     def insert_water_consumption(
         self,
@@ -424,8 +394,8 @@ class DatabaseService:
             FROM water 
             WHERE date = ? AND user_id = ?
         """
-        result = self._db.execute(query, (str(date), user_id)).fetchone()
-        return result[0]
+        result = self._db.q(query, (str(date), user_id))
+        return result[0]["SUM(water_consumed_ml)"]
 
     def get_user_measurements(self, user_id: int) -> list[tuple[str, float, float]]:
         """Get user measurements from the database."""
@@ -435,32 +405,21 @@ class DatabaseService:
     def get_latest_user_measurements(self, user_id: int) -> dict | None:
         """Get the latest user measurements from the database."""
         query = """
-            SELECT weight, height 
-            FROM measurements 
-            WHERE user_id = ? 
-            ORDER BY datetime DESC 
-            LIMIT 1
+            SELECT weight, height FROM measurements WHERE user_id = ? ORDER BY datetime DESC LIMIT 1
         """
-        result = self._db.execute(query, (user_id,)).fetchone()
+        result = self._db.q(query, (user_id,))
         if result is None:
             return None
-        return {
-            "weight": result[0],
-            "height": result[1]
-        }
+        return {"weight": result["weight"], "height": result["height"]}
 
-    def insert_user_measurements(
-        self,
-        height: float,
-        weight: float,
-        dt: datetime,
-        user_id: int
-    ):
+    def insert_user_measurements(self, height: float, weight: float, dt: datetime, user_id: int):
         """Insert user measurements into the database."""
-        query = """
-            INSERT INTO measurements (datetime, height, weight, user_id) VALUES (?, ?, ?, ?)
-        """
-        self._db.execute(query, (dt.isoformat(), height, weight, user_id))
+        self._db.t.measurements.insert(
+            datetime=dt.isoformat(),
+            height=height,
+            weight=weight,
+            user_id=user_id
+        )
 
     def delete_meal(self, meal_id: int) -> bool:
         """Delete a meal from the database by its rowid."""
@@ -490,26 +449,22 @@ class DatabaseService:
 
     def get_inventory(self, user_id: int) -> dict:
         """Get the inventory from the database, grouped by category."""
-        query = """
-            SELECT rowid, title, quantity, unit, category 
-            FROM inventory 
-            WHERE user_id = ?
-        """
-        result = self._db.execute(query, (user_id,)).fetchall()
+        query = "SELECT rowid, title, quantity, unit, category FROM inventory WHERE user_id = ?"
+        result = self._db.q(query, (user_id,))
         results = {category: [] for category in KITCHEN_ITEM_CATEGORIES}
         for row in result:
-            results[row[4]].append({
-                "rowid": row[0],
-                "title": row[1],
-                "quantity": row[2],
-                "unit": row[3],
+            results[row["category"]].append({
+                "rowid": row["rowid"],
+                "title": row["title"],
+                "quantity": row["quantity"],
+                "unit": row["unit"],
             })
         return results
 
     def get_weight_goal(self, user_id: int) -> float:
         """Get the weight goal from the database."""
-        query = "SELECT weight_goal FROM profile WHERE user_id = ?"
-        return self._db.execute(query, (user_id,)).fetchone()[0]
+        result = self._db.q("SELECT weight_goal FROM profile WHERE user_id = ?", (user_id,))
+        return result[0]["weight_goal"]
 
     def delete_inventory_item(self, rowid: int) -> bool:
         """Delete an inventory item from the database by its rowid."""
