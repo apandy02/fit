@@ -341,7 +341,9 @@ class DatabaseService:
             calories=result["calories"],
             macronutrients=dm.Macronutrients(
                 protein=result["protein"],
-                carbohydrates=dm.Carbohydrates(total=result["carbohydrates"], fiber=result["fiber"], total_sugar=0, added_sugar=0),
+                carbohydrates=dm.Carbohydrates(
+                    total=result["carbohydrates"], fiber=result["fiber"], total_sugar=0, added_sugar=0
+                ),
                 fat=dm.Fats(total=result["fat"], saturated=0, trans=0),
             ),
             micronutrients=dm.Micronutrients(
@@ -353,7 +355,5 @@ class DatabaseService:
                 potassium=result["potassium"],
                 sodium=result["sodium"]
             ),
-            conditional_nutrients=dm.ConditionalNutrients(
-                creatine=result["creatine"]
-            )
+            conditional_nutrients=dm.ConditionalNutrients(creatine=result["creatine"])
         )
