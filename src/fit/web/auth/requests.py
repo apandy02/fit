@@ -21,8 +21,8 @@ whoop_scope = ["offline", "read:recovery", "read:cycles", "read:workout", "read:
 def login(req):
     fitbit_redir = redir_url(req, f"{auth_callback_path}/fitbit")
     whoop_redir = redir_url(req, f"{auth_callback_path}/whoop")
-    fitbit_login_link = fitbit_client.login_link(fitbit_redir, scope=fitbit_scope)
-    whoop_login_link = whoop_client.login_link(whoop_redir, scope=whoop_scope)
+    fitbit_login_link = fitbit_client.login_link(fitbit_redir)
+    whoop_login_link = whoop_client.login_link(whoop_redir)
     return get_login_page(req, fitbit_login_link=fitbit_login_link, whoop_login_link=whoop_login_link)
 
 def fitbit_auth_redirect(code:str, request, session):

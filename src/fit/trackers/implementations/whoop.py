@@ -35,15 +35,13 @@ class WhoopAppClient(WebApplicationClient):
     token_url = "https://api.prod.whoop.com/oauth/oauth2/token"
     info_url = "https://api.prod.whoop.com/developer/v1/user/profile/basic"
 
-    def __init__(self, client_id, client_secret, code=None, scope=None, **kwargs):
+    def __init__(self, client_id, client_secret, scope=None, code=None, **kwargs):
         super().__init__(client_id, code=code, scope=scope, **kwargs)
         self.code_verifier, self.code_challenge = make_code_verifier_and_challenge()
         self.client_secret = client_secret
 
-    def login_link(self, redirect_uri, scope=None, state=None):
+    def login_link(self, redirect_uri, state=None):
         """Create the WHOOP login link with PKCE parameters."""
-        if scope is None:
-            scope = self.SCOPE
         if state is None:
             state = secrets.token_urlsafe(16)
             self.state = state
@@ -55,7 +53,7 @@ class WhoopAppClient(WebApplicationClient):
         }
 
         auth_url = self.prepare_request_uri(
-            self.base_url, redirect_uri=redirect_uri, scope=scope, **extra_params
+            self.base_url, redirect_uri=redirect_uri, scope=self.scope, **extra_params
         )
         return auth_url
 
