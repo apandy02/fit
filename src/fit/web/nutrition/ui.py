@@ -911,3 +911,25 @@ def overview_text(analysis: NutritionFeedback):
         ),
         cls="bg-base-200 outline outline-1 outline-base-content rounded-lg mt-8"
     )
+
+def create_meal_suggestions(recommendations):
+    return fh.Div(
+        fh.H4("Suggestions", cls="text-lg font-bold mb-1 text-base-content text-center"),
+        fh.Div(
+            fh.Ul(
+                *[
+                    fh.Li(
+                        fh.Div(
+                            fh.P(meal.title, cls="font-medium text-base-content text-sm text-center font-bold mb-1"),
+                            fh.P(meal.ingredients, cls="text-base-content text-xs text-center"),
+                            cls="mb-3"
+                        ),
+                        cls="list-none"
+                    ) for meal in recommendations.meals
+                ],
+                cls="list-none p-0"
+            ),
+            cls="outline outline-1 outline-base-content rounded-lg p-4 max-h-[200px] overflow-y-auto mt-3"
+        ),
+        cls="bg-base-200 p-4 rounded-lg"
+    )

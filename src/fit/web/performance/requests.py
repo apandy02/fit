@@ -73,8 +73,7 @@ def get_performance_info(tracker: FitnessTracker):
         cycle = tracker.get_cycle_for_day(today)
         daily_stats = cycle["score"]
         daily_stats["calories"] = kj_to_kcal(daily_stats["kilojoule"])
-    else:
-        #fitbit
+    else: # fitbit for now
         heart_rate_data = tracker.get_intraday_heart_rate(datetime.date(2019, 6, 21))
         print(f"heart_rate_data: {heart_rate_data}")
         daily_stats = {

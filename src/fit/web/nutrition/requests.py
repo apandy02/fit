@@ -22,21 +22,16 @@ from fit.web.common import database_service, micronutrient_goals
 def get_daily_overview(session, date: str = None):
     """Return the nutritional overview page content"""
     tracker = tracker_factory(session["tracker"], session["access_token"])
-    if date is None:
+    if not date:
         date = datetime.today().date()
     else:
         try:
             date = datetime.strptime(date, "%Y-%m-%d").date()
         except ValueError:
             date = datetime.today().date()
-
-    if date is None:
-        date = datetime.today().date()
     
     data = get_daily_nutrition_data(date, tracker, session["user_id"])
     return overview_page_content(session, data, "daily", date)
-
-    
 
 def get_weekly_overview(session):
     """Return the weekly nutritional overview page content"""
@@ -45,7 +40,6 @@ def get_weekly_overview(session):
     data = get_weekly_nutrition_data(week, tracker, session["user_id"])
     date = datetime.today().date()
     return overview_page_content(session, data, "weekly", date)
-
 
 def overview_page_content(session, data: list[dict], current_view: str, date: datetime.date = None):
     menu_items = [
@@ -356,8 +350,6 @@ async def generate_daily_overview(session, date: str | None = None):
         
     return ui.overview_text(analysis)
 
-
-
 def generate_overview(session, date: str | None = None, weekly: bool = False):
     """Get the overview data for the given date or week"""
     if weekly:
@@ -378,7 +370,6 @@ def generate_overview(session, date: str | None = None, weekly: bool = False):
         return assistants.weekly_io_analysis(meals, nutritional_data["targets"], nutritional_data["restrictions"]).content[0].parsed
     else:
         return assistants.daily_io_analysis(meals, nutritional_data["targets"][0], nutritional_data["restrictions"]).content[0].parsed
-    
 
 async def nutrition_redirect(request: fh.Request):
     """Redirect to the nutrition page"""
@@ -404,27 +395,7 @@ async def get_nutrient_suggestions(session, nutrient: str):
         kitchen_inventory=kitchen_inventory
     ).content[0].parsed
 
-    return fh.Div(
-        fh.H4("Suggestions", cls="text-lg font-bold mb-1 text-base-content text-center"),
-        fh.Div(
-            fh.Ul(
-                *[
-                    fh.Li(
-                        fh.Div(
-                            fh.P(meal.title, cls="font-medium text-base-content text-sm text-center font-bold mb-1"),
-                            fh.P(meal.ingredients, cls="text-base-content text-xs text-center"),
-                            cls="mb-3"
-                        ),
-                        cls="list-none"
-                    ) for meal in recommendations.meals
-                ],
-                cls="list-none p-0"
-            ),
-            cls="outline outline-1 outline-base-content rounded-lg p-4 max-h-[200px] overflow-y-auto mt-3"
-        ),
-        cls="bg-base-200 p-4 rounded-lg"
-    )
-
+    return ui.create_meal_suggestions(recommendations)
 def get_user_nutritional_data_for_dates(session, dates: list[datetime.date]):
     """
     Get the user's nutritional data for the given dates.
