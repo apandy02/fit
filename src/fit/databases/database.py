@@ -90,18 +90,21 @@ class DatabaseService:
     def insert_meal(
         self,
         meal_description: str,
-        meal: dm.MealBreakdown,
+        meal: dm.MealBreakdown | dm.NutritionalInformation,
         meal_date: str,
         meal_time: str,
-        user_id: int
+        user_id: int,
+        summary: str = None,
+        ingredients: str = None,
+        is_supplement: bool = False
     ):
         try:
             self._db.t.meals.insert(
                 date_entered=meal_date,
                 meal_time=meal_time,
                 user_description=meal_description,
-                llm_summary=meal.title,
-                ingredients=meal.ingredients,
+                llm_summary=summary,
+                ingredients=ingredients,
                 calories=meal.calories,
                 protein=meal.macronutrients.protein,
                 carbohydrates=meal.macronutrients.carbohydrates.total,
@@ -115,7 +118,7 @@ class DatabaseService:
                 sodium=meal.micronutrients.sodium,
                 fiber=meal.macronutrients.carbohydrates.fiber,
                 creatine=meal.conditional_nutrients.creatine,
-                is_supplement=False,
+                is_supplement=is_supplement,
                 user_id=user_id
             )
         except Exception as e:
@@ -173,24 +176,13 @@ class DatabaseService:
             sodium=nutritional_info.micronutrients.sodium,
             user_id=user_id
         )
-        self._db.t.meals.insert(
-            llm_summary=name,
-            calories=nutritional_info.calories,
-            protein=nutritional_info.macronutrients.protein,
-            carbohydrates=nutritional_info.macronutrients.carbohydrates.total,
-            fat=nutritional_info.macronutrients.fat.total,
-            fiber=nutritional_info.macronutrients.carbohydrates.fiber,
-            vitamin_a=nutritional_info.micronutrients.vitamin_a,
-            vitamin_c=nutritional_info.micronutrients.vitamin_c,
-            vitamin_d=nutritional_info.micronutrients.vitamin_d,
-            calcium=nutritional_info.micronutrients.calcium,
-            iron=nutritional_info.micronutrients.iron,
-            potassium=nutritional_info.micronutrients.potassium,
-            sodium=nutritional_info.micronutrients.sodium,
+        self.insert_meal(
+            meal_description=name,
+            meal=nutritional_info,
+            meal_date=date,
             meal_time=consumption_time,
-            date_entered=date,
-            is_supplement=True,
-            user_id=user_id
+            user_id=user_id,
+            is_supplement=True
         )
 
     def log_supplement_consumption(
