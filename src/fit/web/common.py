@@ -10,20 +10,18 @@ from fit.nutrition.targets import MICRO_GOALS
 
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
 
-
 tables = [
     ("users", User, ["user_id"], "user_id"),
-    ("meals", Meal, ["rowid", "user_id"], "rowid"),
+    ("meals", Meal, [ "user_id"], "rowid"),
     ("supplements", Supplement, ["name", "user_id"], "name"),
-    ("measurements", Measurement, ["uuid", "user_id"], "uuid"),
-    ("water", Water, ["uuid", "user_id"], "uuid"),
+    ("measurements", Measurement, ["user_id"], "rowid"),
+    ("water", Water, ["user_id"], "rowid"),
     ("profile", Profile, ["user_id"], "user_id"),
-    ("inventory", Inventory, ["rowid", "user_id"], "rowid"),
-    ("supplement_entries", SupplementEntry, ["uuid", "user_id"], "uuid"),
+    ("inventory", Inventory, ["user_id"], "rowid"),
+    ("supplement_entries", SupplementEntry, ["user_id"], "rowid"),
 ]
 
-
-database_service = DatabaseService("data/nutrition.db")
+database_service = DatabaseService("data/nutrition.db", tables)
 micronutrient_goals = MICRO_GOALS["male"]
 
 def create_fab_menu(buttons):

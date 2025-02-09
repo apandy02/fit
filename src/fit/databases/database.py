@@ -13,16 +13,21 @@ class DatabaseService:
     """
     def __init__(self, db_path: str, tables: list[tuple[str, type, list[str], str]]):
         self._db = fh.database(db_path)
-        self.__initialize_tables(tables)
-        
+        self.init_db(tables)
+    
+    def init_db(self, tables: list[tuple[str, type, list[str], str]]):
         for table_name, schema, not_null_columns, pk in tables:
             if table_name not in self._db.t:
-                self._db.t.create(cls=schema, pk=pk, not_null=not_null_columns)
+                self._db.create(cls=schema, pk=pk, not_null=not_null_columns, name=table_name)
+
+    @property
+    def tables(self):
+        return self._db.t
 
     def get_user_id(self, provider_user_id: str, provider: str) -> int | None:
         query = "SELECT user_id FROM users WHERE provider_user_id = ? AND provider = ? limit 1"
         result = self._db.q(query, (provider_user_id, provider))
-        return result[0]["user_id"] # TODO: error handling (for all these queries tbh)
+        return None if result is None or len(result) == 0 else result[0]["user_id"] # TODO: error handling (for all these queries tbh)
 
     def insert_new_user(self, user_dict: dict) -> int:
         """Insert a new user into the database."""
@@ -74,12 +79,13 @@ class DatabaseService:
     def get_daily_cumulative_nutrition(self, date: datetime, user_id: int) -> dm.NutritionalInformation:
         query = """
             SELECT 
-                SUM(calories), SUM(protein), SUM(carbohydrates), SUM(fat), SUM(fiber), SUM(vitamin_a), 
-                SUM(vitamin_c), SUM(vitamin_d), SUM(calcium), SUM(iron), SUM(potassium), SUM(sodium), SUM(creatine)
-            FROM meals WHERE date_entered = ? AND user_id = ?
+            SUM(calories) as calories, SUM(protein) as protein, SUM(carbohydrates) as carbohydrates, 
+            SUM(fat) as fat, SUM(fiber) as fiber, SUM(vitamin_a) as vitamin_a, SUM(vitamin_c) as vitamin_c,
+            SUM(vitamin_d) as vitamin_d, SUM(calcium) as calcium, SUM(iron) as iron, SUM(potassium) as potassium, 
+            SUM(sodium) as sodium, SUM(creatine) as creatine FROM meals WHERE date_entered = ? AND user_id = ?
         """
         result = self._db.q(query, (str(date), user_id))
-        return self.__nutritional_info_from_row(result)
+        return self.__nutritional_info_from_row(result[0])
 
     def insert_meal(
         self,
@@ -113,7 +119,7 @@ class DatabaseService:
                 user_id=user_id
             )
         except Exception as e:
-            print(f"Error inserting meal: {e}")
+            logging.error(f"Error inserting meal: {e}")
             raise e
 
     def get_profile_data(self, user_id: int) -> dict:
@@ -125,6 +131,7 @@ class DatabaseService:
         """
         result = self._db.q(query, (user_id,))
         if result:
+            result = result[0]
             return {
                 "name": result["name"],
                 "email": result["email"],
@@ -268,7 +275,7 @@ class DatabaseService:
             SELECT weight, height FROM measurements WHERE user_id = ? ORDER BY datetime DESC LIMIT 1
         """
         result = self._db.q(query, (user_id,))
-        return None if result is None else {"weight": result["weight"], "height": result["height"]}
+        return None if not result else {"weight": result[0]["weight"], "height": result[0]["height"]}
 
     def insert_user_measurements(self, height: float, weight: float, dt: datetime, user_id: int):
         self._db.t.measurements.insert(
@@ -283,7 +290,7 @@ class DatabaseService:
             self._db.t.meals.delete(meal_id)
             return True
         except Exception as e:
-            print(f"Error deleting meal: {e}")
+            logging.error(f"Error deleting meal: {e}")
             return False
 
     def insert_inventory_item(
@@ -334,12 +341,16 @@ class DatabaseService:
             logging.error(f"Error updating profile: {e}")
 
     def __nutritional_info_from_row(self, result: dict) -> dm.NutritionalInformation:
-        return None if result is None or result[0] is None else dm.NutritionalInformation(
+        if result.get("calories") is None:
+            for key in result:
+                result[key] = 0
+
+        return dm.NutritionalInformation(
             calories=result["calories"],
             macronutrients=dm.Macronutrients(
                 protein=result["protein"],
-                carbohydrates=dm.Carbohydrates(result["carbohydrates"], result["fiber"], 0, 0),
-                fat=dm.Fats(result["fat"], 0, 0),
+                carbohydrates=dm.Carbohydrates(total=result["carbohydrates"], fiber=result["fiber"], total_sugar=0, added_sugar=0),
+                fat=dm.Fats(total=result["fat"], saturated=0, trans=0),
             ),
             micronutrients=dm.Micronutrients(
                 vitamin_a=result["vitamin_a"],
