@@ -2,6 +2,7 @@ import fasthtml.common as fh
 
 from fit.web.common import page_outline
 
+
 def create_profile_page(user_data, restrictions):
     content = fh.Article(
         fh.Div(

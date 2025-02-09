@@ -4,8 +4,7 @@ from markdown import markdown
 
 from fit.database.database import DatabaseService
 from fit.database.schema import (Inventory, Meal, Measurement, Profile,
-                                       Supplement, SupplementEntry, User,
-                                       Water)
+                                 Supplement, SupplementEntry, User, Water)
 from fit.nutrition.targets import MICRO_GOALS
 
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")

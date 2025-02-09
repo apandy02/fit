@@ -2,7 +2,7 @@ import fasthtml.common as fh
 
 from fit.web.common import page_outline
 from fit.web.profile.ui import (create_basic_info_card,
-                                  create_dietary_restrictions_card)
+                                create_dietary_restrictions_card)
 
 
 def create_profile_page(user_data):

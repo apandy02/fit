@@ -3,8 +3,9 @@ from datetime import datetime
 
 import fasthtml.common as fh
 
-from fit.web.common import database_service
 import fit.web.progress.ui as ui
+from fit.web.common import database_service
+
 
 def get(session):
     """Return the progress tracking page content"""

@@ -1,7 +1,8 @@
 import fasthtml.common as fh
 
-from fit.web.common import database_service
 import fit.web.profile.ui as ui
+from fit.web.common import database_service
+
 
 def get(session):
     """Return the profile page content"""

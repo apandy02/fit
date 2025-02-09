@@ -1,12 +1,13 @@
 import fasthtml.common as fh
+
 import fit.web.auth.requests as auth
 import fit.web.kitchen.requests as kitchen
 import fit.web.nutrition.requests as nutrition
 import fit.web.onboarding.requests as onboarding
 import fit.web.performance.requests as requests
+import fit.web.profile.requests as profile
 import fit.web.progress.requests as progress
 import fit.web.rest.requests as rest
-import fit.web.profile.requests as profile
 from fit.web.bw import auth_bware, onboarding_bware
 
 htmx_indicator_style = fh.Style("""

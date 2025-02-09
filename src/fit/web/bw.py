@@ -5,6 +5,7 @@ from fasthtml.common import RedirectResponse
 
 from fit.web.common import database_service
 
+
 def auth_before(req, session):
     """beforeware that checks if the user is logged in"""
     access_token_expiry = session.get('access_token_expiry', None)
