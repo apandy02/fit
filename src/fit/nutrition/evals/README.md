@@ -19,11 +19,9 @@ evals/
 - **Recommendation eval**: Tests meal recommendation quality and constraint satisfaction.
 - **Inventory completeness eval**: Tests the completeness of the kitchen inventory. 
 
-## Test Data
+## Data
 
 Datasets for each eval are stored in the `data` directory. 
-- `kitchen.json`: Sample kitchen inventory descriptions with ground truth parsing
-- `recommendations.json`: Test cases for meal recommendations with user preferences and nutritional targets
 
 Results for evals are stored in `./logdir` for tracking performance over time. 
 
