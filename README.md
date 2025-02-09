@@ -103,7 +103,7 @@ Each module contains its own README with detailed documentation.
 
 ## Contributing
 
-1. Ensure all tests pass: `python -m unittest discover -v`
-2. Run linting: `ruff check .`
+1. Ensure all tests pass: `uv run -m unittest discover -v`
+2. Run linting: `uv run ruff check . --fix`
 3. Follow the existing code structure and documentation patterns
 4. Submit a pull request
