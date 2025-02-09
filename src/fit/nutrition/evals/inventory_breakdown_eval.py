@@ -42,7 +42,6 @@ def calculate_item_metrics(prediction: List[KitchenItem], reference: List[Kitche
     """Calculate precision and recall for item names."""
     pred_names = set(item.name.lower() for item in prediction)
     ref_names = set(item.name.lower() for item in reference)
-    
     true_positives = len(pred_names.intersection(ref_names))
     false_positives = len(pred_names - ref_names)
     false_negatives = len(ref_names - pred_names)
@@ -50,10 +49,7 @@ def calculate_item_metrics(prediction: List[KitchenItem], reference: List[Kitche
     precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
     recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
     
-    return {
-        "precision": precision,
-        "recall": recall
-    }
+    return {"precision": precision, "recall": recall}
 
 def unit_accuracy_metric(prediction: List[KitchenItem], reference: List[KitchenItem]) -> float:
     """Calculate accuracy of unit predictions for correctly identified items."""
