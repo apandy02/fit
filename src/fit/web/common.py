@@ -2,8 +2,8 @@ import fasthtml.common as fh
 import fh_bootstrap as fhb
 from markdown import markdown
 
-from fit.databases.database import DatabaseService
-from fit.databases.dataclasses import (Inventory, Meal, Measurement, Profile,
+from fit.database.database import DatabaseService
+from fit.database.schema import (Inventory, Meal, Measurement, Profile,
                                        Supplement, SupplementEntry, User,
                                        Water)
 from fit.nutrition.targets import MICRO_GOALS

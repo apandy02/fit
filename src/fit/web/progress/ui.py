@@ -1,17 +1,13 @@
 import json
-from datetime import datetime
 
 import fasthtml.common as fh
 
 from fit.nutrition.data_models import WeightGoal
-from fit.web.common import database_service, page_outline
+from fit.web.common import page_outline
 
 
-def get(session):
-    """Return the progress tracking page content"""
-    measurements = database_service.get_user_measurements(session["user_id"])
+def create_progress_page(session, measurements: list[tuple[str, float]]):
     plot_data, plot_layout = create_weight_plot(measurements)
-    
     content = fh.Article(
         fh.Div(
             fh.Card(
@@ -60,76 +56,6 @@ def get(session):
         cls="bg-base-100"
     )
     return page_outline(2, "Progress Tracking", True, True, content)
-
-def get_latest_measurements(user_id: int):
-    """Get the latest measurements from the database"""
-    latest = database_service.get_latest_user_measurements(user_id)
-    
-    if latest:
-        weight = latest["weight"] if latest["weight"] is not None else 0
-        height = latest["height"] if latest["height"] is not None else 0
-        feet = height // 12 if height > 0 else 0
-        inches = height % 12 if height > 0 else 0
-    else:
-        weight = 0
-        feet = 0
-        inches = 0
-    
-    return weight, feet, inches
-
-def create_weight_form(session):
-    """Create the weight input form"""
-    weight, _, _ = get_latest_measurements(session["user_id"])
-    return fh.Form(
-        hx_post="/update_weight",
-        hx_target="#weight-result",
-        cls="space-y-4"
-    )(
-        create_measurement_input_section("Weight (lbs)", "weight", min="0", step="0.1", placeholder="Enter your weight", value=str(weight)),
-        fh.Button(
-            "Update Weight",
-            type="submit",
-            cls="btn btn-neutral w-full"
-        ),
-        fh.Div(id="weight-result")
-    )
-
-def create_height_form():
-    """Create the height input form"""
-    _, feet, inches = get_latest_measurements()
-    return fh.Form(
-        hx_post="/update_height",
-        hx_target="#height-result",
-        cls="space-y-4"
-    )(
-        fh.Div(
-            fh.Label("Height", cls="label text-base-content"),
-            fh.Div(
-                create_measurement_input_section("Feet", "height_feet", "w-24", step="1", min="0", max="9", placeholder="ft", value=str(feet)),
-                create_measurement_input_section("Inches", "height_inches", "w-24", min="0", max="11", placeholder="in", value=str(inches)),
-                cls="flex space-x-4"
-            )
-        ),
-        fh.Button(
-            "Update Height",
-            type="submit",
-            cls="btn btn-neutral w-full"
-        ),
-        fh.Div(id="height-result")
-    )
-
-def create_measurement_input_section(label: str, name: str, width: str = "w-full", **input_props):
-    """Create a form input section with label and input"""
-    return fh.Div(
-        fh.Label(label, cls="label text-base-content"),
-        fh.Input(
-            type="number",
-            name=name,
-            cls=f"input input-bordered {width} bg-base-200 text-base-content placeholder-slate-400",
-            **input_props
-        ),
-        cls="form-control"
-    )
 
 def create_weight_plot(measurements: list[tuple[str, float]]):
     """Create the weight progress plot"""
@@ -232,9 +158,8 @@ def create_goal_form():
         fh.Div(id="goal-result")
     )
 
-def measurements_modal(user_id: int):
+def measurements_modal(user_id: int, feet: float, inches: float, weight: float):
     """Create the measurements tracking modal"""
-    weight, feet, inches = get_latest_measurements(user_id)
     return fh.Div(
         fh.Dialog(
             fh.Div(
@@ -324,30 +249,3 @@ def measurements_modal(user_id: int):
             }
         """)
     )
-
-async def update_measurements(session, request: fh.Request):
-    """Handle measurements update"""
-    form = await request.form()
-    weight = float(form["weight"])
-    height_feet = float(form["height_feet"])
-    height_inches = float(form["height_inches"])
-    total_height = (height_feet * 12) + height_inches
-    database_service.insert_user_measurements(
-        height=total_height,
-        weight=weight,
-        datetime=datetime.now(),
-        user_id=session["user_id"]
-    )
-
-    return fh.Div(
-        fh.P(
-            "Measurements updated successfully!",
-            cls="text-green-600 font-semibold text-center mt-4"
-        ),
-        fh.Script("""
-            setTimeout(() => {
-                closeMeasurementsModal();
-                window.location.reload();
-            }, 1000);
-        """)
-    ) 

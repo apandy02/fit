@@ -1,7 +1,37 @@
 import fasthtml.common as fh
 
-from fit.web.common import database_service, page_outline
+from fit.web.common import page_outline
 
+def create_profile_page(user_data, restrictions):
+    content = fh.Article(
+        fh.Div(
+            fh.Card(
+                fh.Header(
+                    fh.H3("User Profile", cls="text-2xl text-center mb-2 text-base-content"),
+                    cls="mb-6 bg-base-200"
+                ),
+                fh.Form(
+                    hx_post="/update_profile",
+                    hx_target="#profile-result",
+                    cls="space-y-6"
+                )(
+                    create_basic_info_card(user_data),
+                    create_dietary_restrictions_card(restrictions),
+                    create_preferences_card(user_data),
+                    fh.Button(
+                        "Save Changes",
+                        type="submit",
+                        cls="btn btn-primary outline outline-1 outline-primary-content w-full"
+                    ),
+                    fh.Div(id="profile-result")
+                ),
+                cls="bg-base-200 shadow-none rounded-lg p-6 mb-8"
+            ),
+            cls="max-w-2xl mx-auto p-6 space-y-6"
+        ),
+        cls="bg-base-100"
+    )
+    return page_outline(6, "Profile", True, True, content)
 
 def create_editable_input(name: str, value: str, input_type: str = "text", placeholder: str = "", required: bool = True):
     """Create an input field that can be toggled between read-only and editable"""
@@ -37,11 +67,9 @@ def create_basic_info_card(user_data):
             cls="mb-6 bg-base-200"
         ),
         fh.Div(
-            create_form_row("Name", create_editable_input(
-                "name",
-                user_data.get("name", ""),
-                placeholder="John Doe"
-            )),
+            create_form_row(
+                "Name", create_editable_input("name", user_data.get("name", ""), placeholder="John Doe")
+            ),
             create_form_row("Email", create_editable_input(
                 "email",
                 user_data.get("email", ""),
@@ -145,44 +173,6 @@ def create_preferences_card(user_data):
         cls="bg-base-200 outline outline-1 outline-base-content rounded-lg p-6 mb-8 shadow-none"
     )
 
-def get(session):
-    """Return the profile page content"""
-    user_data = database_service.get_profile_data(session["user_id"])
-    restrictions = user_data.get("dietary_restrictions", "")
-    if restrictions == "" or restrictions is None:
-        restrictions = []
-    else:
-        restrictions = restrictions.split(",")
-
-    content = fh.Article(
-        fh.Div(
-            fh.Card(
-                fh.Header(
-                    fh.H3("User Profile", cls="text-2xl text-center mb-2 text-base-content"),
-                    cls="mb-6 bg-base-200"
-                ),
-                fh.Form(
-                    hx_post="/update_profile",
-                    hx_target="#profile-result",
-                    cls="space-y-6"
-                )(
-                    create_basic_info_card(user_data),
-                    create_dietary_restrictions_card(restrictions),
-                    create_preferences_card(user_data),
-                    fh.Button(
-                        "Save Changes",
-                        type="submit",
-                        cls="btn btn-primary outline outline-1 outline-primary-content w-full"
-                    ),
-                    fh.Div(id="profile-result")
-                ),
-                cls="bg-base-200 shadow-none rounded-lg p-6 mb-8"
-            ),
-            cls="max-w-2xl mx-auto p-6 space-y-6"
-        ),
-        cls="bg-base-100"
-    )
-    return page_outline(6, "Profile", True, True, content)
 
 
 def create_form_row(label: str, input_element):
@@ -209,47 +199,11 @@ def create_login_input_section(label: str, name: str, input_type: str = "text", 
         cls="form-control"
     )
 
-
-
-async def update_profile(session, request: fh.Request):
-    """Handle profile update"""
-    try:
-        form = await request.form()
-        
-        restrictions = form.getlist("existing_restrictions[]")
-        form_data = dict(form)
-        form_data["dietary_restrictions"] = ",".join(restrictions) if restrictions else ""
-        form_data["user_id"] = session["user_id"]
-        if "existing_restrictions[]" in form_data:
-            form_data.pop("existing_restrictions[]")
-        
-        database_service.update_profile(form_data)
-        
-        return fh.P(
-            "Profile updated successfully!",
-            cls="text-success font-semibold text-center mt-4"
-        )
-    except Exception as e:
-        return fh.P(
-            f"Error updating profile: {str(e)}",
-            cls="text-error font-semibold text-center mt-4"
-        )
-
-async def add_restriction(request: fh.Request):
-    """Handle adding a dietary restriction"""
-    try:
-        form = await request.form()
-        restriction = form.get("dietary_restrictions")
-        existing_restrictions = form.getlist("existing_restrictions[]")
-        if restriction not in existing_restrictions:
-            existing_restrictions.append(restriction)
-        
-        restriction_divs = [
+def create_restriction_list(existing_restrictions):
+    """Create the restriction list"""
+    restriction_divs = [
             fh.Div(
-                fh.Div(
-                    r.replace('_', ' ').title(),
-                    cls="flex-grow mr-8"
-                ),
+                fh.Div(r.replace('_', ' ').title(), cls="flex-grow mr-8"),
                 fh.Button(
                     "×",
                     hx_post="/remove_restriction",
@@ -261,70 +215,17 @@ async def add_restriction(request: fh.Request):
             )
             for r in existing_restrictions
         ]
-        
-        return fh.Div(
-            *restriction_divs,
-            *[
-                fh.Input(
-                    type="hidden",
-                    name="existing_restrictions[]",
-                    value=r
-                )
-                for r in existing_restrictions
-            ],
-            id="restrictions-list",
-            cls="flex flex-wrap"
-        )
-    except Exception as e:
-        return fh.P(
-            f"Error adding restriction: {str(e)}",
-            cls="text-error text-sm mt-1"
-        )
-
-
-async def remove_restriction(request: fh.Request):
-    """Handle removing a dietary restriction"""
-    try:
-        form = await request.form()
-        restriction_to_remove = form.get("restriction")
-        existing_restrictions = form.getlist("existing_restrictions[]")
-        
-        if restriction_to_remove in existing_restrictions:
-            existing_restrictions.remove(restriction_to_remove)
-        
-        restriction_divs = [
-            fh.Div(
-                fh.Div(
-                    r.replace('_', ' ').title(),
-                    cls="flex-grow mr-8"
-                ),
-                fh.Button(
-                    "×",
-                    hx_post="/remove_restriction",
-                    hx_vals=f'{{"restriction": "{r}"}}',
-                    hx_target="#restrictions-list",
-                    cls="text-lg hover:text-error focus:outline-none focus:ring-0 border-none"
-                ),
-                cls="bg-neutral flex items-center justify-between px-4 py-2 rounded-lg mr-2 mb-2"
+            
+    return fh.Div(
+        *restriction_divs,
+        *[
+            fh.Input(
+                type="hidden",
+                name="existing_restrictions[]",
+                value=r
             )
             for r in existing_restrictions
-        ]
-        
-        return fh.Div(
-            *restriction_divs,
-            *[
-                fh.Input(
-                    type="hidden",
-                    name="existing_restrictions[]",
-                    value=r
-                )
-                for r in existing_restrictions
-            ],
-            id="restrictions-list",
-            cls="flex flex-wrap"
-        )
-    except Exception as e:
-        return fh.P(
-            f"Error removing restriction: {str(e)}",
-            cls="text-error text-sm mt-1"
-        ) 
+        ],
+        id="restrictions-list",
+        cls="flex flex-wrap"
+    )
