@@ -1,10 +1,12 @@
+"""
+Eval for LMPs deciphering meal breakdowns from user-provided descriptions. 
+"""
 import logging
 import os
 
 import ell
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, Field
 
 from fit.nutrition.assistants import natural_language_nutritional_breakdown
 from fit.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
@@ -16,10 +18,6 @@ ell.init(store="./logdir")
 MACRONUTRIENTS = ["protein", "carbohydrates", "fat"]
 MICRONUTRIENTS = ["vitamin_a", "vitamin_c", "vitamin_d", "calcium", "iron", "potassium", "sodium"]
 DEFAULT_MODEL = "gpt-4o-mini-2024-07-18"
-
-class MealSemanticSimilarity(BaseModel):
-    """A dataclass that contains the semantic similarity for a meal."""
-    similarity: float = Field(description="the semantic similarity of the meal to the user's preferences")
 
 def prepare_eval_data():
     """

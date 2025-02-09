@@ -1,3 +1,6 @@
+"""
+Eval for LMPs making meal recommendations based on user preferences and nutritional targets. 
+"""
 import json
 import logging
 import os

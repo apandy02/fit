@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from fit.databases.database import DatabaseService, dm
-from fit.databases.dataclasses import Inventory, User
+from fit.database.database import DatabaseService, dm
+from fit.database.schema import Inventory, User
 
 
 class TestDatabaseService(unittest.TestCase):

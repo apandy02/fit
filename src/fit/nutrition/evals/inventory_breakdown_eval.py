@@ -1,3 +1,6 @@
+"""
+Eval for LMPs deciphering kitchen inventory from user-provided descriptions and images. 
+"""
 import json
 import logging
 import os
