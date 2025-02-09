@@ -453,7 +453,7 @@ def create_editable_inventory_form_modal(inventory: KitchenInventory):
                 style="outline: none; box-shadow: none;"
             ),
             fh.Div(
-                ui.create_editable_inventory_form(inventory),
+                create_editable_inventory_form(inventory),
                 cls="px-6"
             ),
             cls="p-6",
