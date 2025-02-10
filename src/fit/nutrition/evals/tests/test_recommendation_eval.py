@@ -9,26 +9,26 @@ from fit.nutrition.evals.recommendation_eval import (calculate_final_totals,
 class TestRecommendationEval(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.eval_data = prepare_eval_data()[0]  # Use first datapoint from real data
+        cls.eval_data = prepare_eval_data()[0]
         cls.current = cls.eval_data["consumption"]
         cls.targets = cls.eval_data["targets"]
         cls.target_nutrient = cls.eval_data["target_nutrient"]
 
     def test_calculate_target_score(self):
-        final_totals = {"protein": 116}  # Using actual target from data
+        final_totals = {"protein": 116}
         self.assertEqual(calculate_target_score(final_totals, "protein", 116), 1.0)
         
-        final_totals = {"protein": 92.8}  # 80% of target
+        final_totals = {"protein": 92.8}
         self.assertAlmostEqual(calculate_target_score(final_totals, "protein", 116), 0.8)
         
-        final_totals = {"protein": 139.2}  # 120% of target
+        final_totals = {"protein": 139.2}
         self.assertAlmostEqual(calculate_target_score(final_totals, "protein", 116), 0.8)
 
     def test_calculate_penalty(self):
         final_totals = {
-            "protein": self.targets["protein"] * 1.2,  # 20% over
-            "carbohydrates": self.targets["carbohydrates"],  # at target
-            "fat": self.targets["fat"] * 1.5,  # 50% over
+            "protein": self.targets["protein"] * 1.2,
+            "carbohydrates": self.targets["carbohydrates"],
+            "fat": self.targets["fat"] * 1.5,
             "vitamin_a": self.targets["vitamin_a"],
             "vitamin_c": self.targets["vitamin_c"],
             "vitamin_d": self.targets["vitamin_d"],
@@ -40,10 +40,10 @@ class TestRecommendationEval(unittest.TestCase):
         
         self.assertAlmostEqual(calculate_penalty(final_totals, self.targets), -0.7)
         
-        final_totals = {k: v * 0.9 for k, v in self.targets.items()}  # All 10% under
+        final_totals = {k: v * 0.9 for k, v in self.targets.items()}
         self.assertEqual(calculate_penalty(final_totals, self.targets), 0.0)
         
-        final_totals = {k: v * 3 for k, v in self.targets.items()}  # All 200% over
+        final_totals = {k: v * 3 for k, v in self.targets.items()}
         self.assertEqual(calculate_penalty(final_totals, self.targets), -1.0)
 
     def test_calculate_final_totals(self):
