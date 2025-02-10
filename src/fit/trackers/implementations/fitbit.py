@@ -1,21 +1,11 @@
-import base64
 import datetime
-import hashlib
 import logging
-import os
 from typing import Any
 
 import httpx
 from oauthlib.oauth2 import WebApplicationClient
 
-from fit.trackers.base import FitnessTracker
-
-
-def make_code_verifier_and_challenge():
-    code_verifier = base64.urlsafe_b64encode(os.urandom(64)).decode("utf-8").rstrip("=")
-    sha256 = hashlib.sha256(code_verifier.encode("utf-8")).digest()
-    code_challenge = base64.urlsafe_b64encode(sha256).decode("utf-8").rstrip("=")
-    return code_verifier, code_challenge
+from fit.trackers.base import FitnessTracker, make_code_verifier_and_challenge
 
 
 class FitbitAppClient(WebApplicationClient):

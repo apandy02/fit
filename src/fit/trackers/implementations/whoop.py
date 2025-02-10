@@ -1,6 +1,4 @@
-import base64
 import datetime
-import hashlib
 import json
 import logging
 import os
@@ -10,20 +8,13 @@ from typing import Any
 import httpx
 from oauthlib.oauth2 import WebApplicationClient
 
-from fit.trackers.base import FitnessTracker
+from fit.trackers.base import FitnessTracker, make_code_verifier_and_challenge
 from fit.utils.conversions import kj_to_kcal
 
 json_path = os.path.join(os.path.dirname(__file__), "config/whoop_sports.json")
 
 with open(json_path, "r") as f:
     SPORTS_MAP = json.load(f)["sports"]
-
-
-def make_code_verifier_and_challenge():
-    code_verifier = base64.urlsafe_b64encode(os.urandom(64)).decode("utf-8").rstrip("=")
-    sha256 = hashlib.sha256(code_verifier.encode("utf-8")).digest()
-    code_challenge = base64.urlsafe_b64encode(sha256).decode("utf-8").rstrip("=")
-    return code_verifier, code_challenge
 
 
 class WhoopAppClient(WebApplicationClient):
