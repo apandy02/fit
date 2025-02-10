@@ -100,13 +100,6 @@ Each module contains its own README with detailed documentation.
 ## Contributing
 
 1. Ensure all tests pass: `uv run -m unittest discover -v`
-<<<<<<< Updated upstream
-2. Run linting (isort and ruff). There are pre commit hooks that should auto-run when you commit. If these don't run, run the linters manually with:
-   - `uv run isort .`
-   - `uv run ruff check . --fix`
-4. Follow the existing code structure and documentation patterns
-5. Submit a pull request
-=======
 2. Run linting: `uv run ruff check . --fix`
 3. Follow the existing code structure and documentation patterns
 4. Submit a pull request
@@ -114,4 +107,3 @@ Each module contains its own README with detailed documentation.
 
 ## Builds and packaging [Work in progress]
 
->>>>>>> Stashed changes
