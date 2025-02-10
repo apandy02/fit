@@ -20,6 +20,7 @@ dependencies = [
     "ruff>=0.7.3",
     "cherrypy>=18.10.0",
     "pandas>=2.2.3",
+    "pre-commit>=4.1.0",
 ]
 
 [build-system]
