@@ -20,17 +20,24 @@ def onboarding_before(req, session):
 
     if user_profile["onboarding_stage"] == 0:
         return RedirectResponse('/onboarding/profile', status_code=303)
-
+    
     elif user_profile["onboarding_stage"] == 1:
-        return RedirectResponse('/onboarding/dietary', status_code=303)
+        return RedirectResponse('/onboarding/measurements', status_code=303)
 
     elif user_profile["onboarding_stage"] == 2:
+        return RedirectResponse('/onboarding/dietary', status_code=303)
+        
+    elif user_profile["onboarding_stage"] == 3:
         return RedirectResponse('/onboarding/activity', status_code=303)
     
+    elif user_profile["onboarding_stage"] == 4:
+        return RedirectResponse('/onboarding/goals', status_code=303)
+    
+
 def onboarding_complete_before(req, session):
     """block the onboarding pages for users who have completed onboarding"""
     user_profile = database_service.get_profile_data(session["user_id"])
-    if user_profile["onboarding_stage"] != 3:
+    if user_profile["onboarding_stage"] == 5:  # Updated to reflect new final stage
         return RedirectResponse('/nutrition', status_code=303)
 
 auth_callback_path = "/auth_redirect"
@@ -46,11 +53,15 @@ onboarding_bware = fh.Beforeware(
         auth_callback_path + '/fitbit',
         auth_callback_path + '/whoop',
         '/onboarding/profile',
+        '/onboarding/measurements',
         '/onboarding/activity',
         '/onboarding/dietary',
+        '/onboarding/goals',
         '/onboarding/complete_profile',
+        '/onboarding/complete_measurements',
         '/onboarding/complete_dietary',
         '/onboarding/handle_activity_selection',
+        '/onboarding/handle_goals_selection',
         '/add_restriction',
         '/remove_restriction',
     ]

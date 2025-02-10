@@ -49,6 +49,7 @@ class DatabaseService:
         results = self._db.q(query, (str(date), user_id))
         meals = []
         for row in results:
+            print(row)
             rowid = row["rowid"]
             nutritional_info = self.__nutritional_info_from_row(row)
             meal = dm.MealBreakdown(
@@ -258,8 +259,8 @@ class DatabaseService:
         return result[0]["SUM(water_consumed_ml)"]
 
     def get_user_measurements(self, user_id: int) -> list[tuple[str, float, float]]:
-        query = "SELECT datetime, weight, height FROM measurements WHERE user_id = ?"
-        return self._db.execute(query, (user_id,)).fetchall()
+        query = "SELECT datetime, weight, height FROM measurements WHERE user_id = ? ORDER BY datetime DESC"
+        return self._db.q(query, (user_id,))
 
     def get_latest_user_measurements(self, user_id: int) -> dict | None:
         query = "SELECT weight, height FROM measurements WHERE user_id = ? ORDER BY datetime DESC LIMIT 1"
@@ -327,6 +328,14 @@ class DatabaseService:
             return True
         except Exception as e:
             logging.error(f"Error updating profile: {e}")
+
+    def insert_measurement(self, user_id: int, weight: float, date: datetime) -> bool:
+        try:
+            self._db.t.measurements.insert(user_id=user_id, weight=weight, datetime=date.isoformat())
+            return True
+        except Exception as e:
+            logging.error(f"Error inserting measurement: {e}")
+            return False
 
     def __nutritional_info_from_row(self, result: dict) -> dm.NutritionalInformation:
         if result.get("calories") is None:

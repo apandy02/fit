@@ -8,6 +8,7 @@ from fit.web.common import page_outline
 
 def create_progress_page(session, measurements: list[tuple[str, float]]):
     plot_data, plot_layout = create_weight_plot(measurements)
+    print("measurements: ", measurements)
     content = fh.Article(
         fh.Div(
             fh.Card(
@@ -50,7 +51,7 @@ def create_progress_page(session, measurements: list[tuple[str, float]]):
                 ),
                 cls="fixed bottom-8 right-8"
             ),
-            measurements_modal(session["user_id"]),
+            measurements_modal(session["user_id"], measurements),
             cls="max-w-4xl mx-auto p-6 bg-base-100"
         ),
         cls="bg-base-100"
@@ -59,8 +60,9 @@ def create_progress_page(session, measurements: list[tuple[str, float]]):
 
 def create_weight_plot(measurements: list[tuple[str, float]]):
     """Create the weight progress plot"""
-    dates = [m[0].split("T")[0] for m in measurements]
-    weights = [m[1] for m in measurements]
+
+    dates = [m['datetime'] for m in measurements]
+    weights = [m['weight'] for m in measurements]
     
     plot_data = json.dumps([{
         "x": dates,
@@ -97,7 +99,8 @@ def create_weight_plot(measurements: list[tuple[str, float]]):
 
 def create_stats_grid(measurements: list[tuple[str, float]]):
     """Create a grid of statistics cards"""
-    weights = [m[1] for m in measurements]
+    weights = [m['weight'] for m in measurements]
+    print("weights: ", weights)
     current_weight = f"{weights[-1]:.1f} lbs" if weights else "No data"
     total_change = f"{(weights[-1] - weights[0]):.1f} lbs" if len(weights) > 1 else "No change"
     measurement_count = str(len(weights))
@@ -158,8 +161,9 @@ def create_goal_form():
         fh.Div(id="goal-result")
     )
 
-def measurements_modal(user_id: int, feet: float, inches: float, weight: float):
+def measurements_modal(user_id: int, measurements: list[tuple[str, float, float]]):
     """Create the measurements tracking modal"""
+    latest_measurement = measurements[0]
     return fh.Div(
         fh.Dialog(
             fh.Div(
@@ -185,7 +189,7 @@ def measurements_modal(user_id: int, feet: float, inches: float, weight: float):
                                 min="0",
                                 required=True,
                                 placeholder="Enter your weight",
-                                value=str(weight),
+                                value=str(latest_measurement["weight"]),
                                 cls="input input-bordered w-full bg-base-200 text-base-content"
                             ),
                             cls="form-control"
@@ -202,7 +206,7 @@ def measurements_modal(user_id: int, feet: float, inches: float, weight: float):
                                         min="0",
                                         max="9",
                                         placeholder="ft",
-                                        value=str(feet),
+                                        value=str(latest_measurement["height"] // 12),
                                         cls="input input-bordered w-full bg-base-200 text-base-content"
                                     ),
                                     cls="form-control"
@@ -215,7 +219,7 @@ def measurements_modal(user_id: int, feet: float, inches: float, weight: float):
                                         min="0",
                                         max="11",
                                         placeholder="in",
-                                        value=str(inches),
+                                        value=str(latest_measurement["height"] % 12),
                                         cls="input input-bordered w-full bg-base-200 text-base-content"
                                     ),
                                     cls="form-control"

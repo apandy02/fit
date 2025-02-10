@@ -1,5 +1,5 @@
-
 import logging
+from datetime import datetime
 
 import fasthtml.common as fh
 from fasthtml.common import RedirectResponse
@@ -41,6 +41,14 @@ def get_goals_page(session):
     block_onboarded_users(session)
     return ui.create_goals_page(session)
 
+def get_measurements_page(session):
+    """
+    Get request:
+        Return the measurements page
+    """
+    block_onboarded_users(session)
+    return ui.create_measurements_page(session)
+
 async def handle_profile_completion(session, request: fh.Request):
     """
     Post request:
@@ -50,15 +58,46 @@ async def handle_profile_completion(session, request: fh.Request):
         form = await request.form()
         form_data = dict(form)
         form_data["user_id"] = session["user_id"]
-        form_data["onboarding_stage"] = 1
+        form_data["onboarding_stage"] = 1  # Set stage to move to measurements
         database_service.update_profile(form_data)
-        return fh.Response(headers={"HX-Redirect": "/onboarding/dietary"})
+        return fh.Response(headers={"HX-Redirect": "/onboarding/measurements"})
 
     except Exception as e:
         return fh.P(
             f"Error updating profile: {str(e)}",
             cls="text-error font-semibold text-center mt-4"
         )
+    
+async def handle_measurements_completion(session, request: fh.Request):
+    """
+    Post request:
+        Handle measurements form submission
+    """
+    try:
+        form = await request.form()
+        weight = float(form["weight"])
+        height_feet = int(form["height_feet"])
+        height_inches = int(form["height_inches"])
+        
+        database_service.update_profile({
+            "user_id": session["user_id"],
+            "onboarding_stage": 2
+        })
+        
+        database_service.insert_measurement(
+            user_id=session["user_id"],
+            weight=weight,
+            height = height_feet * 12 + height_inches,
+            date=datetime.today().date()
+        )
+        
+        return fh.Response(headers={"HX-Redirect": "/onboarding/dietary"})
+    except Exception as e:
+        return fh.P(
+            f"Error updating measurements: {str(e)}",
+            cls="text-error font-semibold text-center mt-4"
+        )
+
 
 async def handle_dietary_completion(session, request: fh.Request):
     """
@@ -72,7 +111,7 @@ async def handle_dietary_completion(session, request: fh.Request):
         restrictions_str = ",".join(restrictions) if restrictions else ""
         
         database_service.update_profile(
-            {"user_id": session["user_id"], "dietary_restrictions": restrictions_str, "onboarding_stage": 2}
+            {"user_id": session["user_id"], "dietary_restrictions": restrictions_str, "onboarding_stage": 3}
         )
         
         return fh.Response(headers={"HX-Redirect": "/onboarding/activity"})
@@ -91,7 +130,7 @@ async def handle_activity_selection(session, request: fh.Request):
         form = await request.form()
         activity_level = form.get("activity_level")
         database_service.update_profile(
-            {"user_id": session["user_id"], "activity_level": activity_level, "onboarding_stage": 3}
+            {"user_id": session["user_id"], "activity_level": activity_level, "onboarding_stage": 4}
         )
         
         return fh.Response(headers={"HX-Redirect": "/onboarding/goals"})
@@ -116,7 +155,7 @@ async def handle_goals_selection(session, request: fh.Request):
                 "user_id": session["user_id"],
                 "weight_goal": weight_goal,
                 "fitness_goal": fitness_goal,
-                "onboarding_stage": 4
+                "onboarding_stage": 5
             }
         )
         
@@ -126,12 +165,12 @@ async def handle_goals_selection(session, request: fh.Request):
         return fh.P(
             f"Error updating goals: {str(e)}",
             cls="text-error font-semibold text-center mt-4"
-        ) 
+        )
 
 def block_onboarded_users(session):
     """
     Block users who have already completed onboarding
     """
     user_data = database_service.get_profile_data(session["user_id"])
-    if user_data["onboarding_stage"] == 4:
+    if user_data["onboarding_stage"] == 5:
         return RedirectResponse('/nutrition', status_code=303)

@@ -141,6 +141,7 @@ async def save_meal(session, request: fh.Request, date: str | None = None):
     user_id = session["user_id"]
     try:
         form = await request.form()
+        print("form: ", form)
         if date is not None:
             date = datetime.today().date()
 
@@ -180,7 +181,9 @@ async def save_meal(session, request: fh.Request, date: str | None = None):
             micronutrients=micronutrients,
             conditional_nutrients=conditional_nutrients
         )    
-        database_service.insert_meal(form["title"], nutrition_info, date, meal_time, user_id)
+        database_service.insert_meal(
+            form["title"], nutrition_info, date, meal_time, user_id, summary=form["title"], ingredients=nutrition_info.ingredients
+        )
         return fh.Response(headers={"HX-Redirect": "/nutrition"}, status_code=200)
     
     except Exception as e:
@@ -213,7 +216,7 @@ async def save_supplement(session, request: fh.Request):
     user_id = session["user_id"]
     try:
         form = await request.form()
-
+        print("form: ", form)
         nutrition_info = NutritionalInformation(
             calories=form["calories"],
             protein=form["protein"],
@@ -229,7 +232,11 @@ async def save_supplement(session, request: fh.Request):
             sodium=form["sodium"]
         )    
         database_service.insert_supplement(
-            name=form["summary"], consumption_time=form["time_consumed"], nutritional_info=nutrition_info, user_id=user_id
+            name=form["title"],
+            consumption_time=form["time_consumed"],
+            nutritional_info=nutrition_info,
+            user_id=user_id,
+            date=datetime.today().date()
         )
         
         return fh.Div(
@@ -257,17 +264,7 @@ async def save_supplement(session, request: fh.Request):
 async def get_supplements(session):
     """Get all supplements for the dropdown"""
     supplements = database_service.get_supplement_names(session["user_id"])
-    return fh.Select(
-        *[
-            fh.Option(
-                name,
-                value=name,
-            ) for name in supplements
-        ],
-        name="supplement_name",
-        cls="select select-bordered w-full bg-base-200 text-base-content",
-        required=True
-    )
+    return ui.create_supplement_dropdown(supplements)
 
 async def log_supplement_consumption(session, request: fh.Request, date: str | None = None):
     """Log a supplement consumption entry"""
