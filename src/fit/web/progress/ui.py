@@ -36,7 +36,7 @@ def create_progress_page(session, measurements: list[tuple[str, float]]):
                 ),
                 fh.Div(
                     fh.Div(
-                        fh.H3("Statistics", cls="text-2xl font-semibold mb-4 text-base-content text-center"),
+                        fh.H3("Statistics", cls="text-2xl mb-4 text-base-content text-center"),
                         create_stats_grid(measurements),
                     ),
                     cls="mt-8"

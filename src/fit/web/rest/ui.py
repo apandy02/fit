@@ -9,10 +9,10 @@ from fit.web.common import (create_fab_menu, create_text_generation_card,
 def create_rest_page(tracker: FitnessTracker, text_generation_endpoint: str, fab_buttons: list[tuple[str, str, str]], recovery: dict, sleep: list[dict]):
     content = fh.Div(
             fh.Card(
-                fh.H3("Rest Overview", cls="text-2xl  text-center mb-2 text-base-content"),
+                fh.H3("Rest Overview", cls="text-2xl font-light text-center mb-2 text-base-content"),
                 fh.P(
                     "Monitor your rest and readiness",
-                    cls="text-slate-400 text-center"
+                    cls="text-slate-400 text-center font-light"
                 ),
                 create_time_filter("daily"),
                 create_text_generation_card(text_generation_endpoint, "Generate Rest Overview"),
@@ -30,8 +30,8 @@ def create_rest_page(tracker: FitnessTracker, text_generation_endpoint: str, fab
 def rest_card(title: str, value: str):
     return fh.Card(
         fh.Div(
-            fh.H4(title, cls="text-lg font-semibold text-base-content mb-4 text-center"),
-            fh.P(value, cls="text-4xl  text-base-content text-center"),
+            fh.H4(title, cls="text-lg font-light text-base-content mb-4 text-center"),
+            fh.P(value, cls="text-4xl font-light text-base-content text-center"),
             cls="p-6 flex flex-col"
         ),
         cls="bg-base-200 outline outline-1 outline-base-content rounded-lg shadow-none"
@@ -42,9 +42,9 @@ def get_rest_metrics_section(tracker: FitnessTracker, recovery: dict, sleep: lis
     """Return the rest tracking metrics section"""    
     return fh.Div(
         fh.Div(
-            fh.H3("Today's Recovery", cls="text-xl  text-base-content mb-8 text-center"),
+            fh.H3("Today's Recovery", cls="text-xl font-light text-base-content mb-8 text-center"),
             fh.Div(
-                fh.P("No recovery data available for today", cls="text-base-content text-center italic") if not recovery else
+                fh.P("No recovery data available for today", cls="text-base-content text-center italic font-light") if not recovery else
                 fh.Div(
                     rest_card("Recovery Score", f"{recovery.get('score', 'N/A')}%") if isinstance(tracker, Whoop) else None,
                     rest_card("Resting Heart Rate", f"{recovery.get('resting_hr', 'N/A')} bpm"), 
@@ -55,8 +55,8 @@ def get_rest_metrics_section(tracker: FitnessTracker, recovery: dict, sleep: lis
             cls="mb-16"
         ),
         fh.Div(
-            fh.H3("Today's Sleep", cls="text-xl  text-base-content mb-8 text-center"),
-            create_sleep_cards(sleep) if sleep else fh.P("No sleep data available for today", cls="text-base-content text-center italic"),
+            fh.H3("Today's Sleep", cls="text-xl font-light text-base-content mb-8 text-center"),
+            create_sleep_cards(sleep) if sleep else fh.P("No sleep data available for today", cls="text-base-content text-center italic font-light"),
             cls="mb-8"
         ),
         cls="p-6"
@@ -69,12 +69,12 @@ def create_sleep_cards(sleep_entries: list[dict]) -> fh.Div:
         *[
             fh.Div(
                 fh.Div(
-                    fh.H4("Nap" if entry.get("nap", False) else "Sleep", cls="text-lg font-semibold text-base-content"),
+                    fh.H4("Nap" if entry.get("nap", False) else "Sleep", cls="text-lg font-light text-base-content"),
                     cls="collapse-title"
                 ),
                 fh.Div(
                     # TODO: Sleep details will go here
-                    fh.P("hello"),
+                    fh.P("hello", cls="font-light"),
                     cls="collapse-content bg-base-300"
                 ),
                 tabindex="0",

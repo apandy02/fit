@@ -48,7 +48,7 @@ def metric_card(
     return fh.Card(
         fh.Div(
             fh.Div(
-                fh.H3(display_title, cls="text-xl text-base-content text-center mt-4 mb-12"),
+                fh.H3(display_title, cls="text-xl text-base-content text-center mt-4 mb-12 font-light"),
                 fh.Div(id=plot_id, cls="w-full h-[300px]"),
                 cls="w-full"
             ),
@@ -62,7 +62,7 @@ def metric_card(
                     """
                 ),
             ),
-            fh.P(analysis_text, cls="text-md text-base-content mb-2 text-center") if analysis_text else None,
+            fh.P(analysis_text, cls="text-md text-base-content mb-2 text-center font-light") if analysis_text else None,
             fh.Div(
                 suggestions_button,
                 cls="flex justify-center"
@@ -108,7 +108,7 @@ def create_meal_prompt_form(
     rows: int = 3
 ):
     """Create a form for meal description or refinement input."""
-    header_content = fh.H3(title, cls="text-xl text-base-content")
+    header_content = fh.H3(title, cls="text-xl text-base-content font-light")
     if header_buttons:
         header_content = fh.Div(
             header_content,
@@ -134,22 +134,22 @@ def create_meal_prompt_form(
                 fh.Button(
                     submit_text,
                     type="submit",
-                    cls="btn btn-neutral w-1/2"
+                    cls="btn btn-neutral w-1/2 font-light"
                 )
             ),            
             cls="p-6"
         ),
-        cls="bg-base-200 outline outline-1 outline-base-content rounded-lg mt-12 shadow-none "
+        cls="bg-base-200 rounded-lg mt-12 shadow-none "
     )
 
 def text_area(textarea_label: str, textarea_placeholder: str, rows: int, name: str):
     return fh.Div(
-        fh.Label(textarea_label, cls="label text-base-content"),
+        fh.Label(textarea_label, cls="label text-base-content font-light"),
         fh.Textarea(
             name=name,
             placeholder=textarea_placeholder,
             rows=rows,
-            cls="textarea textarea-bordered w-full bg-base-200 outline text-base-content placeholder-slate-400"
+            cls="textarea textarea-bordered w-full bg-base-200 outline text-base-content placeholder-slate-400 font-light"
         ),
         cls="form-control"
     )
@@ -201,7 +201,7 @@ def create_text_input_form(is_feedback: bool = False, original_description: str 
                     "↺",
                     hx_post="/reset_text_form",
                     hx_target="#text-input",
-                    cls="btn btn-ghost text-xl text-base-content"
+                    cls="btn btn-ghost text-xl text-base-content font-light"
                 )
             ]
         )
@@ -211,7 +211,7 @@ def create_image_upload_form():
     return fh.Card(
         fh.Div(
             fh.Header(
-                fh.H3("Upload Food Image", cls="text-xl text-base-content"),
+                fh.H3("Upload Food Image", cls="text-xl text-base-content font-light"),
                 cls="mb-6"
             ),
             fh.Form(
@@ -222,12 +222,12 @@ def create_image_upload_form():
                 cls="space-y-4"
             )(
                 fh.Div(
-                    fh.Label("Food Image", cls="label text-base-content"),
+                    fh.Label("Food Image", cls="label text-base-content font-light"),
                     fh.Input(
                         type="file",
                         name="food_image",
                         accept="image/*",
-                        cls="file-input file-input-bordered w-full text-sm"
+                        cls="file-input file-input-bordered w-full text-sm font-light"
                     ),
                     cls="form-control"
                 ),
@@ -241,7 +241,7 @@ def create_image_upload_form():
                 fh.Button(
                     "Upload & Analyze",
                     type="submit",
-                    cls="btn btn-neutral"
+                    cls="btn btn-neutral font-light"
                 )
             ),
             cls="p-6"
@@ -268,7 +268,7 @@ def create_modal_content(date: str | None = None):
         ),
         fh.Div(
             fh.Div(
-                fh.H3("How would you like to log your meal?", cls="text-xl text-center mb-8 text-base-content"),
+                fh.H3("How would you like to log your meal?", cls="text-xl text-center mb-8 text-base-content font-light"),
                 fh.Div(
                     fh.Button(
                         "Upload an image",
@@ -389,14 +389,14 @@ def water_tracking_modal(date: datetime | None = None):
                         onclick="closeWaterModal()",
                         style="outline: none; box-shadow: none;"
                     ),
-                    fh.H3("Log Water", cls="text-xl  text-center mt-4 mb-8 text-base-content"),
+                    fh.H3("Log Water", cls="text-xl  text-center mt-4 mb-8 text-base-content font-light"),
                     fh.Form(
                         hx_post=log_water_endpoint,
                         hx_target="#water-log-result",
                         cls="w-[90%] mx-auto space-y-6"
                     )(
                         fh.Div(
-                            fh.Label("Amount (ml)", cls="label text-base-content"),
+                            fh.Label("Amount (ml)", cls="label text-base-content font-light"),
                             fh.Input(
                                 type="number",
                                 name="amount",
@@ -404,7 +404,7 @@ def water_tracking_modal(date: datetime | None = None):
                                 step="50",
                                 min="0",
                                 required=True,
-                                cls="input input-bordered w-full bg-base-200 text-base-content"
+                                cls="input input-bordered w-full bg-base-200 text-base-content font-light"
                             ),
                             cls="form-control"
                         ),
@@ -412,7 +412,7 @@ def water_tracking_modal(date: datetime | None = None):
                         fh.Button(
                             "Log Water",
                             type="submit",
-                            cls="btn btn-neutral w-full mt-6"
+                            cls="btn btn-neutral w-full mt-6 font-light"
                         ),
                         fh.Div(id="water-log-result", cls="mt-4"),
                         cls="mx-8"
@@ -437,13 +437,13 @@ def water_tracking_modal(date: datetime | None = None):
 
 def time_input(name: str, label: str):
     return fh.Div(
-        fh.Label(label, cls="label text-base-content"),
+        fh.Label(label, cls="label text-base-content font-light"),
         fh.Input(
             type="time",
             name=name,
             value=datetime.now().strftime("%H:%M"),
             required=True,
-            cls="input input-bordered w-full bg-base-200 text-base-content"
+            cls="input input-bordered w-full bg-base-200 text-base-content font-light"
         ),
         cls="form-control"
     )
@@ -491,7 +491,7 @@ def create_metric_overview_section(title, data, metrics, view_type: str = "daily
     """Create a metrics overview section with configurable metrics"""    
     return fh.Section(
         fh.Div(
-            fh.H2(title, cls="text-3xl my-8 text-base-content text-center"),
+            fh.H2(title, cls="text-3xl my-8 text-base-content text-center font-light"),
             fh.Div(
                 *[fh.Div(
                     metric_card(
@@ -574,11 +574,11 @@ def create_metrics_grid(user_id, data, water_metrics, view_type: str, date: date
 def create_nutrition_section(title: str, items: list, cls: str = "mb-4"):
     """Create a section in the nutrition card"""
     return fh.Section(
-        fh.H4(title, cls="font-medium mb-2"),
+        fh.H4(title, cls="font-light mb-2"),
         fh.Ul(
             *[
                 fh.Li(
-                    fh.Span(f"{name}: ", cls="font-medium"),
+                    fh.Span(f"{name}: ", cls="font-light"),
                     value,
                     cls="mb-1"
                 )
@@ -593,7 +593,7 @@ def create_nutrition_section(title: str, items: list, cls: str = "mb-4"):
 def create_form_section(title, inputs, cls="mb-6"):
     """Helper function to create a form section with a title and inputs"""
     return fh.Section(
-        fh.H4(title, cls="font-medium mb-4 text-base-content"),
+        fh.H4(title, cls="font-light mb-4 text-base-content"),
         fh.Div(
             *inputs,
             cls="grid grid-cols-2 gap-4"
@@ -606,10 +606,10 @@ def create_meal_breakdown(nutrition_info, meal_time: str, date: str | None = Non
     print(f"meal_time: {meal_time}")
     return fh.Card(
         fh.Div(
-            fh.H4("Ingredients", cls="font-medium mb-2 text-base-content"),
+            fh.H4("Ingredients", cls="font-light mb-2 text-base-content"),
             fh.P(
                 nutrition_info.ingredients,
-                cls="mb-6 text-base-content"
+                cls="mb-6 text-base-content font-light"
             ),
             fh.Form(
                 hx_post=save_meal_endpoint,
@@ -620,7 +620,7 @@ def create_meal_breakdown(nutrition_info, meal_time: str, date: str | None = Non
                 fh.Input(type="hidden", name="ingredients", value=nutrition_info.ingredients),
                 fh.Input(type="hidden", name="meal_time", value=meal_time),
                 create_nutrition_card(nutrition_info),
-                fh.Button("Save Meal", type="submit", cls="btn btn-neutral w-full"),
+                fh.Button("Save Meal", type="submit", cls="btn btn-neutral w-full font-light"),
                 fh.Div(id="save-result", cls="mt-4")
             ),
             cls="p-6"
@@ -665,7 +665,7 @@ def _create_modal_close_button():
 def _create_supplement_options():
     """Create the main supplement options buttons"""
     return fh.Div(
-        fh.H3("Supplementation", cls="text-xl text-center mb-8 text-base-content mt-4"),
+        fh.H3("Supplementation", cls="text-xl text-center mb-8 text-base-content mt-4 font-light"),
         fh.Div(
             fh.Button(
                 "Log existing supplement",

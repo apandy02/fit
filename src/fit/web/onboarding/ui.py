@@ -15,7 +15,7 @@ def create_profile_page(user_data):
             fh.Button(
                 "Next →",
                 type="submit",
-                cls="btn btn-base outline outline-1 outline-primary-content w-full mt-8"
+                cls="btn btn-base outline outline-1 outline-primary-content w-full mt-8 font-light"
             ),
         cls="p-6"
     )
@@ -31,7 +31,7 @@ def create_dietary_page(session):
         fh.Button(
             "Next →",
             type="submit",
-            cls="btn btn-base outline outline-1 outline-primary-content w-full mt-8"
+            cls="btn btn-base outline outline-1 outline-primary-content w-full mt-8 font-light"
         ),
         cls="p-6"
     )
@@ -43,7 +43,7 @@ def onboarding_page(form: fh.Form, page_title: str, header: str):
             fh.Card(
                 fh.Div(
                     fh.Header(
-                        fh.H3(header, cls="text-2xl text-center mb-6 text-base-content"),
+                        fh.H3(header, cls="text-2xl text-center mb-6 text-base-content font-light"),
                         cls="mb-6 bg-base-200"
                     ),
                     form,
@@ -82,14 +82,14 @@ def create_activity_page(session):
 def onboarding_form_option(title, description, form_name, value, is_last=False):
     return fh.Button(
         fh.Div(
-            fh.H4(title, cls="text-lg mb-2 text-base-content"),
-            fh.P(description, cls="text-sm text-slate"),
+            fh.H4(title, cls="text-lg mb-2 text-base-content font-light"),
+            fh.P(description, cls="text-sm text-slate font-light"),
             cls="text-center"
         ),
         type="submit",
         name=form_name, 
         value=value,
-        cls=f"btn btn-ghost outline outline-1 outline-base-content w-full h-24{' mb-4' if not is_last else ''}"
+        cls=f"btn btn-ghost outline outline-1 outline-base-content w-full h-24 font-light{' mb-4' if not is_last else ''}"
     )
 
 def create_goals_page(session):
@@ -125,12 +125,12 @@ def create_measurements_page(session):
     )(
         fh.Card(
             fh.Header(
-                fh.H3("Body Measurements", cls="text-xl text-center mb-2 text-base-content"),
+                fh.H3("Body Measurements", cls="text-xl text-center mb-2 text-base-content font-light"),
                 cls="mb-6 bg-base-200"
             ),
             fh.Div(
                 fh.Div(
-                    fh.Label("Weight (lbs)", cls="label text-base-content"),
+                    fh.Label("Weight (lbs)", cls="label text-base-content font-light"),
                     fh.Input(
                         type="number",
                         name="weight",
@@ -138,15 +138,15 @@ def create_measurements_page(session):
                         min="0",
                         required=True,
                         placeholder="Enter your weight",
-                        cls="input input-bordered w-full bg-base-200 text-base-content"
+                        cls="input input-bordered w-full bg-base-200 text-base-content font-light"
                     ),
                     cls="form-control mb-4"
                 ),
                 fh.Div(
-                    fh.Label("Height", cls="label text-base-content"),
+                    fh.Label("Height", cls="label text-base-content font-light"),
                     fh.Div(
                         fh.Div(
-                            fh.Label("Feet", cls="label text-base-content"),
+                            fh.Label("Feet", cls="label text-base-content font-light"),
                             fh.Input(
                                 type="number",
                                 name="height_feet",
@@ -155,12 +155,12 @@ def create_measurements_page(session):
                                 max="9",
                                 placeholder="ft",
                                 required=True,
-                                cls="input input-bordered w-full bg-base-200 text-base-content"
+                                cls="input input-bordered w-full bg-base-200 text-base-content font-light"
                             ),
                             cls="form-control"
                         ),
                         fh.Div(
-                            fh.Label("Inches", cls="label text-base-content"),
+                            fh.Label("Inches", cls="label text-base-content font-light"),
                             fh.Input(
                                 type="number",
                                 name="height_inches",
@@ -168,7 +168,7 @@ def create_measurements_page(session):
                                 max="11",
                                 placeholder="in",
                                 required=True,
-                                cls="input input-bordered w-full bg-base-200 text-base-content"
+                                cls="input input-bordered w-full bg-base-200 text-base-content font-light"
                             ),
                             cls="form-control"
                         ),
@@ -183,7 +183,7 @@ def create_measurements_page(session):
         fh.Button(
             "Next →",
             type="submit",
-            cls="btn btn-base outline outline-1 outline-primary-content w-full mt-8"
+            cls="btn btn-base outline outline-1 outline-primary-content w-full mt-8 font-light"
         ),
         cls="p-6"
     )

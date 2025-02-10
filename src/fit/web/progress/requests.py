@@ -41,7 +41,7 @@ async def update_measurements(session, request: fh.Request):
     return fh.Div(
         fh.P(
             "Measurements updated successfully!",
-            cls="text-green-600 font-semibold text-center mt-4"
+            cls="text-green-600 text-center mt-4"
         ),
         fh.Script("""
             setTimeout(() => {
