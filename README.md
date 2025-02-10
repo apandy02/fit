@@ -61,18 +61,11 @@ The application consists of several core modules:
    cd fit
    ```
 
-4. Create and activate virtual environment:
+4. Create virtual environment and sync dependencies:
    ```bash
    uv venv
-   source .venv/bin/activate  # On Unix
-   .venv\Scripts\activate     # On Windows
+   uv sync
    ```
-
-5. Install dependencies:
-   ```bash
-   uv pip install -e .
-   ```
-
 ### Running the Application
 
 Start the web interface:
@@ -80,13 +73,15 @@ Start the web interface:
 uv run src/fit/web/app.py
 ```
 
+The above might take a few seconds to execute the first time, but it will work (hang in there)
+
 The application will be available at `http://localhost:5001`
 
 ### Testing
 
 Run the test suite:
 ```bash
-python -m unittest discover -v
+uv run -m unittest discover -v
 ```
 
 ## Project Structure
@@ -104,6 +99,8 @@ Each module contains its own README with detailed documentation.
 ## Contributing
 
 1. Ensure all tests pass: `uv run -m unittest discover -v`
-2. Run linting: `uv run ruff check . --fix`
-3. Follow the existing code structure and documentation patterns
-4. Submit a pull request
+2. Run linting (isort and ruff). There are pre commit hooks that should auto-run when you commit. If these don't run, run the linters manually with:
+   - `uv run isort .`
+   - `uv run ruff check . --fix`
+4. Follow the existing code structure and documentation patterns
+5. Submit a pull request
