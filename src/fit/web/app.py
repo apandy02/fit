@@ -1,17 +1,14 @@
-from datetime import datetime
-
 import fasthtml.common as fh
-from fasthtml.common import RedirectResponse
 
 import fit.web.auth.requests as auth
 import fit.web.kitchen.requests as kitchen
 import fit.web.nutrition.requests as nutrition
 import fit.web.onboarding.requests as onboarding
 import fit.web.performance.requests as requests
-import fit.web.progress as progress
+import fit.web.profile.requests as profile
+import fit.web.progress.requests as progress
 import fit.web.rest.requests as rest
-import fit.web.user_profile as user_profile
-from fit.web.common import database_service
+from fit.web.bw import auth_bware, onboarding_bware
 
 htmx_indicator_style = fh.Style("""
 .htmx-indicator {
@@ -32,65 +29,6 @@ dlink = fh.Link(
 )
 modal_css = fh.Link(rel="stylesheet", href="/static/public/modal.css")
 
-def auth_before(req, session):
-    access_token_expiry = session.get('access_token_expiry', None)
-    req.scope['auth'] = access_token_expiry
-    print(f"access_token_expiry: {access_token_expiry}")
-    # if a user is not logged in, redirect to the login page
-    if not access_token_expiry or datetime.now().timestamp() > access_token_expiry:
-        return RedirectResponse('/login', status_code=303)
-
-def onboarding_before(req, session):
-    user_profile = database_service.get_profile_data(session["user_id"])
-
-    if user_profile["onboarding_stage"] == 0:
-        return RedirectResponse('/onboarding/profile', status_code=303)
-
-    if user_profile["onboarding_stage"] == 1:
-        return RedirectResponse('/onboarding/dietary', status_code=303)
-
-    if user_profile["onboarding_stage"] == 2:
-        return RedirectResponse('/onboarding/activity', status_code=303)
-    
-def onboarding_complete_before(req, session):
-    user_profile = database_service.get_profile_data(session["user_id"])
-    if user_profile["onboarding_stage"] != 3:
-        return RedirectResponse('/nutrition', status_code=303)
-
-auth_callback_path = "/auth_redirect"
-
-fitbit_auth_callback_path = auth_callback_path + '/fitbit'
-whoop_auth_callback_path = auth_callback_path + '/whoop'
-
-fitbit_scope = ["activity", "heartrate", "profile"]
-whoop_scope = ["offline", "read:recovery", "read:cycles", "read:workout", "read:sleep", "read:profile"]
-
-auth_bware = fh.Beforeware(
-    auth_before,
-    skip=[
-        '/login',
-        auth_callback_path,
-        fitbit_auth_callback_path,
-        whoop_auth_callback_path
-    ]
-)
-onboarding_bware = fh.Beforeware(
-    onboarding_before, 
-    skip=[
-        '/login',
-        auth_callback_path,
-        fitbit_auth_callback_path,
-        whoop_auth_callback_path,
-        '/onboarding/profile',
-        '/onboarding/activity',
-        '/onboarding/dietary',
-        '/onboarding/complete_profile',
-        '/onboarding/complete_dietary',
-        '/onboarding/handle_activity_selection',
-        '/add_restriction',
-        '/remove_restriction',
-    ]
-)
 
 app = fh.FastHTML(before=[auth_bware, onboarding_bware], hdrs=(htmx_indicator_style, tlink, *amcharts, plotly, dlink, fh.picolink, modal_css))
 
@@ -123,16 +61,16 @@ app.post("/add_item")(kitchen.add_item)
 app.post("/decipher_text_inventory_addition")(kitchen.add_inventory_from_text)
 app.post("/save_inventory")(kitchen.save_inventory)
 app.get("/get_inventory")(kitchen.get_inventory)
-app.route("/delete_inventory_item/{rowid:int}", methods=["POST"])(kitchen.delete_inventory_item)
+app.post("/delete_inventory_item/{rowid:int}")(kitchen.delete_inventory_item)
 app.post("/generate_inventory_additions")(kitchen.generate_inventory_additions)
 
 app.get("/progress")(progress.get)
 app.post("/update_measurements")(progress.update_measurements)
 
-app.get("/profile")(user_profile.get)
-app.post("/update_profile")(user_profile.update_profile)
-app.post("/add_restriction")(user_profile.add_restriction)
-app.post("/remove_restriction")(user_profile.remove_restriction)
+app.get("/profile")(profile.get)
+app.post("/update_profile")(profile.update_profile)
+app.post("/add_restriction")(profile.add_restriction)
+app.post("/remove_restriction")(profile.remove_restriction)
 
 app.get("/rest")(rest.get)
 app.post("/generate_rest_overview")(rest.generate_overview)
@@ -141,19 +79,21 @@ app.get("/performance")(requests.get)
 app.post("/generate_performance_overview")(requests.generate_overview)
 
 app.get("/onboarding/profile")(onboarding.get_profile_page)
+app.get("/onboarding/measurements")(onboarding.get_measurements_page)
 app.get("/onboarding/activity")(onboarding.get_activity_page)
 app.get("/onboarding/dietary")(onboarding.get_dietary_page)
+app.get("/onboarding/goals")(onboarding.get_goals_page)
 app.post("/onboarding/complete_profile")(onboarding.handle_profile_completion)
+app.post("/onboarding/complete_measurements")(onboarding.handle_measurements_completion)
 app.post("/onboarding/complete_dietary")(onboarding.handle_dietary_completion)
 app.post("/onboarding/handle_activity_selection")(onboarding.handle_activity_selection)
-app.get("/onboarding/goals")(onboarding.get_goals_page)
 app.post("/onboarding/handle_goals_selection")(onboarding.handle_goals_selection)
 
-fh.reg_re_param("imgext", "png")
-
 app.get("/login")(auth.login)
-app.get(auth.fitbit_auth_callback_path)(auth.fitbit_auth_redirect)
-app.get(auth.whoop_auth_callback_path)(auth.whoop_auth_redirect)
+app.get(auth.auth_callback_path + '/fitbit')(auth.fitbit_auth_redirect)
+app.get(auth.auth_callback_path + '/whoop')(auth.whoop_auth_redirect)
+
+fh.reg_re_param("imgext", "png")
 
 @app.get(r"/static/{path:path}")
 def get(path: str):

@@ -32,11 +32,9 @@ class FitbitAppClient(WebApplicationClient):
         self.code_verifier, self.code_challenge = make_code_verifier_and_challenge()
 
     def login_link(
-        self, redirect_uri: str, scope: list[str] = None, state: str = None
+        self, redirect_uri: str, state: str = None
     ) -> str:
         """Create the Fitbit login link with PKCE parameters."""
-        if scope is None:
-            scope = self.SCOPE
         if state is None:
             state = self.state
 
@@ -48,7 +46,7 @@ class FitbitAppClient(WebApplicationClient):
         auth_url = self.prepare_request_uri(
             self.base_url,
             redirect_uri=redirect_uri,
-            scope=scope,
+            scope=self.scope,
             state=state,
             **extra_params,
         )
@@ -119,14 +117,6 @@ class FitbitAppClient(WebApplicationClient):
 
 
 class Fitbit(FitnessTracker):
-    SCOPE = [
-        "activity",
-        "heartrate",
-        "profile",
-        "sleep",
-        "oxygen_saturation",
-        "respiratory_rate",
-    ]
     BASE_URL = "https://api.fitbit.com/1/user/-"
     INFO_URL = "https://api.fitbit.com/1/user/-/profile.json"
 

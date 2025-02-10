@@ -22,21 +22,16 @@ from fit.web.common import database_service, micronutrient_goals
 def get_daily_overview(session, date: str = None):
     """Return the nutritional overview page content"""
     tracker = tracker_factory(session["tracker"], session["access_token"])
-    if date is None:
+    if not date:
         date = datetime.today().date()
     else:
         try:
             date = datetime.strptime(date, "%Y-%m-%d").date()
         except ValueError:
             date = datetime.today().date()
-
-    if date is None:
-        date = datetime.today().date()
     
     data = get_daily_nutrition_data(date, tracker, session["user_id"])
     return overview_page_content(session, data, "daily", date)
-
-    
 
 def get_weekly_overview(session):
     """Return the weekly nutritional overview page content"""
@@ -45,7 +40,6 @@ def get_weekly_overview(session):
     data = get_weekly_nutrition_data(week, tracker, session["user_id"])
     date = datetime.today().date()
     return overview_page_content(session, data, "weekly", date)
-
 
 def overview_page_content(session, data: list[dict], current_view: str, date: datetime.date = None):
     menu_items = [
@@ -147,6 +141,7 @@ async def save_meal(session, request: fh.Request, date: str | None = None):
     user_id = session["user_id"]
     try:
         form = await request.form()
+        print("form: ", form)
         if date is not None:
             date = datetime.today().date()
 
@@ -186,7 +181,9 @@ async def save_meal(session, request: fh.Request, date: str | None = None):
             micronutrients=micronutrients,
             conditional_nutrients=conditional_nutrients
         )    
-        database_service.insert_meal(form["title"], nutrition_info, date, meal_time, user_id)
+        database_service.insert_meal(
+            form["title"], nutrition_info, date, meal_time, user_id, summary=form["title"], ingredients=nutrition_info.ingredients
+        )
         return fh.Response(headers={"HX-Redirect": "/nutrition"}, status_code=200)
     
     except Exception as e:
@@ -219,7 +216,7 @@ async def save_supplement(session, request: fh.Request):
     user_id = session["user_id"]
     try:
         form = await request.form()
-
+        print("form: ", form)
         nutrition_info = NutritionalInformation(
             calories=form["calories"],
             protein=form["protein"],
@@ -235,7 +232,11 @@ async def save_supplement(session, request: fh.Request):
             sodium=form["sodium"]
         )    
         database_service.insert_supplement(
-            name=form["summary"], consumption_time=form["time_consumed"], nutritional_info=nutrition_info, user_id=user_id
+            name=form["title"],
+            consumption_time=form["time_consumed"],
+            nutritional_info=nutrition_info,
+            user_id=user_id,
+            date=datetime.today().date()
         )
         
         return fh.Div(
@@ -263,17 +264,7 @@ async def save_supplement(session, request: fh.Request):
 async def get_supplements(session):
     """Get all supplements for the dropdown"""
     supplements = database_service.get_supplement_names(session["user_id"])
-    return fh.Select(
-        *[
-            fh.Option(
-                name,
-                value=name,
-            ) for name in supplements
-        ],
-        name="supplement_name",
-        cls="select select-bordered w-full bg-base-200 text-base-content",
-        required=True
-    )
+    return ui.create_supplement_dropdown(supplements)
 
 async def log_supplement_consumption(session, request: fh.Request, date: str | None = None):
     """Log a supplement consumption entry"""
@@ -356,8 +347,6 @@ async def generate_daily_overview(session, date: str | None = None):
         
     return ui.overview_text(analysis)
 
-
-
 def generate_overview(session, date: str | None = None, weekly: bool = False):
     """Get the overview data for the given date or week"""
     if weekly:
@@ -378,7 +367,6 @@ def generate_overview(session, date: str | None = None, weekly: bool = False):
         return assistants.weekly_io_analysis(meals, nutritional_data["targets"], nutritional_data["restrictions"]).content[0].parsed
     else:
         return assistants.daily_io_analysis(meals, nutritional_data["targets"][0], nutritional_data["restrictions"]).content[0].parsed
-    
 
 async def nutrition_redirect(request: fh.Request):
     """Redirect to the nutrition page"""
@@ -404,27 +392,7 @@ async def get_nutrient_suggestions(session, nutrient: str):
         kitchen_inventory=kitchen_inventory
     ).content[0].parsed
 
-    return fh.Div(
-        fh.H4("Suggestions", cls="text-lg font-bold mb-1 text-base-content text-center"),
-        fh.Div(
-            fh.Ul(
-                *[
-                    fh.Li(
-                        fh.Div(
-                            fh.P(meal.title, cls="font-medium text-base-content text-sm text-center font-bold mb-1"),
-                            fh.P(meal.ingredients, cls="text-base-content text-xs text-center"),
-                            cls="mb-3"
-                        ),
-                        cls="list-none"
-                    ) for meal in recommendations.meals
-                ],
-                cls="list-none p-0"
-            ),
-            cls="outline outline-1 outline-base-content rounded-lg p-4 max-h-[200px] overflow-y-auto mt-3"
-        ),
-        cls="bg-base-200 p-4 rounded-lg"
-    )
-
+    return ui.create_meal_suggestions(recommendations)
 def get_user_nutritional_data_for_dates(session, dates: list[datetime.date]):
     """
     Get the user's nutritional data for the given dates.

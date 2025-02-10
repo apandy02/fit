@@ -2,12 +2,25 @@ import fasthtml.common as fh
 import fh_bootstrap as fhb
 from markdown import markdown
 
-from fit.database import DatabaseService
+from fit.database.database import DatabaseService
+from fit.database.schema import (Inventory, Meal, Measurement, Profile,
+                                 Supplement, SupplementEntry, User, Water)
 from fit.nutrition.targets import MICRO_GOALS
 
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
 
-database_service = DatabaseService("data/nutrition.db")
+tables = [
+    ("users", User, ["user_id"], "user_id"),
+    ("meals", Meal, [ "user_id"], "rowid"),
+    ("supplements", Supplement, ["name", "user_id"], "name"),
+    ("measurements", Measurement, ["user_id"], "rowid"),
+    ("water", Water, ["user_id"], "rowid"),
+    ("profile", Profile, ["user_id"], "user_id"),
+    ("inventory", Inventory, ["user_id"], "rowid"),
+    ("supplement_entries", SupplementEntry, ["user_id"], "rowid"),
+]
+
+database_service = DatabaseService("data/nutrition.db", tables)
 micronutrient_goals = MICRO_GOALS["male"]
 
 def create_fab_menu(buttons):

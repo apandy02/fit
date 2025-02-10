@@ -1,8 +1,8 @@
 import fasthtml.common as fh
 
 from fit.web.common import page_outline
-from fit.web.user_profile import (create_basic_info_card,
-                                  create_dietary_restrictions_card)
+from fit.web.profile.ui import (create_basic_info_card,
+                                create_dietary_restrictions_card)
 
 
 def create_profile_page(user_data):
@@ -116,3 +116,75 @@ def create_goals_page(session):
     cls="p-6"
     )
     return onboarding_page(form, "Goals", header)
+
+def create_measurements_page(session):
+    """Create the measurements page"""
+    form = fh.Form(
+        hx_post="/onboarding/complete_measurements",
+        cls="space-y-6"
+    )(
+        fh.Card(
+            fh.Header(
+                fh.H3("Body Measurements", cls="text-xl text-center mb-2 text-base-content"),
+                cls="mb-6 bg-base-200"
+            ),
+            fh.Div(
+                fh.Div(
+                    fh.Label("Weight (lbs)", cls="label text-base-content"),
+                    fh.Input(
+                        type="number",
+                        name="weight",
+                        step="0.1",
+                        min="0",
+                        required=True,
+                        placeholder="Enter your weight",
+                        cls="input input-bordered w-full bg-base-200 text-base-content"
+                    ),
+                    cls="form-control mb-4"
+                ),
+                fh.Div(
+                    fh.Label("Height", cls="label text-base-content"),
+                    fh.Div(
+                        fh.Div(
+                            fh.Label("Feet", cls="label text-base-content"),
+                            fh.Input(
+                                type="number",
+                                name="height_feet",
+                                step="1",
+                                min="0",
+                                max="9",
+                                placeholder="ft",
+                                required=True,
+                                cls="input input-bordered w-full bg-base-200 text-base-content"
+                            ),
+                            cls="form-control"
+                        ),
+                        fh.Div(
+                            fh.Label("Inches", cls="label text-base-content"),
+                            fh.Input(
+                                type="number",
+                                name="height_inches",
+                                min="0",
+                                max="11",
+                                placeholder="in",
+                                required=True,
+                                cls="input input-bordered w-full bg-base-200 text-base-content"
+                            ),
+                            cls="form-control"
+                        ),
+                        cls="grid grid-cols-2 gap-4"
+                    ),
+                    cls="form-control"
+                ),
+                cls="space-y-4"
+            ),
+            cls="bg-base-200 outline outline-1 outline-base-content rounded-lg p-6 mb-8 shadow-none"
+        ),
+        fh.Button(
+            "Next →",
+            type="submit",
+            cls="btn btn-base outline outline-1 outline-primary-content w-full mt-8"
+        ),
+        cls="p-6"
+    )
+    return onboarding_page(form, "Measurements", "Body Measurements")

@@ -100,26 +100,7 @@ async def add_inventory_from_text(request: fh.Request):
         form = await request.form()
         text = form.get("items_description")
         inventory = assistants.decipher_inventory(text).content[0].parsed
-        return fh.Div(
-            fh.Button(
-                "←",
-                cls="absolute left-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
-                onclick="showBulkView()",
-                style="outline: none; box-shadow: none;"
-            ),
-            fh.Button(
-                "×",
-                cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
-                onclick="closeKitchenModal()",
-                style="outline: none; box-shadow: none;"
-            ),
-            fh.Div(
-                ui.create_editable_inventory_form(inventory),
-                cls="px-6"
-            ),
-            cls="p-6",
-            id="describe-view"
-        )
+        return ui.create_editable_inventory_form_modal(inventory)
     except Exception as e:
         logging.e
         return fh.P(
@@ -131,8 +112,7 @@ async def delete_inventory_item(rowid: int):
     """Delete an inventory item"""
     try:
         database_service.delete_inventory_item(rowid)
-        # Return an empty div that will replace the card
-        return fh.Div()
+        return fh.Response(status=200)
     except Exception:
         logging.e
         return fh.Response(status=500)
@@ -149,7 +129,6 @@ async def generate_inventory_additions(session, request: fh.Request):
             current_inventory, user_preferences, dietary_restrictions
         ).content[0].parsed
         
-        # Create cards for each grocery item
         grocery_cards = []
         for item in grocery_list.items:
             grocery_cards.append(

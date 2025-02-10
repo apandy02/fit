@@ -2,12 +2,6 @@
 
 This directory contains the core nutrition tracking and analysis functionality for the fitness assistant.
 
-## Stack Overview
-
-- **Ell**: LLM framework for nutrition analysis and recommendations
-- **Pydantic**: For data modeling and validation
-- **GPT-4**: For natural language processing of food descriptions and analysis
-
 ## Key Features
 
 - Natural language food logging

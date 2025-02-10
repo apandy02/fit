@@ -435,3 +435,28 @@ def grocery_suggestion_card(item: KitchenItem):
         ),
         cls="card bg-base-300 shadow-xl rounded-xl outline outline-1 outline-base-content mt-4 max-w-[250px]"
     )
+
+def create_editable_inventory_form_modal(inventory: KitchenInventory):
+    """Create a modal for editing inventory items"""
+    return fh.Div(
+        fh.Div(
+            fh.Button(
+                "←",
+                cls="absolute left-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                onclick="showBulkView()",
+                style="outline: none; box-shadow: none;"
+            ),
+            fh.Button(
+                "×",
+                cls="absolute right-4 top-4 text-xl font-light text-primary-content hover:text-primary-content focus:outline-none focus:ring-0 border-none outline-none",
+                onclick="closeKitchenModal()",
+                style="outline: none; box-shadow: none;"
+            ),
+            fh.Div(
+                create_editable_inventory_form(inventory),
+                cls="px-6"
+            ),
+            cls="p-6",
+            id="describe-view"
+        )
+    )
