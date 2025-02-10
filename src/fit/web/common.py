@@ -52,13 +52,15 @@ def create_fab_menu(buttons):
             ],
             cls="absolute bottom-16 right-0"
         ),
-        # Main FAB
-        fh.Button(
-            fh.Span("+", cls="text-2xl transition-transform duration-200"),
-            cls="btn btn-circle btn-outline",
-            onclick=create_fab_animation_script([b[0].lower() for b in buttons])
-        ),
+        fab_entry(create_fab_animation_script([b[0].lower() for b in buttons])),
         cls="fixed bottom-8 right-8"
+    )
+
+def fab_entry(onclick):
+    return fh.Button(
+        fh.Span("+", cls="text-2xl transition-transform duration-200"),
+        cls="btn btn-circle btn-base font-light outline outline-1 outline-base-content",
+        onclick=onclick
     )
 
 def create_fab_animation_script(button_ids):

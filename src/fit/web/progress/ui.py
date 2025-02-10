@@ -13,7 +13,7 @@ def create_progress_page(session, measurements: list[tuple[str, float]]):
         fh.Div(
             fh.Card(
                 fh.Header(
-                    fh.H3("Your Progress", cls="text-2xl font-bold text-center mb-2 text-base-content"),
+                    fh.H3("Your Progress", cls="text-2xl  text-center mb-2 text-base-content"),
                     fh.P(
                         "Track your weight changes over time",
                         cls="text-slate-400 text-center"
@@ -36,7 +36,7 @@ def create_progress_page(session, measurements: list[tuple[str, float]]):
                 ),
                 fh.Div(
                     fh.Div(
-                        fh.H3("Statistics", cls="text-2xl font-semibold mb-4 text-base-content text-center"),
+                        fh.H3("Statistics", cls="text-2xl mb-4 text-base-content text-center"),
                         create_stats_grid(measurements),
                     ),
                     cls="mt-8"
@@ -118,7 +118,7 @@ def create_stats_card(title: str, value: str):
         fh.H5(title, cls="text-sm text-base-content"),
         fh.P(
             value,
-            cls="text-lg font-bold text-base-content"
+            cls="text-lg  text-base-content"
         ),
         cls="p-4 text-center bg-base-300 shadow-none"
     ) 
@@ -127,7 +127,7 @@ def create_progress_modal_card(title: str, create_fn, modal_id: str):
     """Create a modal card"""
     return (
         fh.Card(
-            fh.Header(fh.H3(title, cls="text-xl font-bold mb-4 text-base-content")),
+            fh.Header(fh.H3(title, cls="text-xl  mb-4 text-base-content")),
             create_fn(),
             cls="bg-base-200 shadow-lg rounded-lg"
         ),
@@ -174,7 +174,7 @@ def measurements_modal(user_id: int, measurements: list[tuple[str, float, float]
                         onclick="closeMeasurementsModal()",
                         style="outline: none; box-shadow: none;"
                     ),
-                    fh.H3("Update Measurements", cls="text-xl font-bold text-center mt-4 mb-8 text-base-content"),
+                    fh.H3("Update Measurements", cls="text-xl  text-center mt-4 mb-8 text-base-content"),
                     fh.Form(
                         hx_post="/update_measurements",
                         hx_target="#measurements-result",

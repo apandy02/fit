@@ -7,10 +7,7 @@ def create_profile_page(user_data, restrictions):
     content = fh.Article(
         fh.Div(
             fh.Card(
-                fh.Header(
-                    fh.H3("User Profile", cls="text-2xl text-center mb-2 text-base-content"),
-                    cls="mb-6 bg-base-200"
-                ),
+                fh.H3("Your Profile", cls="text-3xl font-light text-center mb-8 text-base-content"),
                 fh.Form(
                     hx_post="/update_profile",
                     hx_target="#profile-result",
@@ -22,11 +19,11 @@ def create_profile_page(user_data, restrictions):
                     fh.Button(
                         "Save Changes",
                         type="submit",
-                        cls="btn btn-primary outline outline-1 outline-primary-content w-full"
+                        cls="btn btn-primary outline outline-1 outline-primary-content w-full font-light"
                     ),
                     fh.Div(id="profile-result")
                 ),
-                cls="bg-base-200 shadow-none rounded-lg p-6 mb-8"
+                cls="bg-base-100 shadow-none rounded-lg p-6 mb-8"
             ),
             cls="max-w-2xl mx-auto p-6 space-y-6"
         ),
@@ -47,7 +44,7 @@ def create_editable_input(name: str, value: str, input_type: str = "text", place
                 placeholder=placeholder,
                 required=required,
                 readonly=bool(value), 
-                cls="input input-bordered w-full bg-base-200 text-base-content focus:bg-base-200 focus:text-base-content"
+                cls="input input-bordered w-full bg-base-200 text-base-content focus:bg-base-200 focus:text-base-content font-light"
             ),
             cls="w-11/12" 
         ),
@@ -55,7 +52,7 @@ def create_editable_input(name: str, value: str, input_type: str = "text", place
             "✎", 
             type="button",
             onclick=f"document.getElementById('{input_id}').readOnly = false; document.getElementById('{input_id}').focus();",
-            cls="flex items-center justify-center h-12 w-12 hover:bg-slate-700 focus:bg-slate-700 rounded-lg bg-slate-600 border-none outline-none"
+            cls="flex items-center justify-center h-12 w-12 hover:bg-slate-700 focus:bg-slate-700 rounded-lg bg-slate-600 border-none outline-none font-light"
         ) if value else "", 
         cls="flex items-center gap-2" 
     )
@@ -64,7 +61,7 @@ def create_basic_info_card(user_data):
     """Create the basic information card section"""
     return fh.Card(
         fh.Header(
-            fh.H3("Basic Information", cls="text-xl text-center mb-2 text-base-content"),
+            fh.H3("Basic Information", cls="text-xl text-center mb-2 text-base-content font-light"),
             cls="mb-6 bg-base-200"
         ),
         fh.Div(
@@ -83,7 +80,7 @@ def create_basic_info_card(user_data):
                 fh.Option("Female", value="female", selected=user_data.get("gender") == "female"),
                 name="gender",
                 required=True,
-                cls="select select-bordered w-full bg-base-200 text-base-content"
+                cls="select select-bordered w-full bg-base-200 text-base-content font-light"
             )),
             create_form_row("Date of Birth", create_editable_input(
                 "date_of_birth",
@@ -100,7 +97,7 @@ def create_dietary_restrictions_card(restrictions, hx_target="restrictions-list"
     """Create the dietary restrictions card section"""
     return fh.Card(
         fh.Header(
-            fh.H3("Dietary Restrictions", cls="text-xl text-center mb-2 text-base-content"),
+            fh.H3("Dietary Restrictions", cls="text-xl text-center mb-2 text-base-content font-light"),
             cls="mb-6 bg-base-200"
         ),
         fh.Div(
@@ -117,21 +114,21 @@ def create_dietary_restrictions_card(restrictions, hx_target="restrictions-list"
                     name="dietary_restrictions",
                     hx_post="/add_restriction",
                     hx_target=f"#{hx_target}",
-                    cls="select select-bordered w-full bg-base-200 text-base-content mb-4"
+                    cls="select select-bordered w-full bg-base-200 text-base-content mb-4 font-light"
                 ),
                 fh.Div(
                     *[
                         fh.Div(
                             fh.Div(
                                 r.replace('_', ' ').title(),
-                                cls="flex-grow mr-8"
+                                cls="flex-grow mr-8 font-light"
                             ),
                             fh.Button(
                                 "×",
                                 hx_post="/remove_restriction",
                                 hx_vals=f'{{"restriction": "{r}"}}',
                                 hx_target=f"#{hx_target}",
-                                cls="text-lg hover:text-error focus:outline-none focus:ring-0 border-none"
+                                cls="text-lg hover:text-error focus:outline-none focus:ring-0 border-none font-light"
                             ),
                             cls="bg-neutral flex items-center justify-between px-4 py-2 rounded-lg mr-2 mb-2"
                         )
@@ -159,7 +156,7 @@ def create_preferences_card(user_data):
     """Create the preferences card section"""
     return fh.Card(
         fh.Header(
-            fh.H3("Preferences", cls="text-xl text-center mb-2 text-base-content"),
+            fh.H3("Preferences", cls="text-xl text-center mb-2 text-base-content font-light"),
             cls="mb-6 bg-base-200"
         ),
         fh.Div(
@@ -167,7 +164,7 @@ def create_preferences_card(user_data):
                 fh.Option("Imperial (lbs, inches)", value="imperial", selected=user_data.get("units") == "imperial"),
                 fh.Option("Metric (kg, cm)", value="metric", selected=user_data.get("units") == "metric"),
                 name="units",
-                cls="select select-bordered w-full bg-base-200 text-base-content"
+                cls="select select-bordered w-full bg-base-200 text-base-content font-light"
             )),
             cls="space-y-4"
         ),
@@ -179,7 +176,7 @@ def create_preferences_card(user_data):
 def create_form_row(label: str, input_element):
     """Create a form row with label on the left and input on the right"""
     return fh.Div(
-        fh.Label(label, cls="text-base-content w-1/3 h-12 flex items-center"),
+        fh.Label(label, cls="text-base-content w-1/3 h-12 flex items-center font-light"),
         fh.Div(input_element, cls="w-2/3"),
         cls="flex gap-4"
     )
@@ -189,11 +186,11 @@ def create_form_row(label: str, input_element):
 def create_login_input_section(label: str, name: str, input_type: str = "text", **input_props):
     """Create a form input section with label and input, styled for login forms"""
     return fh.Div(
-        fh.Label(label, cls="label text-base-content"),
+        fh.Label(label, cls="label text-base-content font-light"),
         fh.Input(
             type=input_type,
             name=name,
-            cls="input input-bordered w-full bg-base-200 outline outline-1 outline-primary-content text-base-content placeholder-primary-content placeholder-opacity-50",
+            cls="input input-bordered w-full bg-base-200 outline outline-1 outline-primary-content text-base-content placeholder-primary-content placeholder-opacity-50 font-light",
             required=True,
             **input_props
         ),
@@ -204,13 +201,13 @@ def create_restriction_list(existing_restrictions):
     """Create the restriction list"""
     restriction_divs = [
             fh.Div(
-                fh.Div(r.replace('_', ' ').title(), cls="flex-grow mr-8"),
+                fh.Div(r.replace('_', ' ').title(), cls="flex-grow mr-8 font-light"),
                 fh.Button(
                     "×",
                     hx_post="/remove_restriction",
                     hx_vals=f'{{"restriction": "{r}"}}',
                     hx_target="#restrictions-list",
-                    cls="text-lg hover:text-error focus:outline-none focus:ring-0 border-none"
+                    cls="text-lg hover:text-error focus:outline-none focus:ring-0 border-none font-light"
                 ),
                 cls="bg-neutral flex items-center justify-between px-4 py-2 rounded-lg mr-2 mb-2"
             )

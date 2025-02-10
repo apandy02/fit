@@ -40,15 +40,15 @@ def create_kitchen_sections(inventory: dict):
 def create_fab():
     """Create the floating action button"""
     return fh.Button(
-        "➕",
-        cls="btn btn-circle btn-lg fixed bottom-8 right-8 text-2xl",
-        onclick="openKitchenModal()"
+        "+", 
+        cls="btn btn-circle btn-base outline outline-1 outline-base fixed bottom-8 right-8 text-2xl font-light", onclick="openKitchenModal()"
     )
+
 
 def create_expandable_section(title: str, items: list):
     """Create an expandable section with a title and optional content"""
     if len(items) == 0:
-        content = fh.P("No items added yet", cls="text-base-content text-center")
+        content = fh.P("No items added yet", cls="text-base-content text-center font-light")
     else:
         content = fh.Div(
             *[create_item_card(item) for item in items],
@@ -79,10 +79,10 @@ def create_item_card(item: tuple):
             hx_swap="outerHTML"
         ),
         fh.Div(
-            fh.H2(item['title'], cls="card-title justify-center text-lg mb-2 text-base-content"),
-            fh.P(f"Quantity: {item['quantity']} {item['unit']}", cls="text-center text-base-content text-sm"),
+            fh.H2(item['title'], cls="card-title justify-center text-lg mb-2 text-base-content font-light"),
+            fh.P(f"Quantity: {item['quantity']} {item['unit']}", cls="text-center text-base-content text-sm font-light"),
             fh.Div(
-                fh.Button("Edit", cls="px-4 py-2 bg-base-200 hover:bg-base-100 rounded-lg text-base-content text-sm outline outline-1 outline-base-content"),
+                fh.Button("Edit", cls="px-4 py-2 bg-base-200 hover:bg-base-100 rounded-lg text-base-content text-sm outline outline-1 outline-base-content font-light"),
                 cls="card-actions justify-center mt-3"
             ),
             cls="card-body items-center text-center py-4 px-4"
@@ -113,7 +113,7 @@ def create_text_input_form(
             *header_buttons,
             cls="flex justify-between items-center mb-4 mt-4"
         ),
-        fh.H3(title, cls="text-xl text-center mb-4 mt-4 text-base-content"),
+        fh.H3(title, cls="text-xl text-center mb-4 mt-4 text-base-content font-light"),
         fh.Form(
             hx_post=hx_post_url,
             hx_target=hx_target,
@@ -125,7 +125,7 @@ def create_text_input_form(
                     name="items_description",
                     placeholder=textarea_placeholder,
                     rows=rows,
-                    cls="textarea textarea-bordered w-full bg-base-200 text-base-content text-md"
+                    cls="textarea textarea-bordered w-full bg-base-200 text-base-content text-md font-light"
                 ),
                 cls="form-control"
             ),
@@ -142,7 +142,7 @@ def create_text_input_form(
 def create_image_upload_form():
     """Create a form for uploading images of kitchen items"""
     return fh.Div(
-        fh.H3("Upload Image", cls="text-2xl text-base-content mb-8"),
+        fh.H3("Upload Image", cls="text-2xl text-base-content mb-8 font-light"),
         fh.Form(
             hx_post="/analyze_kitchen_image",  # This endpoint will be implemented later
             hx_target="#image-input",
@@ -150,30 +150,30 @@ def create_image_upload_form():
             cls="space-y-6 w-[90%] mx-auto"
         )(
             fh.Div(
-                fh.Label("Upload a photo of your kitchen items", cls="label text-lg text-neutral mb-2"),
+                fh.Label("Upload a photo of your kitchen items", cls="label text-lg text-neutral mb-2 font-light"),
                 fh.Input(
                     type="file",
                     name="kitchen_image",
                     accept="image/*",
                     required=True,
-                    cls="file-input file-input-bordered w-full bg-base-200 text-neutral text-lg"
+                    cls="file-input file-input-bordered w-full bg-base-200 text-neutral text-lg font-light"
                 ),
                 cls="form-control"
             ),
             fh.Div(
-                fh.Label("Additional Context (optional)", cls="label text-lg text-neutral mb-2"),
+                fh.Label("Additional Context (optional)", cls="label text-lg text-neutral mb-2 font-light"),
                 fh.Textarea(
                     name="additional_context",
                     placeholder="Add any additional details about the items in the image (e.g., quantities, brands)",
                     rows=2,
-                    cls="textarea textarea-bordered w-full bg-base-200 text-neutral text-lg"
+                    cls="textarea textarea-bordered w-full bg-base-200 text-neutral text-lg font-light"
                 ),
                 cls="form-control"
             ),
             fh.Button(
                 "Analyze Image",
                 type="submit",
-                cls="btn btn-primary w-full text-lg mt-4"
+                cls="btn btn-primary w-full text-lg mt-4 font-light"
             ),
             fh.Div(id="image-analysis-result")
         ),
@@ -211,7 +211,7 @@ def create_add_items_modal():
                             onclick="closeKitchenModal()",
                             style="outline: none; box-shadow: none;"
                         ),
-                        fh.H3("Add Items to Kitchen", cls="text-xl text-center mt-4 mb-8 text-base-content"),
+                        fh.H3("Add Items to Kitchen", cls="text-xl text-center mt-4 mb-8 text-base-content font-light"),
                         fh.Div(
                             fh.Button(
                                 "Add Single Item",
@@ -344,7 +344,7 @@ def create_editable_inventory_form(inventory: KitchenInventory):
                 fh.Button(
                     "Save Items",
                     type="submit",
-                    cls="btn btn-primary w-full mt-4 ml-4"
+                    cls="btn btn-primary w-full mt-4 ml-4 font-light"
                 ),
                 fh.Div(id="save-result", cls="mt-4"),
                 cls="pr-8 space-y-4"
@@ -388,7 +388,7 @@ def create_option_form_input(options: list, input_name: str, input_value: str):
     """Create a form input for a dropdown menu"""
     return fh.Select(
         *[fh.Option(option, value=option, selected=(option == input_value)) for option in options],
-        cls="select select-bordered w-full max-w-xs",
+        cls="select select-bordered w-full max-w-xs font-light",
         name=input_name
     )
 
@@ -427,10 +427,10 @@ def grocery_suggestion_card(item: KitchenItem):
     """Create a card for a grocery suggestion"""
     return fh.Card(
         fh.Div(
-            fh.H2(item.name.capitalize(), cls="card-title justify-center text-lg mb-2 text-base-content"),
-            fh.P(f"Category: {item.category}", cls="text-center text-base-content text-sm"),
-            fh.P(f"Quantity: {item.quantity} {item.unit}", cls="text-center text-base-content text-sm"),
-            fh.P(f"{item.value}", cls="text-center text-base-content text-sm mt-2"),
+            fh.H2(item.name.capitalize(), cls="card-title justify-center text-lg mb-2 text-base-content font-light"),
+            fh.P(f"Category: {item.category}", cls="text-center text-base-content text-sm font-light"),
+            fh.P(f"Quantity: {item.quantity} {item.unit}", cls="text-center text-base-content text-sm font-light"),
+            fh.P(f"{item.value}", cls="text-center text-base-content text-sm mt-2 font-light"),
             cls="card-body items-center text-center py-4 px-4"
         ),
         cls="card bg-base-300 shadow-xl rounded-xl outline outline-1 outline-base-content mt-4 max-w-[250px]"
