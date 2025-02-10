@@ -182,7 +182,6 @@ def create_text_input_form(is_feedback: bool = False, original_description: str 
                     id="original_description",
                     value=original_description
                 ),
-                # Add hidden fields for all the meal breakdown data
                 fh.Input(
                     type="hidden",
                     name="original_breakdown",
