@@ -67,6 +67,7 @@ The application consists of several core modules:
    uv sync
    ```
 ### Running the Application
+(note: all the operations here are performed from the project root directory)
 
 Start the web interface:
 ```bash
