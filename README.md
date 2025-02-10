@@ -28,10 +28,10 @@ The application consists of several core modules:
 
 ### Core
 - Python 3.10+
-- FastHTML + HTMX
-- ell
-- Pydantic
-- SQLite
+- FastHTML + HTMX (web application frontend and backend)
+- ell (language model programming + evals)
+- Pydantic (data models and validation)
+- SQLite (databases)
 
 ### Frontend Plugins
 - TailwindCSS
