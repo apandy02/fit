@@ -9,7 +9,7 @@ from fit.web.common import (create_fab_menu, create_text_generation_card,
 def create_rest_page(tracker: FitnessTracker, text_generation_endpoint: str, fab_buttons: list[tuple[str, str, str]], recovery: dict, sleep: list[dict]):
     content = fh.Div(
             fh.Card(
-                fh.H3("Rest Overview", cls="text-2xl font-bold text-center mb-2 text-base-content"),
+                fh.H3("Rest Overview", cls="text-2xl  text-center mb-2 text-base-content"),
                 fh.P(
                     "Monitor your rest and readiness",
                     cls="text-slate-400 text-center"
@@ -31,7 +31,7 @@ def rest_card(title: str, value: str):
     return fh.Card(
         fh.Div(
             fh.H4(title, cls="text-lg font-semibold text-base-content mb-4 text-center"),
-            fh.P(value, cls="text-4xl font-bold text-base-content text-center"),
+            fh.P(value, cls="text-4xl  text-base-content text-center"),
             cls="p-6 flex flex-col"
         ),
         cls="bg-base-200 outline outline-1 outline-base-content rounded-lg shadow-none"
@@ -42,7 +42,7 @@ def get_rest_metrics_section(tracker: FitnessTracker, recovery: dict, sleep: lis
     """Return the rest tracking metrics section"""    
     return fh.Div(
         fh.Div(
-            fh.H3("Today's Recovery", cls="text-xl font-bold text-base-content mb-8 text-center"),
+            fh.H3("Today's Recovery", cls="text-xl  text-base-content mb-8 text-center"),
             fh.Div(
                 fh.P("No recovery data available for today", cls="text-base-content text-center italic") if not recovery else
                 fh.Div(
@@ -55,7 +55,7 @@ def get_rest_metrics_section(tracker: FitnessTracker, recovery: dict, sleep: lis
             cls="mb-16"
         ),
         fh.Div(
-            fh.H3("Today's Sleep", cls="text-xl font-bold text-base-content mb-8 text-center"),
+            fh.H3("Today's Sleep", cls="text-xl  text-base-content mb-8 text-center"),
             create_sleep_cards(sleep) if sleep else fh.P("No sleep data available for today", cls="text-base-content text-center italic"),
             cls="mb-8"
         ),
