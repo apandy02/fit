@@ -76,7 +76,7 @@ uv run src/fit/web/app.py
 
 The above might take a few seconds to execute the first time, but it will work (hang in there)
 
-The application will be available at `http://localhost:5001`
+The application will be available at `http://localhost:5001/login`
 
 ### Testing
 
