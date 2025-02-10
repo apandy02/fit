@@ -40,10 +40,10 @@ def create_kitchen_sections(inventory: dict):
 def create_fab():
     """Create the floating action button"""
     return fh.Button(
-        "➕",
-        cls="btn btn-circle btn-lg fixed bottom-8 right-8 text-2xl font-light",
-        onclick="openKitchenModal()"
+        "+", 
+        cls="btn btn-circle btn-base outline outline-1 outline-base fixed bottom-8 right-8 text-2xl font-light", onclick="openKitchenModal()"
     )
+
 
 def create_expandable_section(title: str, items: list):
     """Create an expandable section with a title and optional content"""
