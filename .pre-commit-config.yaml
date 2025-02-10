@@ -6,7 +6,6 @@ repos:
     rev: 0.5.29  # use the desired uv version
     hooks:
       - id: uv-lock       # ensures that your uv.lock file is updated if pyproject.toml changes
-      - id: uv-export     # (optional) automatically exports uv.lock to requirements.txt
 
   # Local hooks to run Python linters via uv
   - repo: local
