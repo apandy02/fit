@@ -16,7 +16,6 @@ json_path = os.path.join(os.path.dirname(__file__), "config/whoop_sports.json")
 with open(json_path, "r") as f:
     SPORTS_MAP = json.load(f)["sports"]
 
-
 class WhoopAppClient(WebApplicationClient):
     """
     A PKCE-capable client for WHOOP.
@@ -92,7 +91,8 @@ class WhoopAppClient(WebApplicationClient):
 
 
 class Whoop(FitnessTracker):
-    """Fitness tracker subclass for WHOOP devices.
+    """
+    Fitness tracker subclass for WHOOP devices.
 
     Attributes:
         access_token (str): OAuth2 access token for the WHOOP API.
@@ -102,15 +102,6 @@ class Whoop(FitnessTracker):
         BASE_URL (str): Base URL for API requests.
         INFO_URL (str): URL for user profile info.
     """
-
-    SCOPE = [
-        "offline",
-        "read:recovery",
-        "read:cycles",
-        "read:workout",
-        "read:sleep",
-        "read:profile",
-    ]
     BASE_URL = "https://api.prod.whoop.com/developer"
     INFO_URL = "https://api.prod.whoop.com/developer/v1/user/profile/basic"
 
