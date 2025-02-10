@@ -10,7 +10,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     container:
-      image: astral/uv:latest
+      image: ghcr.io/astral-sh/uv:latest
       env:
         UV_PYTHON: "3.11"
     steps:
