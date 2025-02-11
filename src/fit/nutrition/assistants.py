@@ -276,7 +276,7 @@ def nutrient_analysis(
     """Analyze if user is over/under their target for a specific nutrient.
 
     Args:
-        nutrient: The nutrient being analyzed (e.g. 'vitamin_a', 'vitamin_c', 'iron', 'calcium', 'sodium', 'potassium')
+        nutrient: The nutrient being analyzed
         intake: The user's intake for this nutrient
         target: The target amount for this nutrient
         multiple_days: Whether the data is for multiple days
