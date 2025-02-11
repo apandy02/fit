@@ -87,7 +87,7 @@ def make_recommendations(
     carbohydrates.
 
     Make sure that the suggestions are serving aware. if the user is 30g of protein under their target,
-    it does not make sense to suggest a meal with 100g of chicken, this would be excessive.
+    it does not make sense to suggest a meal with 200g of chicken, this would be excessive.
 
     You absolutely must not violate the user's dietary restrictions. This is a health and safety issue.
     """
@@ -96,7 +96,7 @@ def make_recommendations(
     Kitchen Inventory: {kitchen_inventory}
     They want trying to improve their {target_nutrient} intake.
     """
-    return user_input
+    return user_input # TODO: pass in the target - consumption instead of them separately
 
 # TODO: cleanup the following two functions using a factory 
 def daily_io_analysis(meals: list[dm.MealBreakdown], target: dict[str, float], restrictions: list[str]) -> dm.NutritionFeedback:

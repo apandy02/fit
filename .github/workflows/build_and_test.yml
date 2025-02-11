@@ -16,6 +16,6 @@ jobs:
       - name: Sync project environment for testing
         run: uv sync --all-extras --dev
       - name: Dry Run Build
-        run: uv build --dry-run
+        run: uv build -- --dry-run
       - name: Run Tests
         run: uv run python -m unittest discover -v
