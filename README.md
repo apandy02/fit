@@ -85,6 +85,21 @@ Run the test suite:
 uv run -m unittest discover -v
 ```
 
+Run the test suite with coverage:
+```bash
+uv run -m coverage run -m unittest discover -v
+```
+
+Generate a coverage report:
+
+```bash
+uv run -m coverage html # for coverage report in html
+```
+
+```bash
+uv run -m coverage report # for coverage report in terminal
+```
+
 ## Project Structure
 
 ```
