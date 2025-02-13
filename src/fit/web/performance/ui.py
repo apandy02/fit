@@ -84,5 +84,5 @@ def analysis_card(analysis: str):
             fh.P(analysis, cls="text-base-content font-light"),
             cls="p-4 space-y-2"
         ),
-        cls="bg-base-200 outline outline-1 outline-primary-content rounded-lg mt-8"
+        cls="bg-base-200 outline outline-1 outline-base-content rounded-lg mt-8 shadow-none"
     )

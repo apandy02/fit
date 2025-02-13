@@ -21,6 +21,7 @@ from fit.web.common import database_service, micronutrient_goals
 
 def get_daily_overview(session, date: str = None):
     """Return the nutritional overview page content"""
+    print(session)
     tracker = tracker_factory(session["tracker"], session["access_token"])
     if not date:
         date = datetime.today().date()

@@ -246,3 +246,12 @@ def create_text_form_input(label_text, input_name, input_value, input_type="numb
         ),
         cls="form-control"
     )
+
+def analysis_card(analysis: str):
+    return fh.Card(
+        fh.Div(
+            fh.P(analysis, cls="text-base-content font-light"),
+            cls="p-4 space-y-2"
+        ),
+        cls="bg-base-200 outline outline-1 outline-base-content rounded-lg mt-8 shadow-none"
+    )

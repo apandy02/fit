@@ -16,6 +16,7 @@ def auth_before(req, session):
 
 def onboarding_before(req, session):
     """beforeware that checks if the user is onboarded"""
+    print(session)
     user_profile = database_service.get_profile_data(session["user_id"])
 
     if user_profile["onboarding_stage"] == 0:

@@ -329,9 +329,9 @@ class DatabaseService:
         except Exception as e:
             logging.error(f"Error updating profile: {e}")
 
-    def insert_measurement(self, user_id: int, weight: float, date: datetime) -> bool:
+    def insert_measurement(self, user_id: int, weight: float, date: datetime, height: float) -> bool:
         try:
-            self._db.t.measurements.insert(user_id=user_id, weight=weight, datetime=date.isoformat())
+            self._db.t.measurements.insert(user_id=user_id, weight=weight, datetime=date.isoformat(), height=height)
             return True
         except Exception as e:
             logging.error(f"Error inserting measurement: {e}")

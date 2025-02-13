@@ -27,18 +27,18 @@ def login(req):
 
 def fitbit_auth_redirect(code:str, request, session):
     new_user, user_id, access_token_dict = _handle_new_user("fitbit", fitbit_client, code, request)
-    return _session_setup_redirect(new_user, user_id, access_token_dict, session)
+    return _session_setup_redirect(new_user, user_id, access_token_dict, session, "fitbit")
 
 def whoop_auth_redirect(code:str, request, session):
     new_user, user_id, access_token_dict = _handle_new_user("whoop", whoop_client, code, request)
-    return _session_setup_redirect(new_user, user_id, access_token_dict, session)
+    return _session_setup_redirect(new_user, user_id, access_token_dict, session, "whoop")
 
-def _session_setup_redirect(new_user: bool, user_id: int, access_token_dict: dict, session: dict):
+def _session_setup_redirect(new_user: bool, user_id: int, access_token_dict: dict, session: dict, provider: str):
     session['user_id'] = user_id
     session['access_token'] = access_token_dict['access_token']
     session['access_token_expiry'] = access_token_dict['expires_at']
     session['refresh_token'] = access_token_dict['refresh_token']
-    session["tracker"] = "whoop"
+    session["tracker"] = provider
     if new_user:
         return RedirectResponse('/onboarding/profile', status_code=303)
     else:
