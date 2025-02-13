@@ -4,7 +4,6 @@ from fasthtml.common import RedirectResponse
 from fasthtml.oauth import redir_url
 from oauthlib.oauth2 import WebApplicationClient
 
-from fit.trackers.implementations.fitbit import FitbitAppClient
 from fit.web.auth.clients import fitbit_client_oauth as fitbit_client
 from fit.web.auth.clients import whoop_client_oauth as whoop_client
 from fit.web.auth.ui import get_login_page
@@ -72,7 +71,7 @@ def _handle_new_user(
         "onboarding_stage": 0
     }
     
-    if isinstance(client, FitbitAppClient):
+    if client.tracker_type == "fitbit":
         profile_dict.update({
             "name": profile_info['user']['fullName'],
             "gender": profile_info['user']['gender'],
@@ -80,7 +79,7 @@ def _handle_new_user(
                 profile_info['user']['dateOfBirth'], '%Y-%m-%d').strftime('%m-%d-%Y'
             )
         })
-    else:
+    elif client.tracker_type == "whoop":
         profile_dict.update(
             {"name": f"{profile_info['first_name']} {profile_info['last_name']}", "email": profile_info['email']}
         )

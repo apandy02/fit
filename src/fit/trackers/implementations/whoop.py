@@ -6,9 +6,8 @@ import secrets
 from typing import Any
 
 import httpx
-from oauthlib.oauth2 import WebApplicationClient
 
-from fit.trackers.base import FitnessTracker, make_code_verifier_and_challenge
+from fit.trackers.base import FitnessTracker, FitnessTrackerClient
 from fit.utils.conversions import kj_to_kcal
 
 json_path = os.path.join(os.path.dirname(__file__), "config/whoop_sports.json")
@@ -16,7 +15,7 @@ json_path = os.path.join(os.path.dirname(__file__), "config/whoop_sports.json")
 with open(json_path, "r") as f:
     SPORTS_MAP = json.load(f)["sports"]
 
-class WhoopAppClient(WebApplicationClient):
+class WhoopAppClient(FitnessTrackerClient):
     """
     A PKCE-capable client for WHOOP.
     """
@@ -25,10 +24,9 @@ class WhoopAppClient(WebApplicationClient):
     token_url = "https://api.prod.whoop.com/oauth/oauth2/token"
     info_url = "https://api.prod.whoop.com/developer/v1/user/profile/basic"
 
-    def __init__(self, client_id, client_secret, scope=None, code=None, **kwargs):
-        super().__init__(client_id, code=code, scope=scope, **kwargs)
-        self.code_verifier, self.code_challenge = make_code_verifier_and_challenge()
-        self.client_secret = client_secret
+    @property
+    def tracker_type(self) -> str:
+        return "whoop"
 
     def login_link(self, redirect_uri, state=None):
         """Create the WHOOP login link with PKCE parameters."""

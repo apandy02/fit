@@ -3,12 +3,11 @@ import logging
 from typing import Any
 
 import httpx
-from oauthlib.oauth2 import WebApplicationClient
 
-from fit.trackers.base import FitnessTracker, make_code_verifier_and_challenge
+from fit.trackers.base import FitnessTracker, FitnessTrackerClient
 
 
-class FitbitAppClient(WebApplicationClient):
+class FitbitAppClient(FitnessTrackerClient):
     """
     A PKCE-capable client for Fitbit.
     """
@@ -17,15 +16,15 @@ class FitbitAppClient(WebApplicationClient):
     token_url = "https://api.fitbit.com/oauth2/token"
     info_url = "https://api.fitbit.com/1/user/-/profile.json"
 
-    def __init__(self, client_id, code=None, scope=None, **kwargs):
-        super().__init__(client_id, code=code, scope=scope, **kwargs)
-        self.code_verifier, self.code_challenge = make_code_verifier_and_challenge()
+    @property
+    def tracker_type(self) -> str:
+        return "fitbit"
 
     def login_link(
         self, redirect_uri: str, state: str = None
     ) -> str:
         """Create the Fitbit login link with PKCE parameters."""
-        if state is None:
+        if not state:
             state = self.state
 
         extra_params = {
@@ -72,7 +71,7 @@ class FitbitAppClient(WebApplicationClient):
 
     def get_info(self, token: str = None) -> dict:
         """Fetch user profile info from Fitbit's API."""
-        if token is None:
+        if not token:
             token = self.token["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
         resp = httpx.get(self.info_url, headers=headers)
@@ -81,7 +80,7 @@ class FitbitAppClient(WebApplicationClient):
 
     def is_token_valid(self, token: str = None) -> bool:
         """Check if the access token is valid."""
-        if token is None:
+        if not token:
             token = self.token["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
         try:
