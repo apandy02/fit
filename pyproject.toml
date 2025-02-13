@@ -21,6 +21,7 @@ dependencies = [
     "cherrypy>=18.10.0",
     "pandas>=2.2.3",
     "pre-commit>=4.1.0",
+    "coverage>=7.6.12",
 ]
 
 [build-system]
