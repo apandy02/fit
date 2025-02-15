@@ -80,6 +80,7 @@ The application will be available at `http://localhost:5001/login`
 
 
 ### Testing
+(note: all the operations here are performed from the project root directory)
 
 Run the test suite:
 ```bash
