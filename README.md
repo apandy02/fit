@@ -40,14 +40,11 @@ The application consists of several core modules:
 - Plotly
 
 ### Development
-- UV (Package Management)
-- Ruff (Linting)
-- Unittest (Testing)
+- uv (package management)
+- ruff (linting)
+- unittest (testing)
 
 ## Getting Started
-
-### Prerequisites
-- [UV](https://docs.astral.sh/uv/getting-started/installation/) for package management
 
 ### Setup
 
