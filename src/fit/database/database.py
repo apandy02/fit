@@ -49,7 +49,6 @@ class DatabaseService:
         results = self._db.q(query, (str(date), user_id))
         meals = []
         for row in results:
-            print(row)
             rowid = row["rowid"]
             nutritional_info = self.__nutritional_info_from_row(row)
             meal = dm.MealBreakdown(

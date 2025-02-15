@@ -9,3 +9,4 @@ secrets.json
 logdir/*
 *.db*
 dist/*
+*.coverage

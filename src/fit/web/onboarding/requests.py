@@ -14,7 +14,9 @@ def get_profile_page(session):
         Return the profile completion page
     """
     user_data = database_service.get_profile_data(session["user_id"])
-    block_onboarded_users(session)
+    if _is_onboarded(session):
+        return RedirectResponse('/nutrition', status_code=303)
+    
     return ui.create_profile_page(user_data)
 
 def get_activity_page(session):
@@ -22,7 +24,9 @@ def get_activity_page(session):
     Get request:
         Return the activity selection page
     """
-    block_onboarded_users(session)
+    if _is_onboarded(session):
+        return RedirectResponse('/nutrition', status_code=303)
+    
     return ui.create_activity_page(session)
 
 def get_dietary_page(session):
@@ -30,7 +34,9 @@ def get_dietary_page(session):
     Get request:
         Return the dietary restrictions page
     """
-    block_onboarded_users(session)
+    if _is_onboarded(session):
+        return RedirectResponse('/nutrition', status_code=303)
+    
     return ui.create_dietary_page(session)
 
 def get_goals_page(session):
@@ -38,7 +44,9 @@ def get_goals_page(session):
     Get request:
         Return the goals selection page
     """
-    block_onboarded_users(session)
+    if _is_onboarded(session):
+        return RedirectResponse('/nutrition', status_code=303)
+    
     return ui.create_goals_page(session)
 
 def get_measurements_page(session):
@@ -46,7 +54,8 @@ def get_measurements_page(session):
     Get request:
         Return the measurements page
     """
-    block_onboarded_users(session)
+    if _is_onboarded(session):
+        return RedirectResponse('/nutrition', status_code=303)
     return ui.create_measurements_page(session)
 
 async def handle_profile_completion(session, request: fh.Request):
@@ -54,7 +63,7 @@ async def handle_profile_completion(session, request: fh.Request):
     Post request:
         Handle profile form submission
     """
-    try:
+    try: 
         form = await request.form()
         form_data = dict(form)
         form_data["user_id"] = session["user_id"]
@@ -62,7 +71,7 @@ async def handle_profile_completion(session, request: fh.Request):
         database_service.update_profile(form_data)
         return fh.Response(headers={"HX-Redirect": "/onboarding/measurements"})
 
-    except Exception as e:
+    except Exception as e: ## TODO: define what kinds of exceptions we expect. key error + errors raised by the db
         return fh.P(
             f"Error updating profile: {str(e)}",
             cls="text-error font-semibold text-center mt-4"
@@ -149,28 +158,27 @@ async def handle_goals_selection(session, request: fh.Request):
     try:
         form = await request.form()
         weight_goal = form.get("weight_goal")
-        fitness_goal = form.get("fitness_goal")
         database_service.update_profile(
             {
                 "user_id": session["user_id"],
                 "weight_goal": weight_goal,
-                "fitness_goal": fitness_goal,
                 "onboarding_stage": 5
             }
         )
         
         return fh.Response(headers={"HX-Redirect": "/nutrition"})
     except Exception as e:
-        logging.error(f"Error updating goals: {e}")
         return fh.P(
             f"Error updating goals: {str(e)}",
             cls="text-error font-semibold text-center mt-4"
         )
 
-def block_onboarded_users(session):
+def _is_onboarded(session):
     """
     Block users who have already completed onboarding
     """
     user_data = database_service.get_profile_data(session["user_id"])
     if user_data["onboarding_stage"] == 5:
-        return RedirectResponse('/nutrition', status_code=303)
+        return True
+
+    return False

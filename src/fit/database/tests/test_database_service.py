@@ -17,8 +17,6 @@ class TestDatabaseService(unittest.TestCase):
         with patch('fasthtml.common.database', return_value=self.mock_db):
             self.db_service = DatabaseService(self.db_path, tables)
             
-        print(f"Tables: {self.db_service.tables}")
-
     def test_get_inventory_empty(self):
         """Test get_inventory when no items are present"""
         self.db_service._db.q.return_value = []
