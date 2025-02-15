@@ -24,28 +24,6 @@ The application consists of several core modules:
 - Multi-tracker fitness data integration
 - Progress and performance monitoring
 
-## Technology Stack
-
-### Core
-- Python 3.10+
-- FastHTML + HTMX (web application frontend and backend)
-- ell (language model programming + evals)
-- Pydantic (data models and validation)
-- SQLite (databases)
-
-### Frontend Plugins
-- TailwindCSS
-- DaisyUI
-- AmCharts
-- Plotly
-
-### Development Tools
-- uv (dependency management, tool runner, build/package management)
-- ruff (linting/formatting)
-- isort (import linting/formatting)
-- unittest (testing)
-- coveragepy (test coverage)
-
 ## Getting Started
 
 ### Setup
@@ -76,6 +54,30 @@ uv run src/fit/web/app.py
 The above might take a few seconds to execute the first time, but it will work (hang in there)
 
 The application will be available at `http://localhost:5001/login`
+
+
+## Technology Stack
+
+### Core
+- Python 3.10+
+- FastHTML + HTMX (web application frontend and backend)
+- ell (language model programming + evals)
+- Pydantic (data models and validation)
+- SQLite (databases)
+
+### Frontend Plugins
+- TailwindCSS
+- DaisyUI
+- AmCharts
+- Plotly
+
+### Development Tools
+- uv (dependency management, tool runner, build/package management)
+- ruff (linting/formatting)
+- isort (import linting/formatting)
+- unittest (testing)
+- coveragepy (test coverage)
+
 
 ### Testing
 
