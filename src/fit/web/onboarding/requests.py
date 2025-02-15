@@ -158,19 +158,16 @@ async def handle_goals_selection(session, request: fh.Request):
     try:
         form = await request.form()
         weight_goal = form.get("weight_goal")
-        fitness_goal = form.get("fitness_goal")
         database_service.update_profile(
             {
                 "user_id": session["user_id"],
                 "weight_goal": weight_goal,
-                "fitness_goal": fitness_goal,
                 "onboarding_stage": 5
             }
         )
         
         return fh.Response(headers={"HX-Redirect": "/nutrition"})
     except Exception as e:
-        logging.error(f"Error updating goals: {e}")
         return fh.P(
             f"Error updating goals: {str(e)}",
             cls="text-error font-semibold text-center mt-4"

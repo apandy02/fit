@@ -308,6 +308,86 @@ class TestOnboardingPostRequests(unittest.IsolatedAsyncioTestCase):
             result = await onboarding_requests.handle_dietary_completion(self.mock_session, self.mock_request)
             self.assertIn("Error updating dietary restrictions", str(result))
 
+    async def test_handle_activity_selection_success(self):
+        """Test successful activity level selection"""
+        mock_form_data = {
+            "activity_level": "active"
+        }
+        
+        async def mock_form():
+            return mock_form_data
+            
+        self.mock_request.form = mock_form
+        
+        with patch('fit.web.onboarding.requests.database_service') as mock_db:
+            result = await onboarding_requests.handle_activity_selection(self.mock_session, self.mock_request)
+            
+            mock_db.update_profile.assert_called_once_with({
+                "user_id": 42,
+                "activity_level": "active",
+                "onboarding_stage": 4
+            })
+            
+            self.assertIsInstance(result, fh.Response)
+            self.assertEqual(result.headers["HX-Redirect"], "/onboarding/goals")
+
+    async def test_handle_activity_selection_error(self):
+        """Test activity level selection with error"""
+        mock_form_data = {
+            "activity_level": "active"
+        }
+        
+        async def mock_form():
+            return mock_form_data
+            
+        self.mock_request.form = mock_form
+        
+        with patch('fit.web.onboarding.requests.database_service') as mock_db:
+            mock_db.update_profile.side_effect = Exception("Error occurred")
+            
+            result = await onboarding_requests.handle_activity_selection(self.mock_session, self.mock_request)
+            self.assertIn("Error updating activity level", str(result))
+
+    async def test_handle_goals_selection_success(self):
+        """Test successful goals selection"""
+        mock_form_data = {
+            "weight_goal": "lose",
+        }
+        
+        async def mock_form():
+            return mock_form_data
+            
+        self.mock_request.form = mock_form
+        
+        with patch('fit.web.onboarding.requests.database_service') as mock_db:
+            result = await onboarding_requests.handle_goals_selection(self.mock_session, self.mock_request)
+            
+            mock_db.update_profile.assert_called_once_with({
+                "user_id": 42,
+                "weight_goal": "lose",
+                "onboarding_stage": 5
+            })
+            
+            self.assertIsInstance(result, fh.Response)
+            self.assertEqual(result.headers["HX-Redirect"], "/nutrition")
+
+    async def test_handle_goals_selection_error(self):
+        """Test goals selection with error"""
+        mock_form_data = {
+            "weight_goal": "lose",
+        }
+        
+        async def mock_form():
+            return mock_form_data
+            
+        self.mock_request.form = mock_form
+        
+        with patch('fit.web.onboarding.requests.database_service') as mock_db:
+            mock_db.update_profile.side_effect = Exception("Error occurred")
+            
+            result = await onboarding_requests.handle_goals_selection(self.mock_session, self.mock_request)
+            self.assertIn("Error updating goals", str(result))
+
 
 if __name__ == '__main__':
     unittest.main()
