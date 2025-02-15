@@ -39,10 +39,12 @@ The application consists of several core modules:
 - AmCharts
 - Plotly
 
-### Development
-- uv (package management)
-- ruff (linting)
+### Development Tools
+- uv (dependency management, tool runner, build/package management)
+- ruff (linting/formatting)
+- isort (import linting/formatting)
 - unittest (testing)
+- coveragepy (test coverage)
 
 ## Getting Started
 
