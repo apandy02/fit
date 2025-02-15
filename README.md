@@ -4,13 +4,13 @@ A comprehensive fitness assistant that combines LLM-powered nutrition analysis w
 
 ## Table of Contents
 - [Overview](#overview)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Setup](#setup)
 - [Technology Stack](#technology-stack)
   - [Core](#core)
   - [Frontend Plugins](#frontend-plugins)
   - [Development](#development)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Setup](#setup)
 - [Running the Application](#running-the-application)
 - [Testing](#testing)
 - [Project Structure](#project-structure)
