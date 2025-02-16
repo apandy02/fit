@@ -67,7 +67,7 @@ async def handle_profile_completion(session, request: fh.Request):
         form = await request.form()
         form_data = dict(form)
         form_data["user_id"] = session["user_id"]
-        form_data["onboarding_stage"] = 1  # Set stage to move to measurements
+        form_data["onboarding_stage"] = 1 
         database_service.update_profile(form_data)
         return fh.Response(headers={"HX-Redirect": "/onboarding/measurements"})
 

@@ -4,7 +4,7 @@ from fit.web.common import (create_fab_menu, create_text_generation_card,
                             create_time_filter, page_outline)
 
 
-def create_performance_page(performance_info: tuple[dict, list[dict]], is_whoop: bool, text_generation_endpoint: str, fab_buttons: list[tuple[str, str, str]]):
+def create_performance_page(daily_stats: dict, workouts: list[dict], is_whoop: bool, text_generation_endpoint: str, fab_buttons: list[tuple[str, str, str]]):
     content = fh.Div(
             fh.Card(
                 fh.H3("Performance Overview", cls="text-2xl font-light text-center mb-2 text-base-content"),
@@ -15,7 +15,7 @@ def create_performance_page(performance_info: tuple[dict, list[dict]], is_whoop:
                 create_time_filter("daily"),
                 create_text_generation_card(text_generation_endpoint, "Generate Performance Overview"),
                 fh.Div(
-                    get_performance_metrics_section(performance_info, is_whoop)
+                    get_performance_metrics_section(daily_stats, workouts, is_whoop)
                 ),
                 cls="bg-base-100 shadow-none rounded-lg p-6"
             ),
@@ -25,9 +25,8 @@ def create_performance_page(performance_info: tuple[dict, list[dict]], is_whoop:
     return page_outline(4, "Performance Overview", True, True, content)
 
 
-def get_performance_metrics_section(performance_info: tuple[dict, list[dict]], is_whoop: bool):
+def get_performance_metrics_section(daily_stats: dict, workouts: list[dict], is_whoop: bool):
     """Return the performance tracking card content"""
-    daily_stats, workouts = performance_info
     return fh.Div(
         fh.Div(
             fh.H3("Today's Overview", cls="text-xl font-light text-base-content mb-6 text-center"),

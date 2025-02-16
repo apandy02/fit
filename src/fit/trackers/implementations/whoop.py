@@ -112,6 +112,10 @@ class Whoop(FitnessTracker):
         self.access_token = access_token
         super().__init__()
 
+    @property
+    def tracker_type(self) -> str:
+        return "whoop"
+
     def _authenticate(self) -> None:
         if not self.is_token_valid():
             raise Exception("WHOOP authentication failed")
