@@ -213,6 +213,7 @@ def create_restriction_list(existing_restrictions):
             )
             for r in existing_restrictions
         ]
+    print(f"restriction_divs: {restriction_divs}")
             
     return fh.Div(
         *restriction_divs,

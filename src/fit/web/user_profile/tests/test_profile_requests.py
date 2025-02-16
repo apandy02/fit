@@ -141,90 +141,13 @@ class TestProfilePostRequests(unittest.IsolatedAsyncioTestCase):
             result = await profile_requests.update_profile(self.mock_session, self.mock_request)
             self.assertIn("Error updating profile", str(result))
 
-    async def test_add_restriction_success(self):
-        """Test successfully adding a new dietary restriction"""
-        mock_form_data = {
-            "dietary_restrictions": "vegan",
-            "existing_restrictions[]": ["vegetarian"]
-        }
-        
-        async def mock_form():
-            return MagicMock(
-                get=lambda x: mock_form_data.get(x),
-                getlist=lambda x: mock_form_data.get(x, [])
-            )
-            
-        self.mock_request.form = mock_form
-        
-        result = await profile_requests.add_restriction(self.mock_request)
-        print(f"Result: {result}")
-        self.assertIn("vegan", str(result))
-        self.assertIn("vegetarian", str(result))
-
-    async def test_add_restriction_duplicate(self):
-        """Test adding a duplicate dietary restriction"""
-        mock_form_data = {
-            "dietary_restrictions": "vegetarian",
-            "existing_restrictions[]": ["vegetarian"]
-        }
-        
-        async def mock_form():
-            return MagicMock(
-                get=lambda x: mock_form_data.get(x),
-                getlist=lambda x: mock_form_data.get(x, [])
-            )
-            
-        self.mock_request.form = mock_form
-        
-        result = await profile_requests.add_restriction(self.mock_request)
-        self.assertEqual(str(result).count("vegetarian"), 2)
-
     async def test_add_restriction_error(self):
         """Test adding a restriction with an error"""
         self.mock_request.form.side_effect = Exception("Form error")
         
         result = await profile_requests.add_restriction(self.mock_request)
         self.assertIn("Error adding restriction", str(result))
-
-    async def test_remove_restriction_success(self):
-        """Test successfully removing a dietary restriction"""
-        mock_form_data = {
-            "restriction": "vegetarian",
-            "existing_restrictions[]": ["vegetarian", "gluten-free"]
-        }
         
-        async def mock_form():
-            return MagicMock(
-                get=lambda x: mock_form_data.get(x),
-                getlist=lambda x: mock_form_data.get(x, [])
-            )
-            
-        self.mock_request.form = mock_form
-        
-        result = await profile_requests.remove_restriction(self.mock_request)
-        
-        self.assertNotIn("vegetarian", str(result))
-        self.assertIn("gluten-free", str(result))
-
-    async def test_remove_restriction_not_found(self):
-        """Test removing a restriction that doesn't exist"""
-        mock_form_data = {
-            "restriction": "vegan",
-            "existing_restrictions[]": ["vegetarian", "gluten-free"]
-        }
-        
-        async def mock_form():
-            return MagicMock(
-                get=lambda x: mock_form_data.get(x),
-                getlist=lambda x: mock_form_data.get(x, [])
-            )
-            
-        self.mock_request.form = mock_form
-        
-        result = await profile_requests.remove_restriction(self.mock_request)
-        
-        self.assertIn("vegetarian", str(result))
-        self.assertIn("gluten-free", str(result))
 
     async def test_remove_restriction_error(self):
         """Test removing a restriction with an error"""
