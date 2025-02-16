@@ -157,7 +157,7 @@ class TestProfilePostRequests(unittest.IsolatedAsyncioTestCase):
         self.mock_request.form = mock_form
         
         result = await profile_requests.add_restriction(self.mock_request)
-        print(f"Result: {str(result)}")
+        print(f"Result: {result}")
         self.assertIn("vegan", str(result))
         self.assertIn("vegetarian", str(result))
 
