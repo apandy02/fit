@@ -8,7 +8,6 @@ from fit.web.common import page_outline
 
 def create_progress_page(session, measurements: list[tuple[str, float]]):
     plot_data, plot_layout = create_weight_plot(measurements)
-    print("measurements: ", measurements)
     content = fh.Article(
         fh.Div(
             fh.Card(
@@ -100,7 +99,6 @@ def create_weight_plot(measurements: list[tuple[str, float]]):
 def create_stats_grid(measurements: list[tuple[str, float]]):
     """Create a grid of statistics cards"""
     weights = [m['weight'] for m in measurements]
-    print("weights: ", weights)
     current_weight = f"{weights[-1]:.1f} lbs" if weights else "No data"
     total_change = f"{(weights[-1] - weights[0]):.1f} lbs" if len(weights) > 1 else "No change"
     measurement_count = str(len(weights))

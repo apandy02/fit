@@ -602,7 +602,6 @@ def create_form_section(title, inputs, cls="mb-6"):
 
 def create_meal_breakdown(nutrition_info, meal_time: str, date: str | None = None):
     save_meal_endpoint = f"/save_meal/{date}" if date is not None else "/save_meal"
-    print(f"meal_time: {meal_time}")
     return fh.Card(
         fh.Div(
             fh.H4("Ingredients", cls="font-light mb-2 text-base-content"),
@@ -831,7 +830,6 @@ def supplement_modal(date: datetime.date):
 def create_meals_list(user_id, date: datetime.date):
     """Create an expandable list of meals for the given date"""
     meals = database_service.get_daily_meals(date, user_id)
-    print(meals)
     if not meals:
         content = fh.P("No meals logged for this day", cls="text-base-content text-center")
     else:

@@ -114,7 +114,6 @@ def quantity_accuracy_metric(prediction: List[KitchenItem], reference: List[Kitc
 
 if __name__ == "__main__":
     dataset = prepare_eval_data()
-    print(f"dataset: {dataset}")
     eval = ell.evaluation.Evaluation(
         name="inventory_breakdown_eval",
         dataset=dataset,

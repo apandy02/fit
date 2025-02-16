@@ -45,7 +45,6 @@ async def add_restriction(request: fh.Request):
         existing_restrictions = form.getlist("existing_restrictions[]")
         if restriction not in existing_restrictions:
             existing_restrictions.append(restriction)
-        print(f"existing_restrictions: {existing_restrictions}")
         return ui.create_restriction_list(existing_restrictions)
     
     except Exception as e:
