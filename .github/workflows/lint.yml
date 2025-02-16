@@ -14,7 +14,5 @@ jobs:
       image: ghcr.io/astral-sh/uv:python3.11-bookworm-slim
     steps:
       - uses: actions/checkout@v3
-      - name: Sync project environment
-        run: uv sync
       - name: Run Ruff Linter
-        run: uv run ruff check .
+        run: uvx run ruff check .
