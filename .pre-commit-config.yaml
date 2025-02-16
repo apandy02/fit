@@ -1,23 +1,20 @@
 # .pre-commit-config.yaml
 
 repos:
-  # UV integration: update uv.lock and export to requirements.txt
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.5.29  # use the desired uv version
+    rev: 0.5.29
     hooks:
-      - id: uv-lock       # ensures that your uv.lock file is updated if pyproject.toml changes
+      - id: uv-lock
 
-  # Local hooks to run Python linters via uv
   - repo: local
     hooks:
       - id: ruff-check
         name: "Run Ruff Linter via uv"
-        entry: uv run ruff check
+        entry: uvx ruff check
         language: system
         files: \.py$
       - id: isort-check
         name: "Run isort via uv (check mode)"
-        # You can change '--check-only' to '--diff' or remove it if you want auto‑fixing
-        entry: uv run isort --check-only
+        entry: uvx isort --check-only
         language: system
         files: \.py$

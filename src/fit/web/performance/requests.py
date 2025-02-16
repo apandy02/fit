@@ -25,8 +25,8 @@ def get(session):
     ]
     text_generation_endpoint = "/generate_performance_overview"
     is_whoop = isinstance(tracker, Whoop)
-    performance_info = get_performance_info(tracker)
-    return ui.create_performance_page(performance_info, is_whoop, text_generation_endpoint, fab_buttons)
+    daily_stats, workouts = _get_performance_info(tracker)
+    return ui.create_performance_page(daily_stats, workouts, is_whoop, text_generation_endpoint, fab_buttons)
 
 
 async def generate_overview(session):
@@ -38,7 +38,7 @@ async def generate_overview(session):
     try:
         tracker = tracker_factory(session["tracker"], session["access_token"])
         today = datetime.date.today()
-        daily_stats, workouts = get_performance_info(tracker)
+        daily_stats, workouts = _get_performance_info(tracker)
         daily_nutrition = database_service.get_daily_cumulative_nutrition(today, session["user_id"])
         caloric_consumption = daily_nutrition.calories
         caloric_target = calculate_caloric_target(daily_nutrition, WeightGoal.MAINTAIN)
@@ -64,23 +64,26 @@ async def generate_overview(session):
         )
 
 
-def get_performance_info(tracker: FitnessTracker):
+def _get_performance_info(tracker: FitnessTracker):
     """
     Retrieve performance information for the day
+    Args:
+        tracker: The fitness tracker to use
+    Returns:
+        A tuple containing the daily stats and workouts
     """
     today = datetime.date.today()
-    if isinstance(tracker, Whoop):
+    if tracker.tracker_type == "whoop":
         cycle = tracker.get_cycle_for_day(today)
         daily_stats = cycle["score"]
         daily_stats["calories"] = kj_to_kcal(daily_stats["kilojoule"])
     else: # fitbit for now
-        heart_rate_data = tracker.get_intraday_heart_rate(datetime.date(2019, 6, 21))
-        print(f"heart_rate_data: {heart_rate_data}")
+        _ = tracker.get_intraday_heart_rate(today) # TODO: convert to average and max heart rate
         daily_stats = {
             "calories": tracker.get_daily_calories_burned(today),
             "average_heart_rate": 55,
             "max_heart_rate": 100,
-        } # TODO: use the timeseries data to get the average and max heart rate
+        } 
 
     workouts = tracker.get_daily_workouts(today)
     return daily_stats, workouts

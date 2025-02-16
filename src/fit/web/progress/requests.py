@@ -10,7 +10,6 @@ from fit.web.common import database_service
 def get(session):
     """Return the progress tracking page content"""
     measurements = database_service.get_user_measurements(session["user_id"])
-    print("measurements: ", measurements)
     return ui.create_progress_page(session, measurements)
 
 def get_latest_measurements(user_id: int):

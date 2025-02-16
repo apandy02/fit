@@ -58,6 +58,11 @@ class FitnessTracker(ABC):
         except Exception as e:
             logging.error(f"Error authenticating: {e}")
             raise e
+    
+    @property
+    @abstractmethod
+    def tracker_type(self) -> str:
+        pass
 
     @abstractmethod
     def get_daily_resting_heart_rate(self, day: datetime.date) -> float:

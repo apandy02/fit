@@ -1,6 +1,6 @@
 import fasthtml.common as fh
 
-import fit.web.profile.ui as ui
+import fit.web.user_profile.ui as ui
 from fit.web.common import database_service
 
 
@@ -45,8 +45,8 @@ async def add_restriction(request: fh.Request):
         existing_restrictions = form.getlist("existing_restrictions[]")
         if restriction not in existing_restrictions:
             existing_restrictions.append(restriction)
-        
         return ui.create_restriction_list(existing_restrictions)
+    
     except Exception as e:
         return fh.P(
             f"Error adding restriction: {str(e)}",

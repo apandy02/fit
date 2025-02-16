@@ -21,7 +21,6 @@ from fit.web.common import database_service, micronutrient_goals
 
 def get_daily_overview(session, date: str = None):
     """Return the nutritional overview page content"""
-    print(session)
     tracker = tracker_factory(session["tracker"], session["access_token"])
     if not date:
         date = datetime.today().date()
@@ -142,7 +141,6 @@ async def save_meal(session, request: fh.Request, date: str | None = None):
     user_id = session["user_id"]
     try:
         form = await request.form()
-        print("form: ", form)
         if date is not None:
             date = datetime.today().date()
 
@@ -198,7 +196,6 @@ async def delete_meal(meal_id: int):
     try:
         success = database_service.delete_meal(meal_id)
     except Exception as e:
-        print(f"Error deleting meal: {e}")
         return fh.P(
             f"Error deleting meal: {str(e)}",
             cls="text-red-500 font-semibold text-center"
@@ -217,7 +214,6 @@ async def save_supplement(session, request: fh.Request):
     user_id = session["user_id"]
     try:
         form = await request.form()
-        print("form: ", form)
         nutrition_info = NutritionalInformation(
             calories=form["calories"],
             protein=form["protein"],

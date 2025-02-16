@@ -20,10 +20,7 @@ async def add_item(session, request: fh.Request):
     try:
         form = await request.form()
         user_id = session["user_id"]
-        item = form.get("item")
-        quantity = form.get("quantity")
-        unit = form.get("unit")
-        category = form.get("category")
+        item, quantity, unit, category = form.get("item"), form.get("quantity"), form.get("unit"), form.get("category")
         database_service.insert_inventory_item(item, quantity, unit, category, user_id)
         return fh.Response(status=200)
     except Exception as e:
