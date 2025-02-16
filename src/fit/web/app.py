@@ -5,9 +5,9 @@ import fit.web.kitchen.requests as kitchen
 import fit.web.nutrition.requests as nutrition
 import fit.web.onboarding.requests as onboarding
 import fit.web.performance.requests as requests
-import fit.web.profile.requests as profile
 import fit.web.progress.requests as progress
 import fit.web.rest.requests as rest
+import fit.web.user_profile.requests as user_profile
 from fit.web.bw import auth_bware, onboarding_bware
 
 htmx_indicator_style = fh.Style("""
@@ -67,10 +67,10 @@ app.post("/generate_inventory_additions")(kitchen.generate_inventory_additions)
 app.get("/progress")(progress.get)
 app.post("/update_measurements")(progress.update_measurements)
 
-app.get("/profile")(profile.get)
-app.post("/update_profile")(profile.update_profile)
-app.post("/add_restriction")(profile.add_restriction)
-app.post("/remove_restriction")(profile.remove_restriction)
+app.get("/profile")(user_profile.get)
+app.post("/update_profile")(user_profile.update_profile)
+app.post("/add_restriction")(user_profile.add_restriction)
+app.post("/remove_restriction")(user_profile.remove_restriction)
 
 app.get("/rest")(rest.get)
 app.post("/generate_rest_overview")(rest.generate_overview)
