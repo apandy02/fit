@@ -10,13 +10,11 @@ def auth_before(req, session):
     """beforeware that checks if the user is logged in"""
     access_token_expiry = session.get('access_token_expiry', None)
     req.scope['auth'] = access_token_expiry
-    print(f"access_token_expiry: {access_token_expiry}")
     if not access_token_expiry or datetime.now().timestamp() > access_token_expiry:
         return RedirectResponse('/login', status_code=303)
 
 def onboarding_before(req, session):
     """beforeware that checks if the user is onboarded"""
-    print(session)
     user_profile = database_service.get_profile_data(session["user_id"])
 
     if user_profile["onboarding_stage"] == 0:
