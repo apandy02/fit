@@ -30,92 +30,16 @@ def get_daily_overview(session, date: str = None):
         except ValueError:
             date = datetime.today().date()
     
-    data = get_daily_nutrition_data(date, tracker, session["user_id"])
-    return overview_page_content(session, data, "daily", date)
+    data = _get_daily_nutrition_data(date, tracker, session["user_id"])
+    return _overview_page_content(session, data, "daily", date)
 
 def get_weekly_overview(session):
     """Return the weekly nutritional overview page content"""
     tracker = tracker_factory(session["tracker"], session["access_token"])
     week = get_current_week_dates()
-    data = get_weekly_nutrition_data(week, tracker, session["user_id"])
+    data = _get_weekly_nutrition_data(week, tracker, session["user_id"])
     date = datetime.today().date()
-    return overview_page_content(session, data, "weekly", date)
-
-def overview_page_content(session, data: list[dict], current_view: str, date: datetime.date = None):
-    menu_items = [
-        ("Food", "🍽️", "openFoodModal()"),
-        ("Water", "💧", "openWaterModal()"), 
-        ("Supplement", "💊", "openSupplementModal()")
-    ]
-
-    water_metrics = [
-        {"name": "Water", "column_name": "water", "unit": "ml", "plot_id": "water-plot"}
-    ]
-
-    content = fh.Article(
-        fh.Div(
-            ui.create_page_header(current_view, date),
-            ui.create_metrics_grid(session["user_id"], data, water_metrics, current_view, date),
-            ui.food_tracking_modal(date),
-            common.create_fab_menu(menu_items),
-            cls="max-w-6xl mx-auto p-6"
-        ),
-        cls="bg-base-100",
-    )
-    return common.page_outline(1, "Nutritional Overview", True, True, content)
-
-def get_weekly_nutrition_data(week: list[datetime], tracker: FitnessTracker, user_id: int):
-    """Get the current nutrition data for display"""
-    data = {
-        "calories": {"consumed": [], "goal": [], "burned": []},
-        "protein": {"consumed": [], "goal": []},
-        "carbohydrates": {"consumed": [], "goal": []}, 
-        "fat": {"consumed": [], "goal": []},
-        "vitamin_a": {"consumed": [], "goal": []},
-        "vitamin_c": {"consumed": [], "goal": []},
-        "iron": {"consumed": [], "goal": []},
-        "calcium": {"consumed": [], "goal": []},
-        "water": {"consumed": [], "goal": []},
-        "creatine": {"consumed": [], "goal": []}
-    }
-    
-    today = datetime.today().date()
-    for date in week:
-        if date > today:
-            # For future dates, extend with 0s
-            for metric in data:
-                for key in data[metric]:
-                    data[metric][key].extend([0])
-        else:
-            daily_data = get_daily_nutrition_data(date, tracker, user_id)
-            for metric, values in daily_data.items():
-                for key, value in values.items():
-                    data[metric][key].extend(value)
-    
-    return data
-
-def get_daily_nutrition_data(date: datetime, tracker: FitnessTracker, user_id: int):
-    """Get the current nutrition data for display"""
-    calories_burned = tracker.get_daily_calories_burned(date)
-    goals = calculate_macro_targets(calories_burned, WeightGoal.MAINTAIN)
-    daily_consumption = database_service.get_daily_cumulative_nutrition(date, user_id)
-    water_consumed = database_service.get_daily_water_consumption(date, user_id)
-    user_info = database_service.get_profile_data(user_id)
-    measurements = database_service.get_latest_user_measurements(user_id)
-    water_goal = estimate_daily_water_intake(measurements, user_info, calories_burned)
-    
-    return {
-        "calories": {"consumed": [daily_consumption.calories], "goal": [goals["calories"]], "burned": [calories_burned]},
-        "protein": {"consumed": [daily_consumption.macronutrients.protein], "goal": [goals["protein"]]},
-        "carbohydrates": {"consumed": [daily_consumption.macronutrients.carbohydrates.total], "goal": [goals["carbohydrates"]]},
-        "fat": {"consumed": [daily_consumption.macronutrients.fat.total], "goal": [goals["fat"]]},
-        "vitamin_a": {"consumed": [daily_consumption.micronutrients.vitamin_a], "goal": [micronutrient_goals["vitamin_a"]]},
-        "vitamin_c": {"consumed": [daily_consumption.micronutrients.vitamin_c], "goal": [micronutrient_goals["vitamin_c"]]},
-        "iron": {"consumed": [daily_consumption.micronutrients.iron], "goal": [micronutrient_goals["iron"]]},
-        "calcium": {"consumed": [daily_consumption.micronutrients.calcium], "goal": [micronutrient_goals["calcium"]]},
-        "water": {"consumed": [water_consumed], "goal": [water_goal]},
-        "creatine": {"consumed": [2.0], "goal": [5.0]}
-    }
+    return _overview_page_content(session, data, "weekly", date)
 
 async def analyze_text(request: fh.Request, date: str | None = None):
     """Handle meal description analysis"""
@@ -359,14 +283,14 @@ def generate_overview(session, date: str | None = None, weekly: bool = False):
                 days = [datetime.today().date()]
         meals = database_service.get_daily_meals(days[0], session["user_id"])
     
-    nutritional_data = get_user_nutritional_data_for_dates(session, days)
+    nutritional_data = _get_user_nutritional_data_for_dates(session, days)
+    
     if weekly:
         return assistants.weekly_io_analysis(meals, nutritional_data["targets"], nutritional_data["restrictions"]).content[0].parsed
     else:
         return assistants.daily_io_analysis(meals, nutritional_data["targets"][0], nutritional_data["restrictions"]).content[0].parsed
 
 async def nutrition_redirect(request: fh.Request):
-    """Redirect to the nutrition page"""
     form = await request.form()
     current_view = form["time_filter"]
     if current_view == "daily":
@@ -375,9 +299,16 @@ async def nutrition_redirect(request: fh.Request):
         return fh.Response(headers={"HX-Redirect": "/nutrition/weekly"}, status_code=200)
 
 async def get_nutrient_suggestions(session, nutrient: str):
-    """Generate meal suggestions based on a specific nutrient"""
+    """
+    Generate meal suggestions based on a specific nutrient
+    Args:
+        session: session
+        nutrient: the nutrient to generate suggestions for
+    Returns:
+        - ui.create_meal_suggestions: the meal suggestions
+    """
     daily_nutrition = database_service.get_daily_cumulative_nutrition(datetime.today().date(), session["user_id"])
-    nutritional_data = get_user_nutritional_data_for_dates(session, [datetime.today().date()])
+    nutritional_data = _get_user_nutritional_data_for_dates(session, [datetime.today().date()])
     user_preferences = assistants.summarize_user_preferences(database_service.get_all_meal_summaries(session["user_id"])) # TODO: cache the output of this so that we aren't calling it every time
     kitchen_inventory = database_service.get_inventory(session["user_id"])
     recommendations = assistants.make_recommendations(
@@ -390,33 +321,6 @@ async def get_nutrient_suggestions(session, nutrient: str):
     ).content[0].parsed
 
     return ui.create_meal_suggestions(recommendations)
-def get_user_nutritional_data_for_dates(session, dates: list[datetime.date]):
-    """
-    Get the user's nutritional data for the given dates.
-    Args:
-        session: the user's session
-        dates: a list of the dates to get the nutritional data for
-    Returns:
-        - dict:
-            - targets: a list of the user's targets for the given dates
-            - daily_nutrition: a list of the user's daily nutrition for the given dates
-            - weight_goal: the user's weight goal
-            - restrictions: the user's dietary restrictions
-            - calories_burned: the user's calories burned for the given dates
-    """
-    tracker = tracker_factory(session["tracker"], session["access_token"])
-    weight_goal = WeightGoal(database_service.get_weight_goal(session["user_id"]))
-    calories_burned = [tracker.get_daily_calories_burned(day) for day in dates]
-    targets = [calculate_macro_targets(calories_burned, weight_goal) for calories_burned in calories_burned]
-    [target.update(micronutrient_goals) for target in targets]
-    
-    return {
-        "targets": targets,
-        "daily_nutrition": [database_service.get_daily_cumulative_nutrition(day, session["user_id"]) for day in dates],
-        "weight_goal": weight_goal, 
-        "restrictions": database_service.get_dietary_restrictions(session["user_id"]),
-        "calories_burned": calories_burned
-    }
 
 async def log_water(session, request: fh.Request, date: str | None = None):
     """Save water consumption entry"""
@@ -460,4 +364,109 @@ def get_weekly_meals(week: list[datetime], user_id: int):
     """
     return {
         str(day): database_service.get_daily_meals(day, user_id) for day in week
+    }
+
+def _overview_page_content(session, data: list[dict], current_view: str, date: datetime.date = None):
+    menu_items = [
+        ("Food", "🍽️", "openFoodModal()"),
+        ("Water", "💧", "openWaterModal()"), 
+        ("Supplement", "💊", "openSupplementModal()")
+    ]
+
+    water_metrics = [
+        {"name": "Water", "column_name": "water", "unit": "ml", "plot_id": "water-plot"}
+    ]
+
+    content = fh.Article(
+        fh.Div(
+            ui.create_page_header(current_view, date),
+            ui.create_metrics_grid(session["user_id"], data, water_metrics, current_view, date),
+            ui.food_tracking_modal(date),
+            common.create_fab_menu(menu_items),
+            cls="max-w-6xl mx-auto p-6"
+        ),
+        cls="bg-base-100",
+    )
+    return common.page_outline(1, "Nutritional Overview", True, True, content)
+
+
+def _get_weekly_nutrition_data(week: list[datetime], tracker: FitnessTracker, user_id: int):
+    """Get the current nutrition data for display"""
+    data = {
+        "calories": {"consumed": [], "goal": [], "burned": []},
+        "protein": {"consumed": [], "goal": []},
+        "carbohydrates": {"consumed": [], "goal": []}, 
+        "fat": {"consumed": [], "goal": []},
+        "vitamin_a": {"consumed": [], "goal": []},
+        "vitamin_c": {"consumed": [], "goal": []},
+        "iron": {"consumed": [], "goal": []},
+        "calcium": {"consumed": [], "goal": []},
+        "water": {"consumed": [], "goal": []},
+        "creatine": {"consumed": [], "goal": []}
+    }
+    
+    today = datetime.today().date()
+    for date in week:
+        if date > today:
+            # For future dates, extend with 0s
+            for metric in data:
+                for key in data[metric]:
+                    data[metric][key].extend([0])
+        else:
+            daily_data = _get_daily_nutrition_data(date, tracker, user_id)
+            for metric, values in daily_data.items():
+                for key, value in values.items():
+                    data[metric][key].extend(value)
+    
+    return data
+
+def _get_daily_nutrition_data(date: datetime, tracker: FitnessTracker, user_id: int):
+    """Get the current nutrition data for display"""
+    calories_burned = tracker.get_daily_calories_burned(date)
+    goals = calculate_macro_targets(calories_burned, WeightGoal.MAINTAIN)
+    daily_consumption = database_service.get_daily_cumulative_nutrition(date, user_id)
+    water_consumed = database_service.get_daily_water_consumption(date, user_id)
+    user_info = database_service.get_profile_data(user_id)
+    measurements = database_service.get_latest_user_measurements(user_id)
+    water_goal = estimate_daily_water_intake(measurements, user_info, calories_burned)
+    
+    return {
+        "calories": {"consumed": [daily_consumption.calories], "goal": [goals["calories"]], "burned": [calories_burned]},
+        "protein": {"consumed": [daily_consumption.macronutrients.protein], "goal": [goals["protein"]]},
+        "carbohydrates": {"consumed": [daily_consumption.macronutrients.carbohydrates.total], "goal": [goals["carbohydrates"]]},
+        "fat": {"consumed": [daily_consumption.macronutrients.fat.total], "goal": [goals["fat"]]},
+        "vitamin_a": {"consumed": [daily_consumption.micronutrients.vitamin_a], "goal": [micronutrient_goals["vitamin_a"]]},
+        "vitamin_c": {"consumed": [daily_consumption.micronutrients.vitamin_c], "goal": [micronutrient_goals["vitamin_c"]]},
+        "iron": {"consumed": [daily_consumption.micronutrients.iron], "goal": [micronutrient_goals["iron"]]},
+        "calcium": {"consumed": [daily_consumption.micronutrients.calcium], "goal": [micronutrient_goals["calcium"]]},
+        "water": {"consumed": [water_consumed], "goal": [water_goal]},
+        "creatine": {"consumed": [2.0], "goal": [5.0]}
+    }
+
+def _get_user_nutritional_data_for_dates(session, dates: list[datetime.date]):
+    """
+    Get the user's nutritional data for the given dates.
+    Args:
+        session: the user's session
+        dates: a list of the dates to get the nutritional data for
+    Returns:
+        - dict:
+            - targets: a list of the user's targets for the given dates
+            - daily_nutrition: a list of the user's daily nutrition for the given dates
+            - weight_goal: the user's weight goal
+            - restrictions: the user's dietary restrictions
+            - calories_burned: the user's calories burned for the given dates
+    """
+    tracker = tracker_factory(session["tracker"], session["access_token"])
+    weight_goal = WeightGoal(database_service.get_weight_goal(session["user_id"]))
+    calories_burned = [tracker.get_daily_calories_burned(day) for day in dates]
+    targets = [calculate_macro_targets(calories_burned, weight_goal) for calories_burned in calories_burned]
+    [target.update(micronutrient_goals) for target in targets]
+    
+    return {
+        "targets": targets,
+        "daily_nutrition": [database_service.get_daily_cumulative_nutrition(day, session["user_id"]) for day in dates],
+        "weight_goal": weight_goal, 
+        "restrictions": database_service.get_dietary_restrictions(session["user_id"]),
+        "calories_burned": calories_burned
     }
