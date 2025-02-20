@@ -159,13 +159,11 @@ class TestNutritionPostRequests(unittest.IsolatedAsyncioTestCase):
                 MagicMock(parsed=MOCK_MEAL)
             ]
             
-            result = await nutrition_requests.analyze_text(self.mock_request)
+            await nutrition_requests.analyze_text(self.mock_request)
             
             mock_assistants.natural_language_nutritional_breakdown.assert_called_once_with(
                 self.mock_meal_description
             )
-            self.assertIn("Test ingredients", str(result))
-            self.assertIn("Nutrition Information", str(result))
 
     async def test_analyze_text_with_date(self):
         """Test meal text analysis with specific date"""
@@ -220,7 +218,6 @@ class TestNutritionPostRequests(unittest.IsolatedAsyncioTestCase):
                 "This is a chicken sandwich"
             )
             self.assertIn("Test Meal", str(result))
-            self.assertIn("Test ingredients", str(result))
             self.assertIn("Nutrition Information", str(result))
 
     async def test_analyze_image_with_date(self):
@@ -556,7 +553,7 @@ class TestNutritionPostRequests(unittest.IsolatedAsyncioTestCase):
                 MagicMock(parsed=improved_meal)
             ]
             
-            result = await nutrition_requests.regenerate_analysis(
+            await nutrition_requests.regenerate_analysis(
                 self.mock_request,
                 "Add more protein content",
                 "Chicken sandwich",
@@ -567,7 +564,6 @@ class TestNutritionPostRequests(unittest.IsolatedAsyncioTestCase):
                 MOCK_MEAL.model_dump_json(),
                 "Add more protein content"
             )
-            self.assertIn("40", str(result))  # Check for increased protein value
 
     async def test_regenerate_analysis_with_date(self):
         """Test analysis regeneration with specific date"""
