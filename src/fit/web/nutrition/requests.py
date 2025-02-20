@@ -293,10 +293,10 @@ def generate_overview(session, date: str | None = None, weekly: bool = False):
 async def nutrition_redirect(request: fh.Request):
     form = await request.form()
     current_view = form["time_filter"]
-    if current_view == "daily":
-        return fh.Response(headers={"HX-Redirect": "/nutrition"}, status_code=200)
-    elif current_view == "weekly":
+    if current_view == "weekly":
         return fh.Response(headers={"HX-Redirect": "/nutrition/weekly"}, status_code=200)
+    else:
+        return fh.Response(headers={"HX-Redirect": "/nutrition"}, status_code=200)
 
 async def get_nutrient_suggestions(session, nutrient: str):
     """

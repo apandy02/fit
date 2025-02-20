@@ -6,7 +6,8 @@ import fasthtml.common as fh
 from PIL import Image
 
 from fit.nutrition.data_models import (ConditionalNutrients, Macronutrients,
-                                       MealBreakdown, Micronutrients)
+                                       MealBreakdown, MealRecommendation,
+                                       Micronutrients, Recommendations)
 from fit.web.nutrition import requests as nutrition_requests
 
 MOCK_SESSION = {
@@ -824,6 +825,397 @@ class TestNutritionPostRequests(unittest.IsolatedAsyncioTestCase):
             
             mock_db.get_daily_meals.assert_called_once_with(today, 42)
             mock_get_data.assert_called_once_with(self.mock_session, [today])
+
+    async def test_get_nutrient_suggestions_success(self):
+        """Test successful nutrient suggestions generation"""
+        nutrient = "protein"
+        mock_daily_nutrition = MagicMock()
+        mock_nutritional_data = {
+            "targets": [{
+                "calories": 2500,
+                "protein": 180,
+                "carbohydrates": 250,
+                "fat": 80
+            }],
+            "restrictions": ["vegetarian"]
+        }
+        mock_preferences = "Prefers high-protein vegetarian meals"
+        mock_inventory = ["chickpeas", "tofu", "quinoa"]
+        mock_recommendations = Recommendations(meals=[
+            MealRecommendation(
+                title="Grilled tofu with quinoa",
+                ingredients="tofu 200g, quinoa 100g, vegetables 150g",
+                is_explorative=False
+            ),
+            MealRecommendation(
+                title="Chickpea curry",
+                ingredients="chickpeas 200g, coconut milk 200ml, spices",
+                is_explorative=True
+            ),
+            MealRecommendation(
+                title="Protein smoothie",
+                ingredients="protein powder 30g, banana 1, milk 250ml",
+                is_explorative=False
+            )
+        ])
+        
+        with patch('fit.web.nutrition.requests.database_service') as mock_db, \
+             patch('fit.web.nutrition.requests._get_user_nutritional_data_for_dates') as mock_get_data, \
+             patch('fit.web.nutrition.requests.assistants') as mock_assistants:
+            
+            mock_db.get_daily_cumulative_nutrition.return_value = mock_daily_nutrition
+            mock_get_data.return_value = mock_nutritional_data
+            mock_db.get_all_meal_summaries.return_value = ["Past meal 1", "Past meal 2"]
+            mock_db.get_inventory.return_value = mock_inventory
+            mock_assistants.summarize_user_preferences.return_value = mock_preferences
+            mock_assistants.make_recommendations.return_value.content = [
+                MagicMock(parsed=mock_recommendations)
+            ]
+            
+            result = await nutrition_requests.get_nutrient_suggestions(self.mock_session, nutrient)
+            
+            mock_db.get_daily_cumulative_nutrition.assert_called_once_with(
+                datetime.today().date(),
+                42
+            )
+            mock_get_data.assert_called_once_with(
+                self.mock_session,
+                [datetime.today().date()]
+            )
+            mock_db.get_all_meal_summaries.assert_called_once_with(42)
+            mock_db.get_inventory.assert_called_once_with(42)
+            mock_assistants.summarize_user_preferences.assert_called_once_with(
+                ["Past meal 1", "Past meal 2"]
+            )
+            mock_assistants.make_recommendations.assert_called_once_with(
+                consumption=mock_daily_nutrition,
+                targets=mock_nutritional_data["targets"][0],
+                target_nutrient=nutrient,
+                restrictions=mock_nutritional_data["restrictions"],
+                user_preferences=mock_preferences,
+                kitchen_inventory=mock_inventory
+            )
+            
+            for meal in mock_recommendations.meals:
+                self.assertIn(meal.title, str(result))
+                self.assertIn(meal.ingredients, str(result))
+
+    async def test_get_nutrient_suggestions_no_inventory(self):
+        """Test nutrient suggestions generation with empty inventory"""
+        nutrient = "protein"
+        mock_daily_nutrition = MagicMock()
+        mock_nutritional_data = {
+            "targets": [{
+                "calories": 2500,
+                "protein": 180,
+                "carbohydrates": 250,
+                "fat": 80
+            }],
+            "restrictions": ["vegetarian"]
+        }
+        mock_preferences = "Prefers high-protein vegetarian meals"
+        mock_inventory = []  # Empty inventory
+        mock_recommendations = Recommendations(meals=[
+            MealRecommendation(
+                title="Protein smoothie",
+                ingredients="protein powder 30g, banana 1, milk 250ml",
+                is_explorative=False
+            ),
+            MealRecommendation(
+                title="Tofu stir-fry",
+                ingredients="tofu 200g, mixed vegetables 300g, soy sauce",
+                is_explorative=False
+            ),
+            MealRecommendation(
+                title="Lentil soup",
+                ingredients="red lentils 200g, vegetables 200g, spices",
+                is_explorative=True
+            )
+        ])
+        
+        with patch('fit.web.nutrition.requests.database_service') as mock_db, \
+             patch('fit.web.nutrition.requests._get_user_nutritional_data_for_dates') as mock_get_data, \
+             patch('fit.web.nutrition.requests.assistants') as mock_assistants:
+            
+            mock_db.get_daily_cumulative_nutrition.return_value = mock_daily_nutrition
+            mock_get_data.return_value = mock_nutritional_data
+            mock_db.get_all_meal_summaries.return_value = ["Past meal 1", "Past meal 2"]
+            mock_db.get_inventory.return_value = mock_inventory
+            mock_assistants.summarize_user_preferences.return_value = mock_preferences
+            mock_assistants.make_recommendations.return_value.content = [
+                MagicMock(parsed=mock_recommendations)
+            ]
+            
+            result = await nutrition_requests.get_nutrient_suggestions(self.mock_session, nutrient)
+            
+            mock_assistants.make_recommendations.assert_called_once_with(
+                consumption=mock_daily_nutrition,
+                targets=mock_nutritional_data["targets"][0],
+                target_nutrient=nutrient,
+                restrictions=mock_nutritional_data["restrictions"],
+                user_preferences=mock_preferences,
+                kitchen_inventory=mock_inventory
+            )
+            
+            for meal in mock_recommendations.meals:
+                self.assertIn(meal.title, str(result))
+                self.assertIn(meal.ingredients, str(result))
+
+    async def test_get_nutrient_suggestions_no_preferences(self):
+        """Test nutrient suggestions generation with no meal history"""
+        nutrient = "protein"
+        mock_daily_nutrition = MagicMock()
+        mock_nutritional_data = {
+            "targets": [{
+                "calories": 2500,
+                "protein": 180,
+                "carbohydrates": 250,
+                "fat": 80
+            }],
+            "restrictions": ["vegetarian"]
+        }
+        mock_inventory = ["chickpeas", "tofu", "quinoa"]
+        mock_recommendations = Recommendations(meals=[
+            MealRecommendation(
+                title="Grilled tofu with quinoa",
+                ingredients="tofu 200g, quinoa 100g, vegetables 150g",
+                is_explorative=True
+            ),
+            MealRecommendation(
+                title="Chickpea curry",
+                ingredients="chickpeas 200g, coconut milk 200ml, spices",
+                is_explorative=True
+            ),
+            MealRecommendation(
+                title="Protein smoothie",
+                ingredients="protein powder 30g, banana 1, milk 250ml",
+                is_explorative=True
+            )
+        ])
+        
+        with patch('fit.web.nutrition.requests.database_service') as mock_db, \
+             patch('fit.web.nutrition.requests._get_user_nutritional_data_for_dates') as mock_get_data, \
+             patch('fit.web.nutrition.requests.assistants') as mock_assistants:
+            
+            mock_db.get_daily_cumulative_nutrition.return_value = mock_daily_nutrition
+            mock_get_data.return_value = mock_nutritional_data
+            mock_db.get_all_meal_summaries.return_value = []  # No meal history
+            mock_db.get_inventory.return_value = mock_inventory
+            mock_assistants.summarize_user_preferences.return_value = ""  # No preferences
+            mock_assistants.make_recommendations.return_value.content = [
+                MagicMock(parsed=mock_recommendations)
+            ]
+            
+            result = await nutrition_requests.get_nutrient_suggestions(self.mock_session, nutrient)
+            
+            mock_assistants.make_recommendations.assert_called_once_with(
+                consumption=mock_daily_nutrition,
+                targets=mock_nutritional_data["targets"][0],
+                target_nutrient=nutrient,
+                restrictions=mock_nutritional_data["restrictions"],
+                user_preferences="",
+                kitchen_inventory=mock_inventory
+            )
+            
+            for meal in mock_recommendations.meals:
+                self.assertIn(meal.title, str(result))
+                self.assertIn(meal.ingredients, str(result))
+
+    async def test_get_nutrient_suggestions_different_nutrients(self):
+        """Test nutrient suggestions for different nutrients"""
+        nutrients = ["protein", "iron", "vitamin_c"]
+        mock_daily_nutrition = MagicMock()
+        mock_nutritional_data = {
+            "targets": [{
+                "calories": 2500,
+                "protein": 180,
+                "carbohydrates": 250,
+                "fat": 80
+            }],
+            "restrictions": ["vegetarian"]
+        }
+        mock_preferences = "Prefers balanced meals"
+        mock_inventory = ["vegetables", "fruits", "grains"]
+        
+        with patch('fit.web.nutrition.requests.database_service') as mock_db, \
+             patch('fit.web.nutrition.requests._get_user_nutritional_data_for_dates') as mock_get_data, \
+             patch('fit.web.nutrition.requests.assistants') as mock_assistants:
+            
+            mock_db.get_daily_cumulative_nutrition.return_value = mock_daily_nutrition
+            mock_get_data.return_value = mock_nutritional_data
+            mock_db.get_all_meal_summaries.return_value = ["Past meal 1", "Past meal 2"]
+            mock_db.get_inventory.return_value = mock_inventory
+            mock_assistants.summarize_user_preferences.return_value = mock_preferences
+            
+            for nutrient in nutrients:
+                mock_recommendations = Recommendations(meals=[
+                    MealRecommendation(
+                        title=f"{nutrient.capitalize()} rich meal {i}",
+                        ingredients="ingredient 1 100g, ingredient 2 150g",
+                        is_explorative=bool(i % 2)
+                    ) for i in range(1, 4)
+                ])
+                mock_assistants.make_recommendations.return_value.content = [
+                    MagicMock(parsed=mock_recommendations)
+                ]
+                
+                result = await nutrition_requests.get_nutrient_suggestions(self.mock_session, nutrient)
+                
+                mock_assistants.make_recommendations.assert_called_with(
+                    consumption=mock_daily_nutrition,
+                    targets=mock_nutritional_data["targets"][0],
+                    target_nutrient=nutrient,
+                    restrictions=mock_nutritional_data["restrictions"],
+                    user_preferences=mock_preferences,
+                    kitchen_inventory=mock_inventory
+                )
+                
+                for meal in mock_recommendations.meals:
+                    self.assertIn(meal.title, str(result))
+                    self.assertIn(meal.ingredients, str(result))
+
+    async def test_log_water_success(self):
+        """Test successful water logging"""
+        mock_form_data = {
+            "amount": "500",
+            "time_consumed": "12:00"
+        }
+        
+        async def mock_form():
+            return mock_form_data
+            
+        self.mock_request.form = mock_form
+        
+        with patch('fit.web.nutrition.requests.database_service') as mock_db:
+            result = await nutrition_requests.log_water(self.mock_session, self.mock_request)
+            
+            mock_db.insert_water_consumption.assert_called_once_with(
+                water_consumed_ml=mock_form_data["amount"],
+                date_consumed=datetime.today().date(),
+                time_consumed=datetime.strptime(mock_form_data["time_consumed"], "%H:%M").time(),
+                user_id=42
+            )
+            
+            self.assertIn("Water logged successfully", str(result))
+            self.assertIn("text-green-500", str(result))
+            self.assertIn("closeWaterModal", str(result))
+            self.assertIn("window.location.reload", str(result))
+
+    async def test_log_water_with_date(self):
+        """Test water logging with specific date"""
+        specific_date = date(2024, 1, 1)
+        mock_form_data = {
+            "amount": "500",
+            "time_consumed": "12:00"
+        }
+        
+        async def mock_form():
+            return mock_form_data
+            
+        self.mock_request.form = mock_form
+        
+        with patch('fit.web.nutrition.requests.database_service') as mock_db:
+            result = await nutrition_requests.log_water(self.mock_session, self.mock_request, str(specific_date))
+            
+            mock_db.insert_water_consumption.assert_called_once_with(
+                water_consumed_ml=mock_form_data["amount"],
+                date_consumed=str(specific_date),
+                time_consumed=datetime.strptime(mock_form_data["time_consumed"], "%H:%M").time(),
+                user_id=42
+            )
+            
+            self.assertIn("Water logged successfully", str(result))
+
+    async def test_log_water_error(self):
+        """Test water logging with database error"""
+        mock_form_data = {
+            "amount": "500",
+            "time_consumed": "12:00"
+        }
+        
+        async def mock_form():
+            return mock_form_data
+            
+        self.mock_request.form = mock_form
+        
+        with patch('fit.web.nutrition.requests.database_service') as mock_db:
+            mock_db.insert_water_consumption.side_effect = Exception("Database error")
+            
+            result = await nutrition_requests.log_water(self.mock_session, self.mock_request)
+            
+            self.assertIn("Error logging water", str(result))
+            self.assertIn("Database error", str(result))
+            self.assertIn("text-red-500", str(result))
+
+    async def test_log_water_invalid_time_format(self):
+        """Test water logging with invalid time format"""
+        mock_form_data = {
+            "amount": "500",
+            "time_consumed": "invalid_time"
+        }
+        
+        async def mock_form():
+            return mock_form_data
+            
+        self.mock_request.form = mock_form
+        
+        result = await nutrition_requests.log_water(self.mock_session, self.mock_request)
+        
+        self.assertIn("Error logging water", str(result))
+        self.assertIn("text-red-500", str(result))
+
+    async def test_nutrition_redirect_daily(self):
+        """Test nutrition redirect to daily view"""
+        mock_form_data = {
+            "time_filter": "daily"
+        }
+        
+        async def mock_form():
+            return mock_form_data
+            
+        self.mock_request.form = mock_form
+        
+        result = await nutrition_requests.nutrition_redirect(self.mock_request)
+
+        self.assertIsInstance(result, fh.Response)
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(result.headers["HX-Redirect"], "/nutrition")
+
+    async def test_nutrition_redirect_weekly(self):
+        """Test nutrition redirect to weekly view"""
+        mock_form_data = {
+            "time_filter": "weekly"
+        }
+        
+        async def mock_form():
+            return mock_form_data
+            
+        self.mock_request.form = mock_form
+        
+        result = await nutrition_requests.nutrition_redirect(self.mock_request)
+        print(f"Result weekly: {result}")
+        self.assertIsInstance(result, fh.Response)
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(result.headers["HX-Redirect"], "/nutrition/weekly")
+
+    async def test_nutrition_redirect_invalid_filter(self):
+        """Test nutrition redirect with invalid time filter"""
+        mock_form_data = {
+            "time_filter": "invalid_filter"
+        }
+        
+        async def mock_form():
+            return mock_form_data
+            
+        self.mock_request.form = mock_form
+        
+        result = await nutrition_requests.nutrition_redirect(self.mock_request)
+        
+        # Should default to daily view
+        self.assertIsInstance(result, fh.Response)
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(result.headers["HX-Redirect"], "/nutrition")
+
 
 if __name__ == '__main__':
     unittest.main() 
