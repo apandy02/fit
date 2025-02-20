@@ -19,3 +19,6 @@ jobs:
         run: uv build
       - name: Run Tests
         run: uv run python -m unittest discover -v
+
+  Expected: improve_breakdown('{"title":"Test Meal","ingredients":"Test ingredients","calories":500.0,"macronutrients":{"protein":40.0,"carbohydrates":{"total":50.0,"fiber":5.0,"total_sugar":10.0,"added_sugar":5.0},"fat":{"total":20.0,"saturated":5.0,"trans":0.0}},"micronutrients":{"vitamin_a":1000.0,"vitamin_c":30.0,"vitamin_d":400.0,"calcium":200.0,"iron":3.0,"potassium":300.0,"sodium":400.0},"conditional_nutrients":{"creatine":0.5}}', 'Add more protein content')
+  Actual: improve_breakdown('{"title":"Test Meal","ingredients":"Test ingredients","calories":500.0,"macronutrients":{"protein":30.0,"carbohydrates":{"total":50.0,"fiber":5.0,"total_sugar":10.0,"added_sugar":5.0},"fat":{"total":20.0,"saturated":5.0,"trans":0.0}},"micronutrients":{"vitamin_a":1000.0,"vitamin_c":30.0,"vitamin_d":400.0,"calcium":200.0,"iron":3.0,"potassium":300.0,"sodium":400.0},"conditional_nutrients":{"creatine":0.5}}', 'Add more protein content')
