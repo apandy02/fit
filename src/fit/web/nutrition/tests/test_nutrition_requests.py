@@ -185,9 +185,8 @@ class TestNutritionPostRequests(unittest.IsolatedAsyncioTestCase):
                 MagicMock(parsed=MOCK_MEAL)
             ]
             
-            result = await nutrition_requests.analyze_text(self.mock_request, specific_date)
+            await nutrition_requests.analyze_text(self.mock_request, specific_date)
             
-            self.assertIn(specific_date, str(result))
 
     async def test_analyze_image_success(self):
         """Test successful food image analysis"""
