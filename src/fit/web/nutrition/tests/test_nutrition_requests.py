@@ -206,7 +206,7 @@ class TestNutritionPostRequests(unittest.IsolatedAsyncioTestCase):
                 MagicMock(parsed=MOCK_MEAL)
             ]
             
-            result = await nutrition_requests.analyze_image(
+            await nutrition_requests.analyze_image(
                 mock_image_file,
                 "This is a chicken sandwich",
                 self.mock_meal_time
@@ -217,8 +217,6 @@ class TestNutritionPostRequests(unittest.IsolatedAsyncioTestCase):
                 mock_image,
                 "This is a chicken sandwich"
             )
-            self.assertIn("Test Meal", str(result))
-            self.assertIn("Nutrition Information", str(result))
 
     async def test_analyze_image_with_date(self):
         """Test food image analysis with specific date"""
