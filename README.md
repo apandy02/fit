@@ -40,7 +40,6 @@ The application consists of several core modules:
 
 4. Create virtual environment and sync dependencies:
    ```bash
-   uv venv
    uv sync
    ```
 ### Running the Application
