@@ -62,7 +62,10 @@ class DatabaseService:
             try:
                 meal_time = datetime.strptime(row["meal_time"], "%H:%M:%S").time()
             except ValueError:
-                meal_time = datetime.fromisoformat(row["meal_time"]).time()
+                try:
+                    meal_time = datetime.strptime(row["meal_time"], "%H:%M").time()
+                except ValueError:
+                    meal_time = datetime.fromisoformat(row["meal_time"]).time()
                 
             meals.append({
                 "meal": meal,

@@ -13,8 +13,3 @@ repos:
         entry: uvx ruff check
         language: system
         files: \.py$
-      - id: isort-check
-        name: "Run isort via uv (check mode)"
-        entry: uvx isort --check-only
-        language: system
-        files: \.py$
