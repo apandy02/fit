@@ -1,57 +1,16 @@
-from __future__ import annotations
-
 from datetime import datetime
 from typing import Optional
 
+from fastapi import APIRouter, Depends, HTTPException
+
 import fit.nutrition.assistants as assistants
 import fit.nutrition.data_models as dm
-from fastapi import Depends, FastAPI, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
-from fit.api.auth import create_token_pair, get_current_user_id, refresh_tokens
-from fit.api.models import (AnalysisRequest, AnalysisResult, LoginRequest,
-                            MealItem, MealLog, RefreshRequest, TokenPair, User)
+from fit.backend.auth import get_current_user_id
+from fit.backend.app.api.models.meals import (AnalysisRequest, AnalysisResult,
+                                              MealItem, MealLog)
 from fit.web.common import database_service
 
-app = FastAPI(title="Fit JSON API")
-
-# CORS
-origins = [
-    "http://localhost:8081",
-    "http://127.0.0.1:8081",
-    "exp://127.0.0.1:19000",
-    "exp+fit://127.0.0.1:19000",
-    "exp://localhost:19000",
-    "exp+fit://localhost:19000",
-]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.get("/me", response_model=User)
-def get_me(user_id: int = Depends(get_current_user_id)):
-    profile = database_service.get_profile_data(user_id)
-    return User(user_id=user_id, email=profile.get("email"), name=profile.get("name"))
-
-
-@app.post("/auth/login", response_model=TokenPair)
-def login(req: LoginRequest):
-    # For now, allow explicit user_id for local dev; in real use, integrate existing OAuth flow.
-    if req.user_id is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="user_id required for login")
-    access, refresh, expires_in = create_token_pair(req.user_id)
-    return TokenPair(access_token=access, refresh_token=refresh, expires_in=expires_in)
-
-
-@app.post("/auth/refresh", response_model=TokenPair)
-def refresh(req: RefreshRequest):
-    access, refresh_tok, expires_in = refresh_tokens(req.refresh_token)
-    return TokenPair(access_token=access, refresh_token=refresh_tok, expires_in=expires_in)
-
+router = APIRouter(tags=["meals"], prefix="/meals")
 
 def _dm_from_meal_item(mi: MealItem) -> dm.NutritionalInformation | dm.MealBreakdown:
     macros = dm.Macronutrients(
@@ -79,7 +38,7 @@ def _dm_from_meal_item(mi: MealItem) -> dm.NutritionalInformation | dm.MealBreak
     )
 
 
-@app.post("/nutrition/analyze", response_model=AnalysisResult)
+@router.post("/nutrition/analyze", response_model=AnalysisResult)
 def analyze(req: AnalysisRequest, user_id: int = Depends(get_current_user_id)):
     result = assistants.natural_language_nutritional_breakdown(req.text).content[0].parsed
     return AnalysisResult(
@@ -101,7 +60,7 @@ def analyze(req: AnalysisRequest, user_id: int = Depends(get_current_user_id)):
     )
 
 
-@app.get("/meals", response_model=list[MealLog])
+@router.get("/meals", response_model=list[MealLog])
 def get_meals(date_str: Optional[str] = None, user_id: int = Depends(get_current_user_id)):
     if date_str is None:
         day = datetime.today().date()
@@ -137,7 +96,7 @@ def get_meals(date_str: Optional[str] = None, user_id: int = Depends(get_current
     return result
 
 
-@app.post("/meals", response_model=MealLog, status_code=201)
+@router.post("/meals", response_model=MealLog, status_code=201)
 def create_meal(item: MealItem, user_id: int = Depends(get_current_user_id)):
     day = item.date_entered or datetime.today().date()
     meal_dm = _dm_from_meal_item(item)
@@ -168,7 +127,7 @@ def create_meal(item: MealItem, user_id: int = Depends(get_current_user_id)):
     return MealLog(id=created["rowid"], meal_time=item.meal_time, item=item)
 
 
-@app.delete("/meals/{meal_id}", status_code=204)
+@router.delete("/meals/{meal_id}", status_code=204)
 def delete_meal(meal_id: int, user_id: int = Depends(get_current_user_id)):
     ok = database_service.delete_meal(meal_id)
     if not ok:

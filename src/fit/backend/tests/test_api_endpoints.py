@@ -2,8 +2,9 @@ import unittest
 from datetime import date, datetime
 from unittest.mock import MagicMock, patch
 
-import fit.nutrition.data_models as dm
 from fastapi.testclient import TestClient
+
+import fit.nutrition.data_models as dm
 from fit.api.app import app as api_app
 
 
