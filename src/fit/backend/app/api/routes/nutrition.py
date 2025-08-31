@@ -8,7 +8,7 @@ from PIL import Image
 import fit.nutrition.assistants as assistants
 import fit.nutrition.data_models as dm
 from fit.backend.auth import get_current_user_id
-from fit.backend.app.api.models.meals import (
+from fit.backend.app.api.models.nutrition import (
     AnalysisRequest,
     AnalysisResult,
     MealItem,
