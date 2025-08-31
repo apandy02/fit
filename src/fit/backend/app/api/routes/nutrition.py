@@ -26,31 +26,6 @@ from fit.utils.calendar import get_current_week_dates
 
 router = APIRouter(tags=["meals"], prefix="/meals")
 
-def _dm_from_meal_item(mi: MealItem) -> dm.NutritionalInformation | dm.MealBreakdown:
-    macros = dm.Macronutrients(
-        protein=mi.protein,
-        carbohydrates=dm.Carbohydrates(total=mi.carbohydrates, fiber=mi.fiber, total_sugar=0, added_sugar=0),
-        fat=dm.Fats(total=mi.fat, saturated=0, trans=0),
-    )
-    micros = dm.Micronutrients(
-        vitamin_a=mi.vitamin_a,
-        vitamin_c=mi.vitamin_c,
-        vitamin_d=mi.vitamin_d,
-        calcium=mi.calcium,
-        iron=mi.iron,
-        potassium=mi.potassium,
-        sodium=mi.sodium,
-    )
-    cond = dm.ConditionalNutrients(creatine=mi.creatine)
-    return dm.MealBreakdown(
-        title=mi.title,
-        ingredients=mi.ingredients,
-        calories=mi.calories,
-        macronutrients=macros,
-        micronutrients=micros,
-        conditional_nutrients=cond,
-    )
-
 
 @router.post("/nutrition/analyze", response_model=AnalysisResult)
 def analyze(req: AnalysisRequest, user_id: int = Depends(get_current_user_id)):
@@ -299,22 +274,6 @@ def regenerate_analysis(req: RegenerateAnalysisRequest, user_id: int = Depends(g
     )
 
 
-def _get_user_nutritional_data_for_dates(user_id: int, days: list[datetime.date]):
-    # NOTE: Tracker calories_burned not available server-side here; defaulting to 2000.
-    weight_goal = WeightGoal(database_service.get_weight_goal(user_id))
-    calories_burned = [2000 for _ in days]
-    targets = [calculate_macro_targets(cb, weight_goal) for cb in calories_burned]
-    for target in targets:
-        target.update(micronutrient_goals)
-    return {
-        "targets": targets,
-        "daily_nutrition": [database_service.get_daily_cumulative_nutrition(day, user_id) for day in days],
-        "weight_goal": weight_goal,
-        "restrictions": database_service.get_dietary_restrictions(user_id),
-        "calories_burned": calories_burned,
-    }
-
-
 @router.post("/nutrition/overview/daily", response_model=dm.NutritionFeedback)
 def generate_daily_overview(date_str: Optional[str] = None, user_id: int = Depends(get_current_user_id)):
     if date_str is None:
@@ -359,3 +318,44 @@ def get_nutrient_suggestions(nutrient: str, user_id: int = Depends(get_current_u
     ).content[0].parsed
     return recs
 
+
+def _dm_from_meal_item(mi: MealItem) -> dm.NutritionalInformation | dm.MealBreakdown:
+    macros = dm.Macronutrients(
+        protein=mi.protein,
+        carbohydrates=dm.Carbohydrates(total=mi.carbohydrates, fiber=mi.fiber, total_sugar=0, added_sugar=0),
+        fat=dm.Fats(total=mi.fat, saturated=0, trans=0),
+    )
+    micros = dm.Micronutrients(
+        vitamin_a=mi.vitamin_a,
+        vitamin_c=mi.vitamin_c,
+        vitamin_d=mi.vitamin_d,
+        calcium=mi.calcium,
+        iron=mi.iron,
+        potassium=mi.potassium,
+        sodium=mi.sodium,
+    )
+    cond = dm.ConditionalNutrients(creatine=mi.creatine)
+    return dm.MealBreakdown(
+        title=mi.title,
+        ingredients=mi.ingredients,
+        calories=mi.calories,
+        macronutrients=macros,
+        micronutrients=micros,
+        conditional_nutrients=cond,
+    )
+
+
+def _get_user_nutritional_data_for_dates(user_id: int, days: list[datetime.date]):
+    # NOTE: Tracker calories_burned not available server-side here; defaulting to 2000.
+    weight_goal = WeightGoal(database_service.get_weight_goal(user_id))
+    calories_burned = [2000 for _ in days]
+    targets = [calculate_macro_targets(cb, weight_goal) for cb in calories_burned]
+    for target in targets:
+        target.update(micronutrient_goals)
+    return {
+        "targets": targets,
+        "daily_nutrition": [database_service.get_daily_cumulative_nutrition(day, user_id) for day in days],
+        "weight_goal": weight_goal,
+        "restrictions": database_service.get_dietary_restrictions(user_id),
+        "calories_burned": calories_burned,
+    }
