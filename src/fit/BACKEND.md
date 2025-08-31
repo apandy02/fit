@@ -65,7 +65,7 @@ database_service.insert_profile({
   'units': 'metric',
   'dietary_restrictions': '',
   'activity_level': 'moderate',
-  'weight_goal': 0,
+  'weight_goal': 'maintain',
   'fitness_goal': '',
   'onboarding_stage': 1
 })

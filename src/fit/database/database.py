@@ -212,7 +212,7 @@ class DatabaseService:
         """
 
         result = self._db.q(query, (name, user_id))
-        return self.__nutritional_info_from_row(result)
+        return self.__nutritional_info_from_row(result[0])
 
     def get_supplement_names(self, user_id: int) -> list[str]:
         """
@@ -358,5 +358,5 @@ class DatabaseService:
                 vitamin_a=result["vitamin_a"], vitamin_c=result["vitamin_c"], vitamin_d=result["vitamin_d"],
                 calcium=result["calcium"], iron=result["iron"], potassium=result["potassium"], sodium=result["sodium"]
             ),
-            conditional_nutrients=dm.ConditionalNutrients(creatine=result["creatine"])
+            conditional_nutrients=dm.ConditionalNutrients(creatine=result.get("creatine", 0))
         )
