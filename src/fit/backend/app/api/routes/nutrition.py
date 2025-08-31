@@ -24,10 +24,10 @@ from fit.nutrition.targets import calculate_macro_targets
 from fit.nutrition.data_models import WeightGoal
 from fit.utils.calendar import get_current_week_dates
 
-router = APIRouter(tags=["meals"], prefix="/meals")
+router = APIRouter(tags=["nutrition"], prefix="/nutrition")
 
 
-@router.post("/nutrition/analyze", response_model=AnalysisResult)
+@router.post("/analyze-meal", response_model=AnalysisResult)
 def analyze(req: AnalysisRequest, user_id: int = Depends(get_current_user_id)):
     result = assistants.natural_language_nutritional_breakdown(req.text).content[0].parsed
     return AnalysisResult(
@@ -49,7 +49,7 @@ def analyze(req: AnalysisRequest, user_id: int = Depends(get_current_user_id)):
     )
 
 
-@router.post("/nutrition/analyze-image", response_model=AnalysisResult)
+@router.post("/analyze-meal-image", response_model=AnalysisResult)
 async def analyze_image(
     additional_context: str = Form(""),
     meal_time: str = Form(...),
@@ -248,7 +248,7 @@ def log_water(req: WaterLogRequest, user_id: int = Depends(get_current_user_id))
     return {"status": "logged"}
 
 
-@router.post("/nutrition/regenerate", response_model=AnalysisResult)
+@router.post("/regenerate-analysis", response_model=AnalysisResult)
 def regenerate_analysis(req: RegenerateAnalysisRequest, user_id: int = Depends(get_current_user_id)):
     try:
         original = dm.MealBreakdown.model_validate(req.original_breakdown)
@@ -274,7 +274,7 @@ def regenerate_analysis(req: RegenerateAnalysisRequest, user_id: int = Depends(g
     )
 
 
-@router.post("/nutrition/overview/daily", response_model=dm.NutritionFeedback)
+@router.post("/overview/daily", response_model=dm.NutritionFeedback)
 def generate_daily_overview(date_str: Optional[str] = None, user_id: int = Depends(get_current_user_id)):
     if date_str is None:
         day = datetime.today().date()
@@ -292,7 +292,7 @@ def generate_daily_overview(date_str: Optional[str] = None, user_id: int = Depen
     return feedback
 
 
-@router.post("/nutrition/overview/weekly", response_model=dm.NutritionFeedback)
+@router.post("/overview/weekly", response_model=dm.NutritionFeedback)
 def generate_weekly_overview(user_id: int = Depends(get_current_user_id)):
     days = get_current_week_dates()
     meals = {str(day): database_service.get_daily_meals(day, user_id) for day in days}
@@ -301,7 +301,7 @@ def generate_weekly_overview(user_id: int = Depends(get_current_user_id)):
     return feedback
 
 
-@router.post("/nutrition/suggestions/{nutrient}", response_model=dm.Recommendations)
+@router.post("/suggestions/{nutrient}", response_model=dm.Recommendations)
 def get_nutrient_suggestions(nutrient: str, user_id: int = Depends(get_current_user_id)):
     today = datetime.today().date()
     daily_nutrition = database_service.get_daily_cumulative_nutrition(today, user_id)
