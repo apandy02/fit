@@ -211,6 +211,80 @@ curl -s -X POST "$BASE/nutrition/water" \
   }'
 ```
 
+## Kitchen API
+
+List inventory:
+```bash
+curl -s "$BASE/kitchen/inventory" -H "Authorization: Bearer $ACCESS"
+```
+
+Add one inventory item:
+```bash
+curl -s -X POST "$BASE/kitchen/inventory" \
+  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
+  -d '{"title":"Bananas","quantity":6,"unit":"count","category":"Produce"}'
+```
+
+Bulk add inventory items:
+```bash
+curl -s -X POST "$BASE/kitchen/inventory/bulk" \
+  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
+  -d '{
+    "items": [
+      {"title":"Chicken Breast","quantity":2,"unit":"lb","category":"Meats & Fish"},
+      {"title":"Spinach","quantity":1,"unit":"bag","category":"Produce"}
+    ]
+  }'
+```
+
+Delete inventory item by rowid:
+```bash
+curl -i -s -X DELETE "$BASE/kitchen/inventory/1" -H "Authorization: Bearer $ACCESS"
+```
+
+Parse inventory from text:
+```bash
+curl -s -X POST "$BASE/kitchen/inventory/from-text" \
+  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
+  -d '{"items_description":"3 apples, 2 lb chicken, 1 bag spinach"}'
+```
+
+Parse inventory from image:
+```bash
+curl -s -X POST "$BASE/kitchen/inventory/from-image" \
+  -H "Authorization: Bearer $ACCESS" \
+  -F file=@/full/path/to/kitchen.jpg
+```
+
+Generate grocery list:
+```bash
+curl -s -X POST "$BASE/kitchen/grocery-list" -H "Authorization: Bearer $ACCESS"
+```
+
+## Performance API
+
+Get daily info (stats + workouts):
+```bash
+curl -s "$BASE/performance/daily-info?tracker=whoop&access_token=YOUR_TOKEN" -H "Authorization: Bearer $ACCESS"
+```
+
+Generate overview analysis:
+```bash
+curl -s -X POST "$BASE/performance/overview?tracker=whoop&access_token=YOUR_TOKEN" -H "Authorization: Bearer $ACCESS"
+```
+
+## Rest API
+
+Get daily rest info:
+```bash
+curl -s "$BASE/rest/daily-info?tracker=whoop&access_token=YOUR_TOKEN" -H "Authorization: Bearer $ACCESS"
+```
+
+Generate rest overview analysis:
+```bash
+curl -s -X POST "$BASE/rest/overview?tracker=whoop&access_token=YOUR_TOKEN" -H "Authorization: Bearer $ACCESS"
+```
+
 ## Refresh token
 ```bash
 REFRESH=$(python - <<'PY'
