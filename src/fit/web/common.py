@@ -1,3 +1,4 @@
+import os
 import fasthtml.common as fh
 import fh_bootstrap as fhb
 from markdown import markdown
@@ -20,7 +21,8 @@ tables = [
     ("supplement_entries", SupplementEntry, ["user_id"], "rowid"),
 ]
 
-database_service = DatabaseService("data/nutrition.db", tables)
+db_path = os.getenv("FIT_DB_PATH", "data/nutrition.db")
+database_service = DatabaseService(db_path, tables)
 micronutrient_goals = MICRO_GOALS["male"]
 
 def create_fab_menu(buttons):

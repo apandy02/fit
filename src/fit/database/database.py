@@ -12,6 +12,7 @@ class DatabaseService:
     The raw database handle is kept private; only explicit methods are exposed.
     """
     def __init__(self, db_path: str, tables: list[tuple[str, type, list[str], str]]):
+        self.db_path = db_path
         self._db = fh.database(db_path)
         self.init_db(tables)
     
