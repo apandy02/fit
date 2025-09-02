@@ -92,3 +92,27 @@ class SupplementEntry:
     date_consumed: str
     time_consumed: str
     servings: float
+
+
+@dataclass
+class TrackerAccount:
+    user_id: int
+    provider: str
+    provider_user_id: str
+    access_token: str
+    refresh_token: str | None
+    expires_at: str | None
+    scopes: str | None
+    primary: bool
+    linked_at: str
+
+
+@dataclass
+class OAuthState:
+    state: str
+    code_verifier: str
+    provider: str
+    user_id: int | None
+    redirect_to: str | None
+    created_at: str
+    expires_at: str

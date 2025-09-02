@@ -206,10 +206,11 @@ def get_supplements(user_id: int = Depends(get_current_user_id)):
 
 @router.post("/supplements/log", status_code=201)
 def log_supplement_consumption(req: SupplementLogRequest, user_id: int = Depends(get_current_user_id)):
+    # Validate supplement exists
     info = database_service.get_supplement(req.supplement_name, user_id)
     if info is None:
         raise HTTPException(status_code=404, detail="Unknown supplement")
-    day = req.date_entered or datetime.today().date()
+    # Normalize time
     try:
         t = datetime.strptime(req.time_consumed, "%H:%M").time()
     except ValueError:
@@ -218,12 +219,13 @@ def log_supplement_consumption(req: SupplementLogRequest, user_id: int = Depends
         except ValueError:
             t = datetime.fromisoformat(req.time_consumed).time()
     time_str = t.strftime("%H:%M:%S")
-    database_service.insert_supplement(
-        name=req.supplement_name,
-        consumption_time=time_str,
-        nutritional_info=info,
-        date=day,
+    # Log consumption in entries table to avoid duplicate supplement row
+    servings = getattr(req, "servings", 1.0)
+    database_service.log_supplement_consumption(
         user_id=user_id,
+        supplement_name=req.supplement_name,
+        servings=servings,
+        time_consumed=time_str,
     )
     return {"status": "logged"}
 

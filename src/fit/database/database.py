@@ -132,7 +132,7 @@ class DatabaseService:
     def get_profile_data(self, user_id: int) -> dict:
         query = """
             SELECT name, email, date_of_birth, units, gender, dietary_restrictions, 
-                   activity_level, onboarding_stage
+                   activity_level, onboarding_stage, weight_goal, fitness_goal
             FROM profile
             WHERE user_id = ?
         """
@@ -147,7 +147,9 @@ class DatabaseService:
                 "gender": result["gender"],
                 "dietary_restrictions": result["dietary_restrictions"],
                 "activity_level": result["activity_level"],
-                "onboarding_stage": result["onboarding_stage"]
+                "onboarding_stage": result["onboarding_stage"],
+                "weight_goal": result["weight_goal"],
+                "fitness_goal": result["fitness_goal"]
             }
         return {}
 
@@ -359,4 +361,93 @@ class DatabaseService:
                 calcium=result["calcium"], iron=result["iron"], potassium=result["potassium"], sodium=result["sodium"]
             ),
             conditional_nutrients=dm.ConditionalNutrients(creatine=result.get("creatine", 0))
+        )
+
+    # --- OAuth & Tracker Accounts ---
+    def create_oauth_state(self, state: str, code_verifier: str, provider: str, user_id: int | None,
+                           redirect_to: str | None, created_at: str, expires_at: str):
+        self._db.t.oauth_state.insert(
+            state=state,
+            code_verifier=code_verifier,
+            provider=provider,
+            user_id=user_id,
+            redirect_to=redirect_to,
+            created_at=created_at,
+            expires_at=expires_at,
+        )
+
+    def consume_oauth_state(self, state: str) -> dict | None:
+        result = self._db.q("SELECT * FROM oauth_state WHERE state = ?", (state,))
+        if not result:
+            return None
+        row = result[0]
+        # delete after read (one-time use)
+        try:
+            self._db.t.oauth_state.delete(state)
+        except Exception:
+            pass
+        return row
+
+    def upsert_tracker_account(self, user_id: int, provider: str, provider_user_id: str,
+                               access_token: str, refresh_token: str | None,
+                               expires_at: str | None, scopes: str | None, primary: bool = False):
+        existing = self._db.q(
+            "SELECT rowid FROM tracker_accounts WHERE user_id = ? AND provider = ? AND provider_user_id = ?",
+            (user_id, provider, provider_user_id),
+        )
+        if existing:
+            self._db.t.tracker_accounts.update({
+                "rowid": existing[0]["rowid"],
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "expires_at": expires_at,
+                "scopes": scopes,
+            })
+        else:
+            self._db.t.tracker_accounts.insert(
+                user_id=user_id,
+                provider=provider,
+                provider_user_id=provider_user_id,
+                access_token=access_token,
+                refresh_token=refresh_token,
+                expires_at=expires_at,
+                scopes=scopes,
+                primary=primary,
+                linked_at=datetime.now().isoformat(),
+            )
+        if primary:
+            # unset previous primaries for this user/provider
+            self._db.execute("UPDATE tracker_accounts SET primary = 0 WHERE user_id = ? AND provider != ?",
+                             (user_id, provider))
+
+    def get_tracker_account(self, user_id: int, provider: str | None = None, primary_only: bool = True) -> dict | None:
+        if provider:
+            result = self._db.q(
+                "SELECT * FROM tracker_accounts WHERE user_id = ? AND provider = ? ORDER BY primary DESC LIMIT 1",
+                (user_id, provider),
+            )
+        elif primary_only:
+            result = self._db.q(
+                "SELECT * FROM tracker_accounts WHERE user_id = ? AND primary = 1 LIMIT 1",
+                (user_id,),
+            )
+        else:
+            result = self._db.q(
+                "SELECT * FROM tracker_accounts WHERE user_id = ? ORDER BY linked_at DESC LIMIT 1",
+                (user_id,),
+            )
+        return None if not result else result[0]
+
+    def list_tracker_accounts(self, user_id: int) -> list[dict]:
+        return self._db.q("SELECT provider, provider_user_id, expires_at, scopes, primary, linked_at FROM tracker_accounts WHERE user_id = ?",
+                          (user_id,))
+
+    def set_primary_tracker(self, user_id: int, provider: str):
+        self._db.execute("UPDATE tracker_accounts SET primary = 0 WHERE user_id = ?", (user_id,))
+        self._db.execute("UPDATE tracker_accounts SET primary = 1 WHERE user_id = ? AND provider = ?", (user_id, provider))
+
+    def update_tracker_tokens(self, user_id: int, provider: str, access_token: str, refresh_token: str | None, expires_at: str | None):
+        self._db.execute(
+            "UPDATE tracker_accounts SET access_token = ?, refresh_token = ?, expires_at = ? WHERE user_id = ? AND provider = ?",
+            (access_token, refresh_token, expires_at, user_id, provider),
         )

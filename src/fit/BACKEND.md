@@ -285,6 +285,108 @@ Generate rest overview analysis:
 curl -s -X POST "$BASE/rest/overview?tracker=whoop&access_token=YOUR_TOKEN" -H "Authorization: Bearer $ACCESS"
 ```
 
+## Profile API
+
+Get profile:
+```bash
+curl -s "$BASE/profile" -H "Authorization: Bearer $ACCESS"
+```
+
+Update profile (fields optional; restrictions as list):
+```bash
+curl -s -X POST "$BASE/profile" \
+  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
+  -d '{
+    "name":"Alex",
+    "email":"alex@example.com",
+    "units":"metric",
+    "dietary_restrictions":["vegan","gluten_free"],
+    "activity_level":"moderate",
+    "weight_goal":"maintain"
+  }'
+```
+
+Modify restrictions (client-side helpers):
+```bash
+curl -s -X POST "$BASE/profile/restrictions/add" \
+  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
+  -d '{"restriction":"dairy_free","existing_restrictions":["vegan"]}'
+
+curl -s -X POST "$BASE/profile/restrictions/remove" \
+  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
+  -d '{"restriction":"vegan","existing_restrictions":["vegan","gluten_free"]}'
+```
+
+## OAuth linking (Whoop/Fitbit)
+
+Start link (requires app auth):
+```bash
+curl -i -X POST "$BASE/oauth/whoop/start" -H "Authorization: Bearer $ACCESS"
+# Follow 303 Location to provider
+```
+
+Callback is handled by backend at:
+```text
+$BASE/oauth/whoop/callback?code=...&state=...
+```
+
+List linked trackers:
+```bash
+curl -s "$BASE/oauth/me/trackers" -H "Authorization: Bearer $ACCESS"
+```
+
+Set primary provider:
+```bash
+curl -s -X PATCH "$BASE/oauth/me/trackers/primary?provider=whoop" -H "Authorization: Bearer $ACCESS"
+```
+
+Unlink:
+```bash
+curl -s -X DELETE "$BASE/oauth/whoop" -H "Authorization: Bearer $ACCESS"
+```
+
+## Onboarding API
+
+Get onboarding status:
+```bash
+curl -s "$BASE/onboarding/status" -H "Authorization: Bearer $ACCESS"
+```
+
+Complete profile:
+```bash
+curl -s -X POST "$BASE/onboarding/complete_profile" \
+  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
+  -d '{"name":"Alex","gender":"MALE","units":"metric"}'
+```
+
+Complete measurements:
+```bash
+curl -s -X POST "$BASE/onboarding/complete_measurements" \
+  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
+  -d '{"weight":180,"height_feet":5,"height_inches":11}'
+```
+
+Complete dietary preferences:
+```bash
+curl -s -X POST "$BASE/onboarding/complete_dietary" \
+  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
+  -d '{"existing_restrictions":["vegan","gluten_free"]}'
+```
+
+Select activity level:
+```bash
+curl -s -X POST "$BASE/onboarding/handle_activity_selection" \
+  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
+  -d '{"activity_level":"moderate"}'
+```
+
+Select goals:
+```bash
+curl -s -X POST "$BASE/onboarding/handle_goals_selection" \
+  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
+  -d '{"weight_goal":"maintain"}'
+```
+
 ## Refresh token
 ```bash
 REFRESH=$(python - <<'PY'

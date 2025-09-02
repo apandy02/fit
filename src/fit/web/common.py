@@ -4,8 +4,8 @@ import fh_bootstrap as fhb
 from markdown import markdown
 
 from fit.database.database import DatabaseService
-from fit.database.schema import (Inventory, Meal, Measurement, Profile,
-                                 Supplement, SupplementEntry, User, Water)
+from fit.database.schema import (Inventory, Meal, Measurement, OAuthState, Profile,
+                                 Supplement, SupplementEntry, TrackerAccount, User, Water)
 from fit.nutrition.targets import MICRO_GOALS
 
 md_exts = ("codehilite", "smarty", "extra", "sane_lists", "md_in_html")
@@ -19,6 +19,8 @@ tables = [
     ("profile", Profile, ["user_id"], "user_id"),
     ("inventory", Inventory, ["user_id"], "rowid"),
     ("supplement_entries", SupplementEntry, ["user_id"], "rowid"),
+    ("tracker_accounts", TrackerAccount, ["user_id", "provider", "provider_user_id"], "rowid"),
+    ("oauth_state", OAuthState, ["state"], "state"),
 ]
 
 db_path = os.getenv("FIT_DB_PATH", "data/nutrition.db")
