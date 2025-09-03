@@ -5,8 +5,8 @@ import io
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from PIL import Image
 
-import fit.nutrition.assistants as assistants
-import fit.nutrition.data_models as dm
+import fit.ai.nutrition.assistants as assistants
+import fit.ai.nutrition.data_models as dm
 from fit.backend.auth import get_current_user_id
 from fit.backend.app.api.models.nutrition import (
     AnalysisRequest,
@@ -21,8 +21,8 @@ from fit.backend.app.api.models.nutrition import (
 from fit.backend.database.database import DatabaseService
 from fit.backend.app.deps import get_database_service
 from fit.web.common import micronutrient_goals
-from fit.nutrition.targets import calculate_macro_targets
-from fit.nutrition.data_models import WeightGoal
+from fit.ai.nutrition.targets import calculate_macro_targets
+from fit.ai.nutrition.data_models import WeightGoal
 from fit.utils.calendar import get_current_week_dates
 
 router = APIRouter(tags=["nutrition"], prefix="/nutrition")

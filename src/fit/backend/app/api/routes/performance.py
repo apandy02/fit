@@ -2,7 +2,7 @@ import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 
-import fit.performance.assistants as assistants
+import fit.ai.performance.assistants as assistants
 from fit.backend.auth import get_current_user_id
 from fit.backend.services.tracker_service import get_primary_tracker_for_user
 from fit.backend.database.database import DatabaseService
@@ -11,7 +11,7 @@ from fit.backend.app.api.models.performance import (
     PerformanceDailyInfoResponse,
     PerformanceOverviewResponse,
 )
-from fit.nutrition.targets import WeightGoal, calculate_caloric_target
+from fit.ai.nutrition.targets import WeightGoal, calculate_caloric_target
 from fit.utils.conversions import kj_to_kcal
 
 

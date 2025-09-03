@@ -2,7 +2,7 @@ import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 
-import fit.rest.assistants as assistants
+import fit.ai.rest.assistants as assistants
 from fit.backend.auth import get_current_user_id
 from fit.backend.services.tracker_service import get_primary_tracker_for_user
 from fit.backend.app.api.models.rest import RestDailyInfoResponse, RestOverviewResponse

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from fastapi.testclient import TestClient
 
-import fit.nutrition.data_models as dm
+import fit.ai.nutrition.data_models as dm
 from fit.api.app import app as api_app
 
 

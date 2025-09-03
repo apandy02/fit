@@ -13,7 +13,7 @@ from fit.backend.app.api.models.kitchen import (
     InventoryItem,
     InventoryList,
 )
-from fit.nutrition import assistants
+from fit.ai.nutrition import assistants
 from fit.backend.database.database import DatabaseService
 from fit.backend.app.deps import get_database_service
 

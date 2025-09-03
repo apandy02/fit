@@ -3,7 +3,7 @@ from datetime import datetime
 
 import fasthtml.common as fh
 
-import fit.nutrition.data_models as dm
+import fit.ai.nutrition.data_models as dm
 
 
 class DatabaseService:
