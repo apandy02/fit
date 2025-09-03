@@ -2,7 +2,7 @@ import unittest
 from datetime import date, datetime, time, timedelta
 from unittest.mock import MagicMock, patch
 
-from fit.trackers.implementations.whoop import Whoop
+from fit.backend.trackers.implementations.whoop import Whoop
 from fit.web.rest import requests as rest_requests
 
 MOCK_SESSION = {

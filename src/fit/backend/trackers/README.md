@@ -16,7 +16,7 @@ The following is the structure of the subdirectory:
 ### Connecting to Whoop
 
 ```python
-from fit.trackers.whoop import Whoop
+from fit.backend.trackers.whoop import Whoop
 
 # Initialize Whoop tracker with credentials
 whoop = Whoop(

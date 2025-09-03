@@ -3,8 +3,8 @@ import fasthtml.common as fh
 import fh_bootstrap as fhb
 from markdown import markdown
 
-from fit.database.database import DatabaseService
-from fit.database.schema import (Inventory, Meal, Measurement, OAuthState, Profile,
+from fit.backend.database.database import DatabaseService
+from fit.backend.database.schema import (Inventory, Meal, Measurement, OAuthState, Profile,
                                  Supplement, SupplementEntry, TrackerAccount, User, Water)
 from fit.nutrition.targets import MICRO_GOALS
 

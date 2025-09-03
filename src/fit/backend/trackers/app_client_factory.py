@@ -1,7 +1,7 @@
 import os
 
-from fit.trackers.implementations.fitbit import FitbitAppClient
-from fit.trackers.implementations.whoop import WhoopAppClient
+from fit.backend.trackers.implementations.fitbit import FitbitAppClient
+from fit.backend.trackers.implementations.whoop import WhoopAppClient
 
 
 def make_app_client(provider: str, restore_code_verifier: str | None = None):

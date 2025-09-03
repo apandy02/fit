@@ -4,7 +4,7 @@ from typing import Any
 
 import httpx
 
-from fit.trackers.base import FitnessTracker, FitnessTrackerClient
+from fit.backend.trackers.base import FitnessTracker, FitnessTrackerClient
 
 
 class FitbitAppClient(FitnessTrackerClient):

@@ -6,16 +6,17 @@ import fit.rest.assistants as assistants
 from fit.backend.auth import get_current_user_id
 from fit.backend.services.tracker_service import get_primary_tracker_for_user
 from fit.backend.app.api.models.rest import RestDailyInfoResponse, RestOverviewResponse
-from fit.trackers.implementations.whoop import Whoop
-from fit.web.common import database_service
+from fit.backend.trackers.implementations.whoop import Whoop
+from fit.backend.database.database import DatabaseService
+from fit.backend.app.deps import get_database_service
 
 
 router = APIRouter(tags=["rest"], prefix="/rest")
 
 
 @router.get("/daily-info", response_model=RestDailyInfoResponse)
-def get_daily_info(user_id: int = Depends(get_current_user_id)):
-    t = get_primary_tracker_for_user(user_id)
+def get_daily_info(user_id: int = Depends(get_current_user_id), database_service: DatabaseService = Depends(get_database_service)):
+    t = get_primary_tracker_for_user(database_service, user_id)
     today = datetime.date.today()
     if t.tracker_type == "whoop":
         recovery = t.get_daily_recovery(today)
@@ -39,9 +40,9 @@ def get_daily_info(user_id: int = Depends(get_current_user_id)):
 
 
 @router.post("/overview", response_model=RestOverviewResponse)
-def generate_overview(user_id: int = Depends(get_current_user_id)):
+def generate_overview(user_id: int = Depends(get_current_user_id), database_service: DatabaseService = Depends(get_database_service)):
     try:
-        t = get_primary_tracker_for_user(user_id)
+        t = get_primary_tracker_for_user(database_service, user_id)
         yesterday = datetime.date.today() - datetime.timedelta(days=1)
         sleep_data = t.get_daily_sleep(yesterday)
         meals = database_service.get_daily_meals(yesterday, user_id)

@@ -1,7 +1,7 @@
 import fasthtml.common as fh
 
-from fit.trackers.base import FitnessTracker
-from fit.trackers.implementations.whoop import Whoop
+from fit.backend.trackers.base import FitnessTracker
+from fit.backend.trackers.implementations.whoop import Whoop
 from fit.web.common import (create_fab_menu, create_text_generation_card,
                             create_time_filter, page_outline)
 

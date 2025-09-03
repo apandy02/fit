@@ -5,21 +5,23 @@ from fastapi import APIRouter, Depends, HTTPException
 import fit.performance.assistants as assistants
 from fit.backend.auth import get_current_user_id
 from fit.backend.services.tracker_service import get_primary_tracker_for_user
+from fit.backend.database.database import DatabaseService
+from fit.backend.app.deps import get_database_service
 from fit.backend.app.api.models.performance import (
     PerformanceDailyInfoResponse,
     PerformanceOverviewResponse,
 )
 from fit.nutrition.targets import WeightGoal, calculate_caloric_target
 from fit.utils.conversions import kj_to_kcal
-from fit.web.common import database_service
+
 
 
 router = APIRouter(tags=["performance"], prefix="/performance")
 
 
 @router.get("/daily-info", response_model=PerformanceDailyInfoResponse)
-def get_daily_info(user_id: int = Depends(get_current_user_id)):
-    t = get_primary_tracker_for_user(user_id)
+def get_daily_info(user_id: int = Depends(get_current_user_id), database_service: DatabaseService = Depends(get_database_service)):
+    t = get_primary_tracker_for_user(database_service, user_id)
     today = datetime.date.today()
     if t.tracker_type == "whoop":
         cycle = t.get_cycle_for_day(today)
@@ -37,9 +39,9 @@ def get_daily_info(user_id: int = Depends(get_current_user_id)):
 
 
 @router.post("/overview", response_model=PerformanceOverviewResponse)
-def generate_overview(user_id: int = Depends(get_current_user_id)):
+def generate_overview(user_id: int = Depends(get_current_user_id), database_service: DatabaseService = Depends(get_database_service)):
     try:
-        t = get_primary_tracker_for_user(user_id)
+        t = get_primary_tracker_for_user(database_service, user_id)
         today = datetime.date.today()
         # daily info
         if t.tracker_type == "whoop":

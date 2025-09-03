@@ -4,9 +4,9 @@ import fasthtml.common as fh
 
 import fit.performance.assistants as assistants
 from fit.nutrition.targets import WeightGoal, calculate_caloric_target
-from fit.trackers.base import FitnessTracker
-from fit.trackers.implementations.whoop import Whoop
-from fit.trackers.manager import tracker_factory
+from fit.backend.trackers.base import FitnessTracker
+from fit.backend.trackers.implementations.whoop import Whoop
+from fit.backend.trackers.manager import tracker_factory
 from fit.utils.conversions import kj_to_kcal
 from fit.web.common import database_service
 from fit.web.performance import ui

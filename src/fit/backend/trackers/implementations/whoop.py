@@ -7,7 +7,7 @@ from typing import Any
 
 import httpx
 
-from fit.trackers.base import FitnessTracker, FitnessTrackerClient
+from fit.backend.trackers.base import FitnessTracker, FitnessTrackerClient
 from fit.utils.conversions import kj_to_kcal
 
 json_path = os.path.join(os.path.dirname(__file__), "config/whoop_sports.json")

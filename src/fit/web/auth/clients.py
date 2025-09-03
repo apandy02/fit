@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
 
-from fit.trackers.implementations.fitbit import FitbitAppClient
-from fit.trackers.implementations.whoop import WhoopAppClient
+from fit.backend.trackers.implementations.fitbit import FitbitAppClient
+from fit.backend.trackers.implementations.whoop import WhoopAppClient
 
 fitbit_config_path = Path(__file__).parent / 'config' / 'fitbit_config.json'
 

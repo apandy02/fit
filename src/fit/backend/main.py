@@ -1,16 +1,45 @@
 from __future__ import annotations
 
+import os
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from fit.backend.auth import create_token_pair, get_current_user_id, refresh_tokens
 from fit.backend.app.api.models.auth import LoginRequest, RefreshRequest, TokenPair, User
-from fit.web.common import database_service
+from fit.backend.database.database import DatabaseService
+from fit.backend.database.schema import (
+    Inventory,
+    Meal,
+    Measurement,
+    OAuthState,
+    Profile,
+    Supplement,
+    SupplementEntry,
+    TrackerAccount,
+    User as DbUser,
+    Water,
+)
+from fit.backend.app.deps import get_database_service
 
 from fit.backend.app.api.main import api_router
 
 app = FastAPI(title="Fit JSON API")
 app.include_router(api_router)
+# Initialize database service within FastAPI app state
+tables = [
+    ("users", DbUser, ["user_id"], "user_id"),
+    ("meals", Meal, ["user_id"], "rowid"),
+    ("supplements", Supplement, ["name", "user_id"], "name"),
+    ("measurements", Measurement, ["user_id"], "rowid"),
+    ("water", Water, ["user_id"], "rowid"),
+    ("profile", Profile, ["user_id"], "user_id"),
+    ("inventory", Inventory, ["user_id"], "rowid"),
+    ("supplement_entries", SupplementEntry, ["user_id"], "rowid"),
+    ("tracker_accounts", TrackerAccount, ["user_id", "provider", "provider_user_id"], "rowid"),
+    ("oauth_state", OAuthState, ["state"], "state"),
+]
+db_path = os.getenv("FIT_DB_PATH", "data/nutrition.db")
+app.state.database_service = DatabaseService(db_path, tables)
 
 # CORS
 origins = [
@@ -31,7 +60,7 @@ app.add_middleware(
 
 
 @app.get("/me", response_model=User)
-def get_me(user_id: int = Depends(get_current_user_id)):
+def get_me(user_id: int = Depends(get_current_user_id), database_service: DatabaseService = Depends(get_database_service)):
     profile = database_service.get_profile_data(user_id)
     return User(user_id=user_id, email=profile.get("email"), name=profile.get("name"))
 

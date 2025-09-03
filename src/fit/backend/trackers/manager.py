@@ -1,6 +1,6 @@
-from fit.trackers.base import FitnessTracker
-from fit.trackers.implementations.fitbit import Fitbit
-from fit.trackers.implementations.whoop import Whoop
+from fit.backend.trackers.base import FitnessTracker
+from fit.backend.trackers.implementations.fitbit import Fitbit
+from fit.backend.trackers.implementations.whoop import Whoop
 
 
 def tracker_factory(tracker_type: str, access_token: str) -> FitnessTracker:
