@@ -20,7 +20,7 @@ from fit.backend.app.api.models.nutrition import (
 )
 from fit.backend.database.database import DatabaseService
 from fit.backend.app.deps import get_database_service
-from fit.web.common import micronutrient_goals
+from fit.ai.nutrition.targets import MICRO_GOALS
 from fit.ai.nutrition.targets import calculate_macro_targets
 from fit.ai.nutrition.data_models import WeightGoal
 from fit.utils.calendar import get_current_week_dates
@@ -353,6 +353,7 @@ def _get_user_nutritional_data_for_dates(user_id: int, days: list[datetime.date]
     weight_goal = WeightGoal(database_service.get_weight_goal(user_id))
     calories_burned = [2000 for _ in days]
     targets = [calculate_macro_targets(cb, weight_goal) for cb in calories_burned]
+    micronutrient_goals = MICRO_GOALS["male"]  # TODO: get gender from user
     for target in targets:
         target.update(micronutrient_goals)
     return {
