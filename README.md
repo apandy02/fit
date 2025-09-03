@@ -5,121 +5,103 @@ A comprehensive fitness assistant that combines LLM-powered nutrition analysis w
 ## Table of Contents
 - [Overview](#overview)
 - [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
   - [Setup](#setup)
+- [Running the Backend](#running-the-backend)
+- [Sanity Checks](#sanity-checks)
 - [Technology Stack](#technology-stack)
-  - [Core](#core)
-  - [Frontend Plugins](#frontend-plugins)
-  - [Development](#development)
-- [Running the Application](#running-the-application)
 - [Testing](#testing)
 - [Project Structure](#project-structure)
 - [Contributing](#contributing)
 
 ## Overview
 
-The application consists of several core modules:
-- Web interface built with FastHTML and HTMX
-- LLM-powered nutrition tracking and analysis
-- Multi-tracker fitness data integration
-- Progress and performance monitoring
+The project currently provides:
+- FastAPI-based JSON backend (`src/fit/backend`)
+- LLM-powered nutrition, performance, and rest analysis modules (`src/fit/ai`)
+- Fitness tracker integrations (Whoop/Fitbit) with OAuth endpoints
+
+Note: The previous FastHTML-based web UI has been deprecated. A new frontend (likely React Native in TypeScript) is planned but not yet implemented.
 
 ## Getting Started
 
 ### Setup
-
-1. Get OpenAI API access. Follow instructions [here](https://platform.openai.com/docs/quickstart)
-
-2. Install UV by following instructions [here](https://docs.astral.sh/uv/getting-started/installation/)
-
-3. Clone the repository:
+1. Install uv: see `https://docs.astral.sh/uv/getting-started/installation/`
+2. Clone the repository:
    ```bash
    git clone git@github.com:apandy02/fit.git
    cd fit
    ```
-
-4. Create virtual environment and sync dependencies:
+3. Create a virtual environment and sync dependencies:
    ```bash
    uv sync
    ```
-### Running the Application
-(note: all the operations here are performed from the project root directory)
 
-Start the web interface:
+## Running the Backend
+
+From the project root:
 ```bash
-uv run src/fit/web/app.py
+uv run -m uvicorn fit.backend.main:app --reload --host 0.0.0.0 --port 5002
 ```
 
-The above might take a few seconds to execute the first time, but it will work (hang in there)
+Optional environment variables:
+- `FIT_DB_PATH` (default: `data/nutrition.db`)
 
-The application will be available at `http://localhost:5001/login`
+## Sanity Checks
 
+With the backend running, you can exercise most endpoints (excluding OAuth-dependent flows) using the included script:
+```bash
+BASE=http://localhost:5002 src/fit/backend/sanity_checks.sh
+```
+
+Notes:
+- The script logs in (user_id 42) to obtain an access token and then runs nutrition, supplements, water, kitchen, profile, and onboarding flows.
+- Image-based endpoints are skipped unless `FOOD_IMG` or `KITCHEN_IMG` point to existing files.
+- Performance/Rest endpoints that require linked trackers are skipped.
 
 ## Technology Stack
 
-### Core
 - Python 3.10+
-- FastHTML + HTMX (web application frontend and backend)
-- ell (language model programming + evals)
+- FastAPI (backend API)
 - Pydantic (data models and validation)
-- SQLite (databases)
+- SQLite (database)
+- ell (language model programming and evals) for the analysis modules under `src/fit/ai`
+- Tooling: uv, ruff, unittest, coverage
 
-### Frontend Plugins
-- TailwindCSS
-- DaisyUI
-- AmCharts
-- Plotly
+Planned frontend:
+- React Native (TypeScript) – not implemented yet
 
-### Development Tools
-- uv (dependency management, tool runner, build/package management)
-- ruff (linting/formatting)
-- isort (import linting/formatting)
-- unittest (testing)
-- coveragepy (test coverage)
-
-
-### Testing
-(note: all the operations here are performed from the project root directory)
+## Testing
 
 Run the test suite:
 ```bash
 uv run -m unittest discover -v
 ```
 
-Run the test suite with coverage:
+Run with coverage:
 ```bash
 uv run -m coverage run -m unittest discover -v
-```
-
-Generate a coverage report:
-
-```bash
-uv run -m coverage html # for coverage report in html
-```
-
-```bash
-uv run -m coverage report # for coverage report in terminal
+uv run -m coverage report
+uv run -m coverage html
 ```
 
 ## Project Structure
 
 ```
 src/fit/
-├── nutrition/       # LLM-powered nutrition analysis
-├── trackers/        # Fitness tracker integrations
-├── utils/          # Shared utilities
-└── web/            # Web interface and API
+├── backend/         # FastAPI app, routes, models, services, trackers
+├── ai/              # LLM-powered analysis modules (nutrition, performance, rest)
+├── trackers/        # Tracker SDKs and managers (used by backend)
+└── utils/           # Shared utilities
 ```
 
-Each module contains its own README with detailed documentation.
+Each module contains its own code and tests as applicable.
 
 ## Contributing
 
 1. Ensure all tests pass: `uv run -m unittest discover -v`
-2. Run linting: `uv run ruff check . --fix`
+2. Lint/fix: `uv run ruff check . --fix`
 3. Follow the existing code structure and documentation patterns
 4. Submit a pull request
-
 
 ## Builds and packaging [Work in progress]
 
