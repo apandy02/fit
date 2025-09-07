@@ -65,11 +65,10 @@ mkdir -p local-data
 cp data/nutrition.db local-data/nutrition.db
 
 docker run --rm -p 5002:5002 \
-  -v $(pwd)/local-data/nutrition.db:/data/nutrition.db \
-  -e FIT_DB_PATH=/data/nutrition.db \
+  -v $FIT_DB_PATH:$FIT_DB_PATH \
+  -e FIT_DB_PATH=$FIT_DB_PATH \
   -e OPENAI_API_KEY=$OPENAI_API_KEY \
   fit-backend:latest
-```
 
 Notes:
 - Do not put secrets in the `Dockerfile`; pass them via `-e`, an `env_file`, or your host platform’s secret management.
