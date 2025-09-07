@@ -6,6 +6,7 @@ A comprehensive fitness assistant that combines LLM-powered nutrition analysis w
 - [Overview](#overview)
 - [Getting Started](#getting-started)
   - [Setup](#setup)
+- [Database (Postgres) & Migrations](#database-postgres--migrations)
 - [Running the Backend](#running-the-backend)
 - [Run with Docker](#run-with-docker)
 - [Sanity Checks](#sanity-checks)
@@ -44,8 +45,34 @@ From the project root:
 uv run -m uvicorn fit.backend.main:app --reload --host 0.0.0.0 --port 5002
 ```
 
-Optional environment variables:
-- `FIT_DB_PATH` (default: `data/nutrition.db`)
+### Database (Postgres) & Migrations
+
+This backend now uses PostgreSQL.
+
+- Set the database URL in your environment (example):
+  ```bash
+  export FIT_DATABASE_URL="postgresql+psycopg://postgres:postgres@localhost:5432/fit"
+  ```
+- Initialize the schema with Alembic:
+  ```bash
+  uv run alembic -c alembic.ini upgrade head
+  ```
+
+Notes:
+- Alembic migration files live in `db/migrations/`. The config is `alembic.ini`.
+- The app reads `FIT_DATABASE_URL` both for runtime and migrations.
+- For quick local testing, you can start Postgres via Docker:
+  ```bash
+  docker run --name fit-pg -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:16
+  docker exec -it fit-pg psql -U postgres -c 'CREATE DATABASE fit;'
+  export FIT_DATABASE_URL="postgresql+psycopg://postgres:postgres@localhost:5432/fit"
+  uv run alembic -c alembic.ini upgrade head
+  ```
+
+Required environment variable:
+- `FIT_DATABASE_URL` (Postgres connection string; see above)
+
+
 
 ## Run with Docker
 
@@ -54,19 +81,10 @@ Build the image (from project root):
 docker build -t fit-backend:latest .
 ```
 
-Run (uses the DB baked into the image):
+Run with Postgres and secrets (from project root):
 ```bash
-docker run --rm -p 5002:5002 fit-backend:latest
-```
-
-Run with a persistent DB and secrets (from project root):
-```bash
-mkdir -p local-data
-cp data/nutrition.db local-data/nutrition.db
-
 docker run --rm -p 5002:5002 \
-  -v $FIT_DB_PATH:$FIT_DB_PATH \
-  -e FIT_DB_PATH=$FIT_DB_PATH \
+  -e FIT_DATABASE_URL="$FIT_DATABASE_URL" \
   -e OPENAI_API_KEY=$OPENAI_API_KEY \
   fit-backend:latest
 
@@ -77,7 +95,7 @@ Notes:
 Render (when ready):
 - Create a Docker service, point it at this repo.
 - Add environment variables (e.g., `OPENAI_API_KEY`).
-- Mount a persistent disk and set `FIT_DB_PATH` to that path (e.g., `/var/data/nutrition.db`).
+- Mount a persistent disk or use a managed Postgres instance; set `FIT_DATABASE_URL` accordingly.
 - Render sets `$PORT` automatically; the image uses it at runtime.
 
 ## Sanity Checks
