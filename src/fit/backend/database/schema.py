@@ -88,7 +88,7 @@ class Inventory:
 @dataclass
 class SupplementEntry:
     user_id: int
-    supplement_name: str
+    supplement_id: int
     date_consumed: str
     time_consumed: str
     servings: float

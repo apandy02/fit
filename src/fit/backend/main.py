@@ -29,12 +29,12 @@ app.include_router(api_router)
 tables = [
     ("users", DbUser, ["user_id"], "user_id"),
     ("meals", Meal, ["user_id"], "rowid"),
-    ("supplements", Supplement, ["name", "user_id"], "name"),
+    ("supplements", Supplement, ["name", "user_id"], "rowid"),
     ("measurements", Measurement, ["user_id"], "rowid"),
     ("water", Water, ["user_id"], "rowid"),
     ("profile", Profile, ["user_id"], "user_id"),
     ("inventory", Inventory, ["user_id"], "rowid"),
-    ("supplement_entries", SupplementEntry, ["user_id"], "rowid"),
+    ("supplement_entries", SupplementEntry, ["user_id", "supplement_id"], "rowid"),
     ("tracker_accounts", TrackerAccount, ["user_id", "provider", "provider_user_id"], "rowid"),
     ("oauth_state", OAuthState, ["state"], "state"),
 ]

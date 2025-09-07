@@ -194,13 +194,24 @@ class DatabaseService:
     def log_supplement_consumption(
         self,
         user_id: int,
-        supplement_name: str,
+        supplement: int | str,
         servings: float,
         time_consumed: str
     ):
+        # Resolve supplement ID if a name was provided
+        supp_id = supplement
+        if isinstance(supplement, str):
+            row = self._db.q(
+                "SELECT rowid FROM supplements WHERE name = ? AND user_id = ? LIMIT 1",
+                (supplement, user_id),
+            )
+            if not row:
+                raise ValueError(f"Supplement '{supplement}' not found for user {user_id}")
+            supp_id = row[0]["rowid"]
+
         self._db.t.supplement_entries.insert(
             user_id=user_id,
-            supplement_name=supplement_name,
+            supplement_id=supp_id,
             date_consumed=datetime.date(datetime.today()),
             time_consumed=time_consumed,
             servings=servings,
@@ -241,8 +252,11 @@ class DatabaseService:
         date: datetime
     ) -> list[tuple[str, float, str]]:
         query = """
-            SELECT supplement_name, servings, time_consumed FROM supplement_entries
-            WHERE user_id = ? AND date_consumed = ? ORDER BY time_consumed
+            SELECT s.name AS supplement_name, e.servings, e.time_consumed
+            FROM supplement_entries e
+            JOIN supplements s ON e.supplement_id = s.rowid
+            WHERE e.user_id = ? AND e.date_consumed = ?
+            ORDER BY e.time_consumed
         """
         results = self._db.q(query, (user_id, date))
         return [(row["supplement_name"], row["servings"], row["time_consumed"]) for row in results]
