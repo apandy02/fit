@@ -7,7 +7,7 @@ from fit.backend.auth import get_current_user_id
 from fit.backend.services.tracker_service import get_primary_tracker_for_user
 from fit.backend.app.api.models.rest import RestDailyInfoResponse, RestOverviewResponse
 from fit.backend.trackers.implementations.whoop import Whoop
-from fit.backend.database.database import DatabaseService
+from fit.backend.database.postgres_service import PostgresDatabaseService
 from fit.backend.app.deps import get_database_service
 
 
@@ -15,7 +15,7 @@ router = APIRouter(tags=["rest"], prefix="/rest")
 
 
 @router.get("/daily-info", response_model=RestDailyInfoResponse)
-def get_daily_info(user_id: int = Depends(get_current_user_id), database_service: DatabaseService = Depends(get_database_service)):
+def get_daily_info(user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
     t = get_primary_tracker_for_user(database_service, user_id)
     today = datetime.date.today()
     if t.tracker_type == "whoop":
@@ -40,7 +40,7 @@ def get_daily_info(user_id: int = Depends(get_current_user_id), database_service
 
 
 @router.post("/overview", response_model=RestOverviewResponse)
-def generate_overview(user_id: int = Depends(get_current_user_id), database_service: DatabaseService = Depends(get_database_service)):
+def generate_overview(user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
     try:
         t = get_primary_tracker_for_user(database_service, user_id)
         yesterday = datetime.date.today() - datetime.timedelta(days=1)

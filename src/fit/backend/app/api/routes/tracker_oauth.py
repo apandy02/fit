@@ -7,7 +7,7 @@ from fastapi.responses import RedirectResponse
 
 from fit.backend.auth import get_current_user_id
 from fit.backend.trackers.app_client_factory import extract_provider_user_id, make_app_client
-from fit.backend.database.database import DatabaseService
+from fit.backend.database.postgres_service import PostgresDatabaseService
 from fit.backend.app.deps import get_database_service
 
 
@@ -19,7 +19,7 @@ def _redirect_base() -> str:
 
 
 @router.post("/{provider}/start")
-def oauth_start(provider: str, redirect_to: str | None = None, user_id: int = Depends(get_current_user_id), database_service: DatabaseService = Depends(get_database_service)):
+def oauth_start(provider: str, redirect_to: str | None = None, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
     try:
         client = make_app_client(provider)
     except Exception as e:
@@ -45,7 +45,7 @@ def oauth_start(provider: str, redirect_to: str | None = None, user_id: int = De
 
 
 @router.get("/{provider}/callback")
-def oauth_callback(provider: str, code: str, state: str, database_service: DatabaseService = Depends(get_database_service)):
+def oauth_callback(provider: str, code: str, state: str, database_service: PostgresDatabaseService = Depends(get_database_service)):
     st = database_service.consume_oauth_state(state)
     if not st or st.get("provider") != provider:
         raise HTTPException(status_code=400, detail="Invalid or expired state")
@@ -91,7 +91,7 @@ def oauth_callback(provider: str, code: str, state: str, database_service: Datab
 
 
 @router.delete("/{provider}")
-def oauth_unlink(provider: str, user_id: int = Depends(get_current_user_id), database_service: DatabaseService = Depends(get_database_service)):
+def oauth_unlink(provider: str, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
     acct = database_service.get_tracker_account(user_id, provider=provider, primary_only=False)
     if not acct:
         raise HTTPException(status_code=404, detail="Not linked")
@@ -101,12 +101,12 @@ def oauth_unlink(provider: str, user_id: int = Depends(get_current_user_id), dat
 
 
 @router.get("/me/trackers")
-def list_linked_trackers(user_id: int = Depends(get_current_user_id), database_service: DatabaseService = Depends(get_database_service)):
+def list_linked_trackers(user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
     return database_service.list_tracker_accounts(user_id)
 
 
 @router.patch("/me/trackers/primary")
-def set_primary(provider: str, user_id: int = Depends(get_current_user_id), database_service: DatabaseService = Depends(get_database_service)):
+def set_primary(provider: str, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
     database_service.set_primary_tracker(user_id, provider)
     return {"status": "ok"}
 
