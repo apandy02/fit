@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 
 import fit.ai.nutrition.data_models as dm
-from fit.api.app import app as api_app
+from fit.backend.main import app as api_app
 
 
 def _make_breakdown() -> dm.MealBreakdown:
@@ -73,7 +73,6 @@ class TestApiEndpoints(unittest.TestCase):
 
     @patch("fit.api.app.database_service")
     def test_meals_crud(self, mock_db):
-        # Stateful fake list representing stored meals
         day = date(2024, 10, 1)
         records = []
 
@@ -97,7 +96,6 @@ class TestApiEndpoints(unittest.TestCase):
         mock_db.insert_meal.side_effect = fake_insert_meal
         mock_db.delete_meal.return_value = True
 
-        # Create
         payload = {
             "title": "Chicken Bowl",
             "ingredients": "chicken, rice, veggies",
@@ -122,14 +120,12 @@ class TestApiEndpoints(unittest.TestCase):
         created = r.json()
         self.assertIn("id", created)
 
-        # List
         r2 = self.client.get(f"/meals?date_str={day.isoformat()}", headers=self.auth)
         self.assertEqual(r2.status_code, 200)
         meals = r2.json()
         self.assertEqual(len(meals), 1)
         self.assertEqual(meals[0]["item"]["title"], "Chicken Bowl")
 
-        # Delete
         rid = meals[0]["id"]
         r3 = self.client.delete(f"/meals/{rid}", headers=self.auth)
         self.assertEqual(r3.status_code, 204)
