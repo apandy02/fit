@@ -1,7 +1,10 @@
 from datetime import datetime
 
-import ell
 from PIL import Image
+import base64
+import io
+
+from pydantic_ai import Agent
 
 import fit.ai.nutrition.data_models as dm
 from fit.ai.nutrition.errors import NoMealsLoggedError
@@ -12,16 +15,29 @@ DEFAULT_LARGE_MODEL = "gpt-4o-2024-08-06"
 DEFAULT_SMALL_MODEL = "gpt-4o-mini-2024-07-18"
 
 
-@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.MealBreakdown)
+def _agent(model: str, system_prompt: str) -> Agent:
+    return Agent(f"openai:{model}", system_prompt=system_prompt)
+
+
+def _image_to_data_url(image: Image.Image) -> str:
+    buf = io.BytesIO()
+    image.save(buf, format="PNG")
+    b64 = base64.b64encode(buf.getvalue()).decode()
+    return f"data:image/png;base64,{b64}"
+
+
 def natural_language_nutritional_breakdown(food: str) -> dm.MealBreakdown:
-    """given what the user ate, return the macro nutrients in grams.
+    system = """
+    Given what the user ate, return the macro nutrients in grams.
     If the user query is not food, return 0 for all macros.
     """
-    return food
+    agent = _agent(DEFAULT_LARGE_MODEL, system)
+    res = agent.run(food, result_type=dm.MealBreakdown)
+    return res.data
 
-@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.MealBreakdown)
+
 def improve_breakdown(breakdown: dm.MealBreakdown, user_feedback: str) -> dm.MealBreakdown:
-    """
+    system = """
     Given the user's feedback on your prediction of the breakdown of their meal,
     improve the breakdown.
     """
@@ -29,36 +45,39 @@ def improve_breakdown(breakdown: dm.MealBreakdown, user_feedback: str) -> dm.Mea
     The user's feedback on your prediction of the breakdown of their meal is: {user_feedback}
     The breakdown of the meal is: {breakdown}
     """
-    return prompt
+    agent = _agent(DEFAULT_LARGE_MODEL, system)
+    res = agent.run(prompt, result_type=dm.MealBreakdown)
+    return res.data
 
-@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.MealBreakdown)
+
 def vision_nutritional_breakdown(image: Image.Image, additional_context: str) -> dm.MealBreakdown:
-    system_message = """
-    given an image of what the user ate, return the macro nutrients in grams.
+    system = """
+    Given an image of what the user ate, return the macro nutrients in grams.
     If the image is not food, return 0 for all macros. The user may or may not
     provide additional context about the food. If they do, use it to improve your
     prediction.
     """
-    return [
-        ell.system(system_message),
-        ell.user([additional_context, image]),
-    ]
-        
-@ell.complex(model=DEFAULT_SMALL_MODEL, max_tokens=200)
+    img_url = _image_to_data_url(image)
+    user_input = f"{additional_context}\n\n![meal_image]({img_url})"
+    agent = _agent(DEFAULT_LARGE_MODEL, system)
+    res = agent.run(user_input, result_type=dm.MealBreakdown)
+    return res.data
+
+
 def summarize_user_preferences(meals: list[dm.MealBreakdown]) -> str:
-    """Given a list of meals the user has eaten, analyze their dietary preferences and patterns.
-    For example: "The user frequently eats Indian food, and seems to consume chicken as their 
-    primary protein. They also seem to like yogurt."
-
-    Focus on identifying:
+    system = """
+    Given a list of meals the user has eaten, analyze their dietary preferences and patterns.
+    Focus on:
     - Cuisine preferences
-    - Common protein (and other major nutrients) sources (if any)
+    - Common protein (and other major nutrients) sources
     - Common ingredients or food combinations
+    Return plain text.
     """
-    prompt = f"Here are the meals I have eaten: {meals}"
-    return prompt
+    agent = _agent(DEFAULT_SMALL_MODEL, system)
+    res = agent.run(f"Here are the meals I have eaten: {meals}")
+    return res.text
 
-@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.Recommendations)
+
 def make_recommendations(
         consumption: dm.NutritionalInformation,
         targets: dict[str, float],
@@ -67,184 +86,139 @@ def make_recommendations(
         restrictions: list[str],
         kitchen_inventory: list[dict[str, float]]
     ) -> dm.Recommendations:
-    """You will be given the user's consumed nutritional information, their nutritional targets,
-    their dietary restrictions, and a specific nutrient they are asking you for food recommendations to 
-    improve.
+    system = """
+    You will be given the user's consumed nutritional information, their nutritional targets,
+    their dietary restrictions, and a specific nutrient they are asking you for food recommendations to improve.
 
-    You will also be given a summary of the user's dietary preferences and patterns. The list of meals
-    you return should contain 3 meals that take this information into account. 
-    The others should be exploratory in that they attempt to get the user to try new things.
-
-    Additionally, you will be given a list of items available in the user's kitchen. You don't have to
-    build meals strictly from these items, but try to make sure that at least a few of the meals
-    are heavily influenced by the items in the user's kitchen.
-
-    Considering all the other nutrient info, try and provide the user with suggestions that 
-    minimize risk of over/under consumption of other.
-
-    For example, if the user is asking for food recommendations to improve their vitamin_c intake,
-    but they already have a high carbohydrate intake, suggest a vitamin_c rich food that is low in 
-    carbohydrates.
-
-    Make sure that the suggestions are serving aware. if the user is 30g of protein under their target,
-    it does not make sense to suggest a meal with 200g of chicken, this would be excessive.
-
-    You absolutely must not violate the user's dietary restrictions. This is a health and safety issue.
+    Return meal recommendations:
+    - 3 meals tailored to their preferences/habits
+    - Additional exploratory meals to broaden variety
+    - Respect dietary restrictions strictly (health/safety)
+    - Consider kitchen inventory when possible
+    - Be serving-aware (avoid excessive portions)
+    - Balance other nutrients to minimize over/under consumption
     """
-    user_input = f"""User Preferences: {user_preferences} \n Consumption: {str(consumption)}
-    Targets: {str(targets)} \n Dietary Restrictions: {restrictions}.
-    Kitchen Inventory: {kitchen_inventory}
-    They want trying to improve their {target_nutrient} intake.
-    """
-    return user_input # TODO: pass in the target - consumption instead of them separately
+    user_input = f"""User Preferences: {user_preferences} 
+        Consumption: {str(consumption)}
+        Targets: {str(targets)} 
+        Dietary Restrictions: {restrictions}.
+        Kitchen Inventory: {kitchen_inventory}
+        They want to improve their {target_nutrient} intake.
+        """
+    agent = _agent(DEFAULT_LARGE_MODEL, system)
+    res = agent.run(user_input, result_type=dm.Recommendations)
+    return res.data
 
-# TODO: cleanup the following two functions using a factory 
+
 def daily_io_analysis(meals: list[dm.MealBreakdown], target: dict[str, float], restrictions: list[str]) -> dm.NutritionFeedback:
-    """
-    Analyzes the user's daily intake and target and produces an overview with feedback.
-    
-    Args:
-        meals: The user's meals for the day.
-        target: The user's target for the day.
-    """
     if len(meals) == 0:
         raise NoMealsLoggedError("No meals logged for today, please log your meals and try again.")
-    
-    sys_message = """
-    Analyze the user's daily nutritional intake versus their targets and provide a detailed assessment. 
 
-    In the summary, talk about the caloric balance, and provide a high level overview of the
-    user's nutrition (if they are highly lacking (or over) in some of them, point out that they are, and
-    if they're doing well in some of them (around their target), point that out as well).
+    system = """
+    Analyze the user's daily nutritional intake versus their targets and provide a detailed assessment.
 
-    For each of the nutrient sections, start with an overview comparing total intake to goals.
-    Then evaluate each meal. Discuss any meals that contribute to to any excess or are not nutrititious
-    enough if a target is underperformed on. flag meals that significantly exceed targets (e.g., >100% of
-    a macro target in one meal) as problematic and suggest alternatives. if it is not too late in the day
-    (roughly speaking before 8PM) and they have consumed more calories than their calorie target, suggest a
-    workout that get them closer to a target range.
-    
-    For meals contributing to excess but not extreme, recommend portion adjustments.
-    For under-target scenarios, suggest realistic additions based on their evident food preferences,
-    eating patterns, and strictly following their dietary restrictions.
+    Summary:
+    - Caloric balance
+    - High-level overview of nutrient performance (over/under/around target)
 
-    Format all fields as plain text paragraphs. You must not use markdown, bullet points, or 
-    special formatting, you are speaking to the user directly as their nutritionist.
-    """ # TODO: the workout bit needs to be changed & system message can be passed in as an arg
+    Per-nutrient:
+    - Start with intake vs goal
+    - Evaluate each meal’s contribution
+    - Flag excessive meals (>100% of macro target in one meal) and suggest alternatives
+    - If before ~8PM and calories exceed target, suggest an appropriate workout
+
+    For excess: suggest portion adjustments.
+    For under-target: suggest realistic additions based on preferences, patterns, and restrictions.
+
+    Format all fields as plain text paragraphs. Do not use markdown or bullets. Speak directly as their nutritionist.
+    """
     current_time = datetime.now().time()
 
     meals_str_prefix = f"As of {current_time} are the meals the user has logged today:\n"
     targets_str_prefix = "The user's daily targets are:\n"
-    
+
     meals_str, targets_str = summarize_daily_meals_and_targets(meals, target)
     restrictions_str = f"The user's dietary restrictions are: {restrictions}"
     user_data = meals_str_prefix + meals_str + targets_str_prefix + targets_str + restrictions_str
     if DEFAULT_LARGE_MODEL in STRUCTURED_MODELS:
-        return _daily_io_analysis_pydantic(sys_message, user_data)
+        return _daily_io_analysis_pydantic(system, user_data)
     else:
         return dm.NutritionFeedback.model_validate_json(
-            _daily_io_analysis_simple(sys_message, user_data)
+            _daily_io_analysis_simple(system, user_data)
         )
-    
-@ell.simple(model=DEFAULT_LARGE_MODEL, max_tokens=2048)
-def _daily_io_analysis_simple(sys_message: str, user_data: str, error_context: str | None = None) -> str:
-    sys_message += f"You must absolutely respond in this format as a json string with no exceptions: {dm.NutritionFeedback.model_json_schema()}"
-    return [
-        ell.system(sys_message),
-        ell.user(user_data)
-    ]
 
-@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.NutritionFeedback, max_tokens=2048)
-def _daily_io_analysis_pydantic(sys_message: str, user_data: str) -> dm.NutritionFeedback:
-    return [
-        ell.system(sys_message),
-        ell.user(user_data)
-    ]
+
+def _daily_io_analysis_simple(system: str, user_data: str, error_context: str | None = None) -> str:
+    system += f"You must absolutely respond in this format as a json string with no exceptions: {dm.NutritionFeedback.model_json_schema()}"
+    agent = _agent(DEFAULT_LARGE_MODEL, system)
+    res = agent.run(user_data)
+    return res.text
+
+
+def _daily_io_analysis_pydantic(system: str, user_data: str) -> dm.NutritionFeedback:
+    agent = _agent(DEFAULT_LARGE_MODEL, system)
+    res = agent.run(user_data, result_type=dm.NutritionFeedback)
+    return res.data
+
 
 @retry(dm.NutritionFeedback)
-@ell.simple(model=DEFAULT_LARGE_MODEL, max_tokens=2048)
 def daily_io_analysis_simple(sys_message: str, user_data: str) -> str:
-    sys_message += f"You must absolutely respond in this format as a json string with no exceptions: {dm.NutritionFeedback.model_json_schema()}"
-    return [
-        ell.system(sys_message),
-        ell.user(user_data)
-    ]
+    system = sys_message + f"You must absolutely respond in this format as a json string with no exceptions: {dm.NutritionFeedback.model_json_schema()}"
+    agent = _agent(DEFAULT_LARGE_MODEL, system)
+    res = agent.run(user_data)
+    return res.text
+
 
 def weekly_io_analysis(
         meals: dict[datetime, list[dm.MealBreakdown]],
         target: list[dict[str, float]],
         restrictions: list[str]
 ) -> dm.NutritionFeedback:
-    """
-    Analyzes the user's weekly intake and target and produces an overview with feedback.
-
-    Args:
-        meals: The user's meals for the week, stored per day.
-        target: The user's target for the week, stored per day.
-    """
     if len(meals) == 0:
         return "No meals logged for today, please log your meals and try again."
 
-    sys_message = """ 
-    You are a nutritionist providing feedback on a week's nutrition logs. Analyze the 
-    user's nutritional intake versus their targets, including macro and micronutrient balance,
-    meal timing, and portion sizes.
-    
-    Identify both positive patterns and areas for improvement. 
-    When discussing concerns, focus on repeated patterns that significantly impact their 
-    nutritional goals. For example, if frequent fried food consumption is causing them to 
-    exceed fat targets, point this out specifically.
+    system = """ 
+    You are a nutritionist providing feedback on a week's nutrition logs.
+    Analyze nutritional intake vs targets (macro/micro), meal timing, and portions.
 
-    Prioritize the 2-3 most important changes that would help them reach their goals. When 
-    suggesting modifications, recommend realistic substitutions that maintain similar taste and 
-    texture profiles. For instance, if they enjoy crunchy snacks but are exceeding sodium targets,
-    suggest specific lower-sodium alternatives they might enjoy.
+    - Identify positive patterns and areas for improvement.
+    - Focus on repeated patterns impacting goals (e.g., frequent fried foods -> fat target overages).
+    - Prioritize 2-3 most important changes.
+    - Recommend realistic substitutions that fit taste/texture preferences.
+    - Respect dietary restrictions strictly.
+    - Aim to refine habits rather than overhaul them.
 
-    Provide practical, actionable suggestions that respect their provided dietary restrictions. 
-    Consider their current food preferences when making recommendations - the goal is to refine 
-    their existing habits rather than completely overhaul their diet.
-
-    Write your response in plain text paragraphs without bullets or special formatting, address 
-    the user directly as their nutritionist.
-    """ #TODO: this can be passed in as an arg
+    Write in plain text paragraphs (no bullets/markdown), addressing the user directly.
+    """
     user_data = ""
-    for i, (day, meals) in enumerate(meals.items()):
+    for i, (day, meals_) in enumerate(meals.items()):
         day_meals_prefix = f"On {day} the user has logged the following meals:\n"
         day_targets_prefix = f"The user's daily targets for {day} are:\n"
-        day_meals_str, day_targets_str = summarize_daily_meals_and_targets(meals, target[i])
+        day_meals_str, day_targets_str = summarize_daily_meals_and_targets(meals_, target[i])
         user_data += day_meals_prefix + day_meals_str + day_targets_prefix + day_targets_str
-    
+
     user_data += f"The user's dietary restrictions are: {restrictions}"
     if DEFAULT_LARGE_MODEL in STRUCTURED_MODELS:
-        analysis = _weekly_io_analysis_pydantic(
-            sys_message, user_data
-        )
+        analysis = _weekly_io_analysis_pydantic(system, user_data)
     else:
-        analysis = _weekly_io_analysis_simple(sys_message, user_data)
-        analysis = dm.NutritionFeedback.model_validate_json(analysis)
-    
+        analysis_text = _weekly_io_analysis_simple(system, user_data)
+        analysis = dm.NutritionFeedback.model_validate_json(analysis_text)
+
     return analysis
 
-@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.NutritionFeedback)
-def _weekly_io_analysis_pydantic(
-        sys_message: str,
-        user_data: str
-) -> dm.NutritionFeedback:
-    return [
-        ell.system(sys_message),
-        ell.user(user_data)
-    ]
-    
-@ell.simple(model=DEFAULT_LARGE_MODEL, max_tokens=2048)
-def _weekly_io_analysis_simple(
-        sys_message: str,
-        user_data: str
-) -> str:
-    sys_message += f"You must absolutely respond in this format with no exceptions. {dm.NutritionFeedback.model_json_schema()}"
-    return [
-        ell.system(sys_message),
-        ell.user(user_data)
-    ]
+
+def _weekly_io_analysis_pydantic(system: str, user_data: str) -> dm.NutritionFeedback:
+    agent = _agent(DEFAULT_LARGE_MODEL, system)
+    res = agent.run(user_data, result_type=dm.NutritionFeedback)
+    return res.data
+
+
+def _weekly_io_analysis_simple(system: str, user_data: str) -> str:
+    system += f"You must absolutely respond in this format with no exceptions. {dm.NutritionFeedback.model_json_schema()}"
+    agent = _agent(DEFAULT_LARGE_MODEL, system)
+    res = agent.run(user_data)
+    return res.text
+
 
 def summarize_daily_meals_and_targets(meals: list[dict], target: dict[str, float]) -> tuple[str, str]:
     meals_str = ""
@@ -265,7 +239,8 @@ def summarize_daily_meals_and_targets(meals: list[dict], target: dict[str, float
         Sodium: {target["sodium"]}mg, Potassium: {target["potassium"]}mg
     """
     return meals_str, targets_str
-    
+
+
 def nutrient_analysis(
         nutrient: str,
         unit: str,
@@ -294,65 +269,60 @@ def nutrient_analysis(
     elif difference < 0:
         analysis = f"{abs(difference):.1f}{unit} under your {nutrient} target"
     else:
-        analysis = f"in line with your {nutrient} target" # TODO: change this to range based 
+        analysis = f"in line with your {nutrient} target"
     
     analysis = f"{analysis} on average" if multiple_days else analysis
     
     return f"{prefix} {analysis}"
 
 
-@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.KitchenInventory)
 def decipher_inventory(inventory_str: str) -> dm.KitchenInventory:
-    """The user is going to, in natural language, describe their kitchen inventory.
-    You are going to take this description and return a list of the items in the inventory.
+    system = """
+    The user will describe their kitchen inventory in natural language.
+    Return a structured list of items present in the inventory.
     """
-    return inventory_str
+    agent = _agent(DEFAULT_LARGE_MODEL, system)
+    res = agent.run(inventory_str, result_type=dm.KitchenInventory)
+    return res.data
 
-@ell.complex(model=DEFAULT_LARGE_MODEL, response_format=dm.KitchenInventory)
+
 def inventory_from_image(image: Image.Image, additional_context: str = "") -> dm.KitchenInventory:
-    system_message = """
-    given an image of what the user's kitchen looks like, return a list of the items in the kitchen.
-    If the image does not contain foods the kitchen, return an empty list.
+    system = """
+    Given an image of the user's kitchen, return a list of items present.
+    If the image does not contain foods in the kitchen, return an empty list.
     """
-    return [
-        ell.system(system_message),
-        ell.user([additional_context, image]),
-    ]
+    img_url = _image_to_data_url(image)
+    user_input = f"{additional_context}\n\n![kitchen_image]({img_url})"
+    agent = _agent(DEFAULT_LARGE_MODEL, system)
+    res = agent.run(user_input, result_type=dm.KitchenInventory)
+    return res.data
 
-@ell.complex(model=DEFAULT_LARGE_MODEL, max_tokens=2048, response_format=dm.GroceryList)
+
 def generate_grocery_list(
     user_preferences: str,
     current_inventory: dm.KitchenInventory,
     dietary_restrictions: list[str]
 ) -> dm.GroceryList:
-    """You are a meal planning and nutrition expert. Your task is to create a comprehensive weekly grocery list
-    that optimizes the user's nutrition while respecting their preferences and current habits.
+    system = """
+    You are a meal planning and nutrition expert. Create a weekly grocery list that optimizes nutrition
+    while respecting preferences and current habits. Do not violate dietary restrictions.
 
-    You absolutely must not violate the user's dietary restrictions. This is a health and safety issue.
+    Consider meal types:
+    - Breakfast (quick, energizing)
+    - Lunch (balanced)
+    - Dinner (can be more elaborate but digestible)
+    - Snacks (light, nutritious)
 
-    Consider the following when planning meals across different types:
-    - Breakfast: Quick to prepare, energizing meals to start the day
-    - Lunch: Balanced, moderate portions suitable for midday
-    - Dinner: Can be more elaborate but should remain digestible
-    - Snacks: Light, nutritious, and convenient options
+    The list should:
+    - Use current inventory; only add missing items
+    - Identify ingredients reused across meals
+    - Prioritize shelf-stable items
+    - Include reasonable weekly quantities
+    - Organize by category
 
-    The grocery list should:
-    1. Enable preparation of meals that:
-       - Gradually introduce healthier alternatives while staying familiar
-       - Are appropriate for their respective meal types
-
-    2. Be practical and efficient by:
-       - Taking into account ingredients already available in the kitchen
-       - Only including items not present in current inventory
-       - Identifying ingredients used across multiple meals
-       - Prioritizing items with good shelf life
-       - Including reasonable quantities for a week
-       - Organizing items by category
-
-    3. Consider the user's relationship with food by:
-       - Making incremental rather than dramatic changes
-       - Maintaining some familiar comfort foods
-       - Introducing new healthy items gradually
-       - Ensuring the shopping list feels achievable
+    Keep changes incremental and achievable; maintain some familiar comfort foods.
     """
-    return f"user_preferences: {user_preferences}\ncurrent_inventory: {current_inventory}\ndietary_restrictions: {dietary_restrictions}"
+    user_input = f"user_preferences: {user_preferences}\ncurrent_inventory: {current_inventory}\ndietary_restrictions: {dietary_restrictions}"
+    agent = _agent(DEFAULT_LARGE_MODEL, system)
+    res = agent.run(user_input, result_type=dm.GroceryList)
+    return res.data

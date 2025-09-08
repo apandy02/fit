@@ -1,6 +1,7 @@
+# src/fit/ai/performance/assistants.py
 import datetime
 
-import ell
+from pydantic_ai import Agent
 
 from fit.ai.performance.data_models import PerformanceStats
 
@@ -8,7 +9,9 @@ STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
 DEFAULT_LARGE_MODEL = "gpt-4o-2024-08-06"
 DEFAULT_SMALL_MODEL = "gpt-4o-mini-2024-07-18"
 
-@ell.simple(model=DEFAULT_LARGE_MODEL)
+def _agent(model: str, system_prompt: str) -> Agent:
+   return Agent(f"openai:{model}", system_prompt=system_prompt)
+
 def early_daily_performance_overview(
       daily_stats: PerformanceStats,
       activities: list,
@@ -17,7 +20,7 @@ def early_daily_performance_overview(
       workout_trend_summary: str,
       time: datetime.time,
       time_cutoff: datetime.time,
-   ) -> list[ell.Message]:
+   ) -> str:
    if time.hour < time_cutoff.hour:
       workout_recommendation_string = """
       - If they've exceeded their caloric target, recommend an appropriate workout
@@ -27,8 +30,8 @@ def early_daily_performance_overview(
    else:
       workout_recommendation_string = """
       - If they've exceeded their caloric target, recommend that they either consume less
-      or workout more in the future. You can suggest a new workout or an adjustment to their
-      existing workout.
+      - or workout more in the future. You can suggest a new workout or an adjustment to their
+      - existing workout.
       """
    system_message = f"""
    You are a digital health and fitness assistant.
@@ -59,15 +62,15 @@ def early_daily_performance_overview(
    Here is my caloric target: {caloric_target}\n, Here is my caloric consumption: {caloric_consumption}\n
    Here is my workout trend summary: {workout_trend_summary}
    """
-   return [
-      ell.system(system_message),
-      ell.user(user_string)
-   ]
+   agent = _agent(DEFAULT_LARGE_MODEL, system_message)
+   res = agent.run(user_string)
+   return res.text
 
-@ell.simple(model=DEFAULT_SMALL_MODEL)
 def summarize_workout_trends(workouts: list) -> str:
-    """
+    system = """
     Summarize the user's workout trends and provide a summary of their recent workout patterns and preferences.
+    Return a concise plain-text summary.
     """
-    return f"Here is the user's workout log: {workouts}"
-
+    agent = _agent(DEFAULT_SMALL_MODEL, system)
+    res = agent.run(f"Here is the user's workout log: {workouts}")
+    return res.text

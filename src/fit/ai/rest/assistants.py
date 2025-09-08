@@ -1,6 +1,6 @@
 from datetime import datetime
 
-import ell
+from pydantic_ai import Agent
 
 from fit.ai.nutrition.data_models import MealBreakdown
 
@@ -9,7 +9,9 @@ STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
 DEFAULT_LARGE_MODEL = "gpt-4o-2024-08-06"
 DEFAULT_SMALL_MODEL = "gpt-4o-mini-2024-07-18"
 
-@ell.simple(model=DEFAULT_LARGE_MODEL)
+def _agent(model: str, system_prompt: str) -> Agent:
+   return Agent(f"openai:{model}", system_prompt=system_prompt)
+
 def analyze_rest_patterns(
       sleep_data: list[dict],
       meals: list[tuple[datetime, MealBreakdown]],
@@ -50,7 +52,6 @@ def analyze_rest_patterns(
    Here are my activities: {activities}\n, Here are my sleep targets: {sleep_targets}\n
    Here are my recovery metrics: {recovery_metrics}
    """
-   return [
-      ell.system(system_message),
-      ell.user(user_string)
-   ]
+   agent = _agent(DEFAULT_LARGE_MODEL, system_message)
+   res = agent.run(user_string)
+   return res.text
