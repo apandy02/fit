@@ -29,8 +29,8 @@ router = APIRouter(tags=["nutrition"], prefix="/nutrition")
 
 
 @router.post("/analyze-meal", response_model=AnalysisResult)
-def analyze(req: AnalysisRequest, user_id: int = Depends(get_current_user_id)):
-    result = assistants.natural_language_nutritional_breakdown(req.text).content[0].parsed
+async def analyze(req: AnalysisRequest, user_id: int = Depends(get_current_user_id)):
+    result = await assistants.natural_language_nutritional_breakdown(req.text)
     return AnalysisResult(
         title=result.title,
         ingredients=result.ingredients,
@@ -59,7 +59,7 @@ async def analyze_image(
 ):
     contents = await file.read()
     image = Image.open(io.BytesIO(contents))
-    result = assistants.vision_nutritional_breakdown(image, additional_context).content[0].parsed
+    result = await assistants.vision_nutritional_breakdown(image, additional_context)
     return AnalysisResult(
         title=result.title,
         ingredients=result.ingredients,
@@ -252,12 +252,12 @@ def log_water(req: WaterLogRequest, user_id: int = Depends(get_current_user_id),
 
 
 @router.post("/regenerate-analysis", response_model=AnalysisResult)
-def regenerate_analysis(req: RegenerateAnalysisRequest, user_id: int = Depends(get_current_user_id)):
+async def regenerate_analysis(req: RegenerateAnalysisRequest, user_id: int = Depends(get_current_user_id)):
     try:
         original = dm.MealBreakdown.model_validate(req.original_breakdown)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid original_breakdown payload")
-    result = assistants.improve_breakdown(original, req.feedback).content[0].parsed
+    result = await assistants.improve_breakdown(original, req.feedback)
     return AnalysisResult(
         title=result.title,
         ingredients=result.ingredients,
@@ -278,7 +278,7 @@ def regenerate_analysis(req: RegenerateAnalysisRequest, user_id: int = Depends(g
 
 
 @router.post("/overview/daily", response_model=dm.NutritionFeedback)
-def generate_daily_overview(date_str: Optional[str] = None, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
+async def generate_daily_overview(date_str: Optional[str] = None, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
     if date_str is None:
         day = datetime.today().date()
     else:
@@ -289,36 +289,36 @@ def generate_daily_overview(date_str: Optional[str] = None, user_id: int = Depen
     meals = database_service.get_daily_meals(day, user_id)
     data = _get_user_nutritional_data_for_dates(user_id, [day], database_service)
     try:
-        feedback = assistants.daily_io_analysis(meals, data["targets"][0], data["restrictions"]).content[0].parsed
+        feedback = await assistants.daily_io_analysis(meals, data["targets"][0], data["restrictions"])
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     return feedback
 
 
 @router.post("/overview/weekly", response_model=dm.NutritionFeedback)
-def generate_weekly_overview(user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
+async def generate_weekly_overview(user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
     days = get_current_week_dates()
     meals = {str(day): database_service.get_daily_meals(day, user_id) for day in days}
     data = _get_user_nutritional_data_for_dates(user_id, days, database_service)
-    feedback = assistants.weekly_io_analysis(meals, data["targets"], data["restrictions"]).content[0].parsed
+    feedback = await assistants.weekly_io_analysis(meals, data["targets"], data["restrictions"])
     return feedback
 
 
 @router.post("/suggestions/{nutrient}", response_model=dm.Recommendations)
-def get_nutrient_suggestions(nutrient: str, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
+async def get_nutrient_suggestions(nutrient: str, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
     today = datetime.today().date()
     daily_nutrition = database_service.get_daily_cumulative_nutrition(today, user_id)
     data = _get_user_nutritional_data_for_dates(user_id, [today], database_service)
-    user_preferences = assistants.summarize_user_preferences(database_service.get_all_meal_summaries(user_id))
+    user_preferences = await assistants.summarize_user_preferences(database_service.get_all_meal_summaries(user_id))
     kitchen_inventory = database_service.get_inventory(user_id)
-    recs = assistants.make_recommendations(
+    recs = await assistants.make_recommendations(
         consumption=daily_nutrition,
         targets=data["targets"][0],
         target_nutrient=nutrient,
         restrictions=data["restrictions"],
         user_preferences=user_preferences,
         kitchen_inventory=kitchen_inventory,
-    ).content[0].parsed
+    )
     return recs
 
 

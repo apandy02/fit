@@ -4,19 +4,11 @@ from PIL import Image
 import base64
 import io
 
-from pydantic_ai import Agent
+from fit.ai.common import natural_language_agent, DEFAULT_LARGE_MODEL, DEFAULT_SMALL_MODEL, STRUCTURED_MODELS
 
 import fit.ai.nutrition.data_models as dm
 from fit.ai.nutrition.errors import NoMealsLoggedError
 from fit.utils.lmp_utils import retry
-
-STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
-DEFAULT_LARGE_MODEL = "gpt-4o-2024-08-06"
-DEFAULT_SMALL_MODEL = "gpt-4o-mini-2024-07-18"
-
-
-def _agent(model: str, system_prompt: str) -> Agent:
-    return Agent(f"openai:{model}", system_prompt=system_prompt)
 
 
 def _image_to_data_url(image: Image.Image) -> str:
@@ -26,17 +18,17 @@ def _image_to_data_url(image: Image.Image) -> str:
     return f"data:image/png;base64,{b64}"
 
 
-def natural_language_nutritional_breakdown(food: str) -> dm.MealBreakdown:
+async def natural_language_nutritional_breakdown(food: str) -> dm.MealBreakdown:
     system = """
     Given what the user ate, return the macro nutrients in grams.
     If the user query is not food, return 0 for all macros.
     """
-    agent = _agent(DEFAULT_LARGE_MODEL, system)
-    res = agent.run(food, result_type=dm.MealBreakdown)
-    return res.data
+    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system, dm.MealBreakdown)
+    res = await agent.run(food)
+    return res.output
 
 
-def improve_breakdown(breakdown: dm.MealBreakdown, user_feedback: str) -> dm.MealBreakdown:
+async def improve_breakdown(breakdown: dm.MealBreakdown, user_feedback: str) -> dm.MealBreakdown:
     system = """
     Given the user's feedback on your prediction of the breakdown of their meal,
     improve the breakdown.
@@ -45,12 +37,12 @@ def improve_breakdown(breakdown: dm.MealBreakdown, user_feedback: str) -> dm.Mea
     The user's feedback on your prediction of the breakdown of their meal is: {user_feedback}
     The breakdown of the meal is: {breakdown}
     """
-    agent = _agent(DEFAULT_LARGE_MODEL, system)
-    res = agent.run(prompt, result_type=dm.MealBreakdown)
-    return res.data
+    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system, dm.MealBreakdown)
+    res = await agent.run(prompt)
+    return res.output
 
 
-def vision_nutritional_breakdown(image: Image.Image, additional_context: str) -> dm.MealBreakdown:
+async def vision_nutritional_breakdown(image: Image.Image, additional_context: str) -> dm.MealBreakdown:
     system = """
     Given an image of what the user ate, return the macro nutrients in grams.
     If the image is not food, return 0 for all macros. The user may or may not
@@ -59,12 +51,12 @@ def vision_nutritional_breakdown(image: Image.Image, additional_context: str) ->
     """
     img_url = _image_to_data_url(image)
     user_input = f"{additional_context}\n\n![meal_image]({img_url})"
-    agent = _agent(DEFAULT_LARGE_MODEL, system)
-    res = agent.run(user_input, result_type=dm.MealBreakdown)
-    return res.data
+    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system, dm.MealBreakdown)
+    res = await agent.run(user_input)
+    return res.output
 
 
-def summarize_user_preferences(meals: list[dm.MealBreakdown]) -> str:
+async def summarize_user_preferences(meals: list[dm.MealBreakdown]) -> str:
     system = """
     Given a list of meals the user has eaten, analyze their dietary preferences and patterns.
     Focus on:
@@ -73,12 +65,12 @@ def summarize_user_preferences(meals: list[dm.MealBreakdown]) -> str:
     - Common ingredients or food combinations
     Return plain text.
     """
-    agent = _agent(DEFAULT_SMALL_MODEL, system)
-    res = agent.run(f"Here are the meals I have eaten: {meals}")
-    return res.text
+    agent = natural_language_agent(DEFAULT_SMALL_MODEL, system, str)
+    res = await agent.run(f"Here are the meals I have eaten: {meals}")
+    return res.output
 
 
-def make_recommendations(
+async def make_recommendations(
         consumption: dm.NutritionalInformation,
         targets: dict[str, float],
         target_nutrient: str,
@@ -105,12 +97,12 @@ def make_recommendations(
         Kitchen Inventory: {kitchen_inventory}
         They want to improve their {target_nutrient} intake.
         """
-    agent = _agent(DEFAULT_LARGE_MODEL, system)
-    res = agent.run(user_input, result_type=dm.Recommendations)
-    return res.data
+    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system, dm.Recommendations)
+    res = await agent.run(user_input)
+    return res.output
 
 
-def daily_io_analysis(meals: list[dm.MealBreakdown], target: dict[str, float], restrictions: list[str]) -> dm.NutritionFeedback:
+async def daily_io_analysis(meals: list[dm.MealBreakdown], target: dict[str, float], restrictions: list[str]) -> dm.NutritionFeedback:
     if len(meals) == 0:
         raise NoMealsLoggedError("No meals logged for today, please log your meals and try again.")
 
@@ -141,35 +133,35 @@ def daily_io_analysis(meals: list[dm.MealBreakdown], target: dict[str, float], r
     restrictions_str = f"The user's dietary restrictions are: {restrictions}"
     user_data = meals_str_prefix + meals_str + targets_str_prefix + targets_str + restrictions_str
     if DEFAULT_LARGE_MODEL in STRUCTURED_MODELS:
-        return _daily_io_analysis_pydantic(system, user_data)
+        return await _daily_io_analysis_pydantic(system, user_data)
     else:
         return dm.NutritionFeedback.model_validate_json(
-            _daily_io_analysis_simple(system, user_data)
+            await _daily_io_analysis_simple(system, user_data)
         )
 
 
-def _daily_io_analysis_simple(system: str, user_data: str, error_context: str | None = None) -> str:
+async def _daily_io_analysis_simple(system: str, user_data: str, error_context: str | None = None) -> str:
     system += f"You must absolutely respond in this format as a json string with no exceptions: {dm.NutritionFeedback.model_json_schema()}"
-    agent = _agent(DEFAULT_LARGE_MODEL, system)
-    res = agent.run(user_data)
-    return res.text
+    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system, str)
+    res = await agent.run(user_data)
+    return res.output
 
 
-def _daily_io_analysis_pydantic(system: str, user_data: str) -> dm.NutritionFeedback:
-    agent = _agent(DEFAULT_LARGE_MODEL, system)
-    res = agent.run(user_data, result_type=dm.NutritionFeedback)
-    return res.data
+async def _daily_io_analysis_pydantic(system: str, user_data: str) -> dm.NutritionFeedback:
+    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system, dm.NutritionFeedback)
+    res = await agent.run(user_data)
+    return res.output
 
 
 @retry(dm.NutritionFeedback)
-def daily_io_analysis_simple(sys_message: str, user_data: str) -> str:
+async def daily_io_analysis_simple(sys_message: str, user_data: str) -> str:
     system = sys_message + f"You must absolutely respond in this format as a json string with no exceptions: {dm.NutritionFeedback.model_json_schema()}"
-    agent = _agent(DEFAULT_LARGE_MODEL, system)
-    res = agent.run(user_data)
-    return res.text
+    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system)
+    res = await agent.run(user_data)
+    return res.output
 
 
-def weekly_io_analysis(
+async def weekly_io_analysis(
         meals: dict[datetime, list[dm.MealBreakdown]],
         target: list[dict[str, float]],
         restrictions: list[str]
@@ -199,25 +191,25 @@ def weekly_io_analysis(
 
     user_data += f"The user's dietary restrictions are: {restrictions}"
     if DEFAULT_LARGE_MODEL in STRUCTURED_MODELS:
-        analysis = _weekly_io_analysis_pydantic(system, user_data)
+        analysis = await _weekly_io_analysis_pydantic(system, user_data)
     else:
-        analysis_text = _weekly_io_analysis_simple(system, user_data)
+        analysis_text = await _weekly_io_analysis_simple(system, user_data)
         analysis = dm.NutritionFeedback.model_validate_json(analysis_text)
 
     return analysis
 
 
-def _weekly_io_analysis_pydantic(system: str, user_data: str) -> dm.NutritionFeedback:
-    agent = _agent(DEFAULT_LARGE_MODEL, system)
-    res = agent.run(user_data, result_type=dm.NutritionFeedback)
-    return res.data
+async def _weekly_io_analysis_pydantic(system: str, user_data: str) -> dm.NutritionFeedback:
+    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system, dm.NutritionFeedback)
+    res = await agent.run(user_data)
+    return res.output
 
 
-def _weekly_io_analysis_simple(system: str, user_data: str) -> str:
+async def _weekly_io_analysis_simple(system: str, user_data: str) -> str:
     system += f"You must absolutely respond in this format with no exceptions. {dm.NutritionFeedback.model_json_schema()}"
-    agent = _agent(DEFAULT_LARGE_MODEL, system)
-    res = agent.run(user_data)
-    return res.text
+    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system)
+    res = await agent.run(user_data)
+    return res.output
 
 
 def summarize_daily_meals_and_targets(meals: list[dict], target: dict[str, float]) -> tuple[str, str]:
@@ -276,29 +268,29 @@ def nutrient_analysis(
     return f"{prefix} {analysis}"
 
 
-def decipher_inventory(inventory_str: str) -> dm.KitchenInventory:
+async def decipher_inventory(inventory_str: str) -> dm.KitchenInventory:
     system = """
     The user will describe their kitchen inventory in natural language.
     Return a structured list of items present in the inventory.
     """
-    agent = _agent(DEFAULT_LARGE_MODEL, system)
-    res = agent.run(inventory_str, result_type=dm.KitchenInventory)
-    return res.data
+    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system, dm.KitchenInventory)
+    res = await agent.run(inventory_str)
+    return res.output
 
 
-def inventory_from_image(image: Image.Image, additional_context: str = "") -> dm.KitchenInventory:
+async def inventory_from_image(image: Image.Image, additional_context: str = "") -> dm.KitchenInventory:
     system = """
     Given an image of the user's kitchen, return a list of items present.
     If the image does not contain foods in the kitchen, return an empty list.
     """
     img_url = _image_to_data_url(image)
     user_input = f"{additional_context}\n\n![kitchen_image]({img_url})"
-    agent = _agent(DEFAULT_LARGE_MODEL, system)
-    res = agent.run(user_input, result_type=dm.KitchenInventory)
-    return res.data
+    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system, dm.KitchenInventory)
+    res = await agent.run(user_input)
+    return res.output
 
 
-def generate_grocery_list(
+async def generate_grocery_list(
     user_preferences: str,
     current_inventory: dm.KitchenInventory,
     dietary_restrictions: list[str]
@@ -323,6 +315,6 @@ def generate_grocery_list(
     Keep changes incremental and achievable; maintain some familiar comfort foods.
     """
     user_input = f"user_preferences: {user_preferences}\ncurrent_inventory: {current_inventory}\ndietary_restrictions: {dietary_restrictions}"
-    agent = _agent(DEFAULT_LARGE_MODEL, system)
-    res = agent.run(user_input, result_type=dm.GroceryList)
-    return res.data
+    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system, dm.GroceryList)
+    res = await agent.run(user_input)
+    return res.output

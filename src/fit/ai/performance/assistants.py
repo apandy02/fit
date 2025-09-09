@@ -1,16 +1,10 @@
 # src/fit/ai/performance/assistants.py
 import datetime
 
-from pydantic_ai import Agent
 
 from fit.ai.performance.data_models import PerformanceStats
+from fit.ai.common import natural_language_agent, DEFAULT_LARGE_MODEL, DEFAULT_SMALL_MODEL
 
-STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
-DEFAULT_LARGE_MODEL = "gpt-4o-2024-08-06"
-DEFAULT_SMALL_MODEL = "gpt-4o-mini-2024-07-18"
-
-def _agent(model: str, system_prompt: str) -> Agent:
-   return Agent(f"openai:{model}", system_prompt=system_prompt)
 
 def early_daily_performance_overview(
       daily_stats: PerformanceStats,
@@ -62,7 +56,7 @@ def early_daily_performance_overview(
    Here is my caloric target: {caloric_target}\n, Here is my caloric consumption: {caloric_consumption}\n
    Here is my workout trend summary: {workout_trend_summary}
    """
-   agent = _agent(DEFAULT_LARGE_MODEL, system_message)
+   agent = natural_language_agent(DEFAULT_LARGE_MODEL, system_message)
    res = agent.run(user_string)
    return res.text
 
@@ -71,6 +65,6 @@ def summarize_workout_trends(workouts: list) -> str:
     Summarize the user's workout trends and provide a summary of their recent workout patterns and preferences.
     Return a concise plain-text summary.
     """
-    agent = _agent(DEFAULT_SMALL_MODEL, system)
+    agent = natural_language_agent(DEFAULT_SMALL_MODEL, system)
     res = agent.run(f"Here is the user's workout log: {workouts}")
     return res.text

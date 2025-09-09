@@ -1,16 +1,8 @@
 from datetime import datetime
 
-from pydantic_ai import Agent
 
 from fit.ai.nutrition.data_models import MealBreakdown
-
-# TODO: find some central place to store these (they are currently maintained in multiple places)
-STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
-DEFAULT_LARGE_MODEL = "gpt-4o-2024-08-06"
-DEFAULT_SMALL_MODEL = "gpt-4o-mini-2024-07-18"
-
-def _agent(model: str, system_prompt: str) -> Agent:
-   return Agent(f"openai:{model}", system_prompt=system_prompt)
+from fit.ai.common import natural_language_agent, DEFAULT_LARGE_MODEL
 
 def analyze_rest_patterns(
       sleep_data: list[dict],
@@ -52,6 +44,6 @@ def analyze_rest_patterns(
    Here are my activities: {activities}\n, Here are my sleep targets: {sleep_targets}\n
    Here are my recovery metrics: {recovery_metrics}
    """
-   agent = _agent(DEFAULT_LARGE_MODEL, system_message)
+   agent = natural_language_agent(DEFAULT_LARGE_MODEL, system_message)
    res = agent.run(user_string)
    return res.text

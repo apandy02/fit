@@ -58,8 +58,8 @@ def delete_inventory_item(rowid: int, user_id: int = Depends(get_current_user_id
 
 
 @router.post("/inventory/from-text", response_model=InventoryList)
-def add_inventory_from_text(req: InventoryFromTextRequest, user_id: int = Depends(get_current_user_id)):
-    parsed = assistants.decipher_inventory(req.items_description).content[0].parsed
+async def add_inventory_from_text(req: InventoryFromTextRequest, user_id: int = Depends(get_current_user_id)):
+    parsed = await assistants.decipher_inventory(req.items_description)
     # parsed is dm.KitchenInventory -> convert to API model
     items = [
         InventoryItem(title=i.name, quantity=i.quantity, unit=i.unit, category=i.category)
@@ -72,7 +72,7 @@ def add_inventory_from_text(req: InventoryFromTextRequest, user_id: int = Depend
 async def add_inventory_from_image(file: UploadFile = File(...), additional_context: Optional[str] = None, user_id: int = Depends(get_current_user_id)):
     contents = await file.read()
     image = Image.open(io.BytesIO(contents))
-    parsed = assistants.inventory_from_image(image, additional_context or "").content[0].parsed
+    parsed = await assistants.inventory_from_image(image, additional_context or "")
     items = [
         InventoryItem(title=i.name, quantity=i.quantity, unit=i.unit, category=i.category)
         for i in parsed.items
@@ -81,14 +81,14 @@ async def add_inventory_from_image(file: UploadFile = File(...), additional_cont
 
 
 @router.post("/grocery-list", response_model=GroceryList)
-def generate_grocery_list(user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
+async def generate_grocery_list(user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
     current_inventory = database_service.get_inventory(user_id)
     user_meals = database_service.get_all_meal_summaries(user_id)
-    user_preferences = assistants.summarize_user_preferences(user_meals)
+    user_preferences = await assistants.summarize_user_preferences(user_meals)
     dietary_restrictions = database_service.get_dietary_restrictions(user_id)
-    result = assistants.generate_grocery_list(
+    result = await assistants.generate_grocery_list(
         user_preferences, current_inventory, dietary_restrictions
-    ).content[0].parsed
+    )
     return result
 
 
