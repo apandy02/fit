@@ -1,15 +1,9 @@
 from datetime import datetime
 
-import ell
 
 from fit.ai.nutrition.data_models import MealBreakdown
+from fit.ai.common import natural_language_agent, DEFAULT_LARGE_MODEL
 
-# TODO: find some central place to store these (they are currently maintained in multiple places)
-STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
-DEFAULT_LARGE_MODEL = "gpt-4o-2024-08-06"
-DEFAULT_SMALL_MODEL = "gpt-4o-mini-2024-07-18"
-
-@ell.simple(model=DEFAULT_LARGE_MODEL)
 def analyze_rest_patterns(
       sleep_data: list[dict],
       meals: list[tuple[datetime, MealBreakdown]],
@@ -50,7 +44,6 @@ def analyze_rest_patterns(
    Here are my activities: {activities}\n, Here are my sleep targets: {sleep_targets}\n
    Here are my recovery metrics: {recovery_metrics}
    """
-   return [
-      ell.system(system_message),
-      ell.user(user_string)
-   ]
+   agent = natural_language_agent(DEFAULT_LARGE_MODEL, system_message)
+   res = agent.run(user_string)
+   return res.text

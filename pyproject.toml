@@ -6,15 +6,12 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "authlib>=1.3.2",
-    "ell-ai[all]>=0.0.15",
-    "fh-bootstrap>=0.0.3",
     "fitbit-web-api>=0.2.0",
     "ipython>=8.29.0",
     "jupyter>=1.1.1",
     "markdown>=3.7",
     "plotly>=5.24.1",
-    "pydantic>=2.10.4",
-    "python-fasthtml>=0.10.1",
+    "pydantic>=2.11.7",
     "requests>=2.32.3",
     "cherrypy>=18.10.0",
     "pandas>=2.2.3",
@@ -26,6 +23,8 @@ dependencies = [
     "psycopg[binary]>=3.2.9",
     "sqlalchemy>=2.0.36",
     "alembic>=1.14.0",
+    "pydantic-ai>=1.0.1",
+    "oauthlib>=3.3.1",
 ]
 
 [build-system]
