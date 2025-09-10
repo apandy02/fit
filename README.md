@@ -24,6 +24,19 @@ The project currently provides:
 
 Note: The previous FastHTML-based web UI has been deprecated. A new frontend (likely React Native in TypeScript) is planned but not yet implemented.
 
+## Technology Stack
+
+- Python 3.10+
+- FastAPI (backend API)
+- Pydantic (data models and validation)
+- SQLite (database)
+- ell (language model programming and evals) for the analysis modules under `src/fit/ai`
+- Tooling: uv, ruff, unittest, coverage
+- Docker
+
+Planned frontend:
+- React Native (TypeScript) – not implemented yet
+
 ## Getting Started
 
 ### Setup
@@ -109,19 +122,6 @@ Notes:
 - The script logs in (user_id 42) to obtain an access token and then runs nutrition, supplements, water, kitchen, profile, and onboarding flows.
 - Image-based endpoints are skipped unless `FOOD_IMG` or `KITCHEN_IMG` point to existing files.
 - Performance/Rest endpoints that require linked trackers are skipped.
-
-## Technology Stack
-
-- Python 3.10+
-- FastAPI (backend API)
-- Pydantic (data models and validation)
-- SQLite (database)
-- ell (language model programming and evals) for the analysis modules under `src/fit/ai`
-- Tooling: uv, ruff, unittest, coverage
-- Docker
-
-Planned frontend:
-- React Native (TypeScript) – not implemented yet
 
 ## Testing
 
