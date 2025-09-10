@@ -11,13 +11,6 @@ from fit.ai.nutrition.errors import NoMealsLoggedError
 from fit.utils.lmp_utils import retry
 
 
-def _image_to_data_url(image: Image.Image) -> str:
-    buf = io.BytesIO()
-    image.save(buf, format="PNG")
-    b64 = base64.b64encode(buf.getvalue()).decode()
-    return f"data:image/png;base64,{b64}"
-
-
 async def natural_language_nutritional_breakdown(food: str) -> dm.MealBreakdown:
     system = """
     Given what the user ate, return the macro nutrients in grams.
@@ -108,20 +101,16 @@ async def daily_io_analysis(meals: list[dm.MealBreakdown], target: dict[str, flo
 
     system = """
     Analyze the user's daily nutritional intake versus their targets and provide a detailed assessment.
-
     Summary:
     - Caloric balance
     - High-level overview of nutrient performance (over/under/around target)
-
     Per-nutrient:
     - Start with intake vs goal
     - Evaluate each meal’s contribution
     - Flag excessive meals (>100% of macro target in one meal) and suggest alternatives
     - If before ~8PM and calories exceed target, suggest an appropriate workout
-
     For excess: suggest portion adjustments.
     For under-target: suggest realistic additions based on preferences, patterns, and restrictions.
-
     Format all fields as plain text paragraphs. Do not use markdown or bullets. Speak directly as their nutritionist.
     """
     current_time = datetime.now().time()
@@ -298,23 +287,26 @@ async def generate_grocery_list(
     system = """
     You are a meal planning and nutrition expert. Create a weekly grocery list that optimizes nutrition
     while respecting preferences and current habits. Do not violate dietary restrictions.
-
     Consider meal types:
     - Breakfast (quick, energizing)
     - Lunch (balanced)
     - Dinner (can be more elaborate but digestible)
     - Snacks (light, nutritious)
-
     The list should:
     - Use current inventory; only add missing items
     - Identify ingredients reused across meals
     - Prioritize shelf-stable items
     - Include reasonable weekly quantities
     - Organize by category
-
     Keep changes incremental and achievable; maintain some familiar comfort foods.
     """
     user_input = f"user_preferences: {user_preferences}\ncurrent_inventory: {current_inventory}\ndietary_restrictions: {dietary_restrictions}"
     agent = natural_language_agent(DEFAULT_LARGE_MODEL, system, dm.GroceryList)
     res = await agent.run(user_input)
     return res.output
+
+def _image_to_data_url(image: Image.Image) -> str:
+    buf = io.BytesIO()
+    image.save(buf, format="PNG")
+    b64 = base64.b64encode(buf.getvalue()).decode()
+    return f"data:image/png;base64,{b64}"

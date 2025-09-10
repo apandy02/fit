@@ -90,5 +90,3 @@ async def generate_grocery_list(user_id: int = Depends(get_current_user_id), dat
         user_preferences, current_inventory, dietary_restrictions
     )
     return result
-
-
