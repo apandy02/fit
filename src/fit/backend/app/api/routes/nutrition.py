@@ -18,7 +18,7 @@ from fit.backend.app.api.models.nutrition import (
     WaterLogRequest,
     RegenerateAnalysisRequest,
 )
-from fit.backend.database.postgres_service import PostgresDatabaseService
+from fit.backend.database.database import Database
 from fit.backend.app.deps import get_database_service
 from fit.ai.nutrition.targets import MICRO_GOALS
 from fit.ai.nutrition.targets import calculate_macro_targets
@@ -80,7 +80,7 @@ async def analyze_image(
 
 
 @router.get("/meals", response_model=list[MealLog])
-def get_meals(date_str: Optional[str] = None, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
+def get_meals(date_str: Optional[str] = None, user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
     if date_str is None:
         day = datetime.today().date()
     else:
@@ -88,7 +88,7 @@ def get_meals(date_str: Optional[str] = None, user_id: int = Depends(get_current
             day = datetime.strptime(date_str, "%Y-%m-%d").date()
         except ValueError:
             day = datetime.today().date()
-    meals = database_service.get_daily_meals(day, user_id)
+    meals = database_service.meals.get_daily_meals(day, user_id)
     result: list[MealLog] = []
     for row in meals:
         meal = row["meal"]
@@ -116,7 +116,7 @@ def get_meals(date_str: Optional[str] = None, user_id: int = Depends(get_current
 
 
 @router.post("/meals", response_model=MealLog, status_code=201)
-def create_meal(item: MealItem, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
+def create_meal(item: MealItem, user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
     day = item.date_entered or datetime.today().date()
     meal_dm = _dm_from_meal_item(item)
     # Normalize time to HH:MM:SS for DB compatibility
@@ -130,7 +130,7 @@ def create_meal(item: MealItem, user_id: int = Depends(get_current_user_id), dat
             # Fallback if an ISO datetime string gets passed
             t = datetime.fromisoformat(mt).time()
     mt_str = t.strftime("%H:%M:%S")
-    database_service.insert_meal(
+    database_service.meals.insert_meal(
         meal_description=item.title,
         meal=meal_dm,
         meal_date=day,
@@ -139,7 +139,7 @@ def create_meal(item: MealItem, user_id: int = Depends(get_current_user_id), dat
         summary=item.title,
         ingredients=item.ingredients,
     )
-    meals = database_service.get_daily_meals(day, user_id)
+    meals = database_service.meals.get_daily_meals(day, user_id)
     created = next((m for m in meals if m["meal"].title == item.title and m["meal_time"].strftime("%H:%M") == item.meal_time), None)
     if created is None:
         raise HTTPException(status_code=500, detail="Meal not created")
@@ -147,8 +147,8 @@ def create_meal(item: MealItem, user_id: int = Depends(get_current_user_id), dat
 
 
 @router.delete("/meals/{meal_id}", status_code=204)
-def delete_meal(meal_id: int, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
-    ok = database_service.delete_meal(meal_id)
+def delete_meal(meal_id: int, user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
+    ok = database_service.meals.delete_meal(meal_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Meal not found")
     return None
@@ -156,7 +156,7 @@ def delete_meal(meal_id: int, user_id: int = Depends(get_current_user_id), datab
 
 
 @router.post("/supplements", status_code=201)
-def save_supplement(body: SupplementCreate, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
+def save_supplement(body: SupplementCreate, user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
     nutrition_info = dm.NutritionalInformation(
         calories=body.calories,
         macronutrients=dm.Macronutrients(
@@ -190,25 +190,25 @@ def save_supplement(body: SupplementCreate, user_id: int = Depends(get_current_u
         except ValueError:
             t = datetime.fromisoformat(body.time_consumed).time()
     time_str = t.strftime("%H:%M:%S")
-    database_service.insert_supplement(
+    database_service.supplements.insert_supplement(
         name=body.title,
-        consumption_time=time_str,
         nutritional_info=nutrition_info,
-        date=day,
         user_id=user_id,
     )
+    # also log a meal entry for now
+    database_service.meals.insert_meal(body.title, nutrition_info, day, time_str, user_id, is_supplement=True)
     return {"status": "created"}
 
 
 @router.get("/supplements", response_model=list[str])
-def get_supplements(user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
-    return database_service.get_supplement_names(user_id)
+def get_supplements(user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
+    return database_service.supplements.get_supplement_names(user_id)
 
 
 @router.post("/supplements/log", status_code=201)
-def log_supplement_consumption(req: SupplementLogRequest, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
+def log_supplement_consumption(req: SupplementLogRequest, user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
     # Validate supplement exists
-    info = database_service.get_supplement(req.supplement_name, user_id)
+    info = database_service.supplements.get_supplement(req.supplement_name, user_id)
     if info is None:
         raise HTTPException(status_code=404, detail="Unknown supplement")
     # Normalize time
@@ -222,7 +222,7 @@ def log_supplement_consumption(req: SupplementLogRequest, user_id: int = Depends
     time_str = t.strftime("%H:%M:%S")
     # Log consumption in entries table to avoid duplicate supplement row
     servings = getattr(req, "servings", 1.0)
-    database_service.log_supplement_consumption(
+    database_service.supplements.log_supplement_consumption(
         user_id=user_id,
         supplement_name=req.supplement_name,
         servings=servings,
@@ -232,7 +232,7 @@ def log_supplement_consumption(req: SupplementLogRequest, user_id: int = Depends
 
 
 @router.post("/water", status_code=201)
-def log_water(req: WaterLogRequest, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
+def log_water(req: WaterLogRequest, user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
     day = req.date_entered or datetime.today().date()
     try:
         t = datetime.strptime(req.time_consumed, "%H:%M").time()
@@ -242,7 +242,7 @@ def log_water(req: WaterLogRequest, user_id: int = Depends(get_current_user_id),
         except ValueError:
             t = datetime.fromisoformat(req.time_consumed).time()
     time_str = t.strftime("%H:%M:%S")
-    database_service.insert_water_consumption(
+    database_service.water.insert_water_consumption(
         water_consumed_ml=req.amount_ml,
         date_consumed=day,
         time_consumed=time_str,
@@ -278,7 +278,7 @@ async def regenerate_analysis(req: RegenerateAnalysisRequest, user_id: int = Dep
 
 
 @router.post("/overview/daily", response_model=dm.NutritionFeedback)
-async def generate_daily_overview(date_str: Optional[str] = None, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
+async def generate_daily_overview(date_str: Optional[str] = None, user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
     if date_str is None:
         day = datetime.today().date()
     else:
@@ -286,7 +286,7 @@ async def generate_daily_overview(date_str: Optional[str] = None, user_id: int =
             day = datetime.strptime(date_str, "%Y-%m-%d").date()
         except ValueError:
             day = datetime.today().date()
-    meals = database_service.get_daily_meals(day, user_id)
+    meals = database_service.meals.get_daily_meals(day, user_id)
     data = _get_user_nutritional_data_for_dates(user_id, [day], database_service)
     try:
         feedback = await assistants.daily_io_analysis(meals, data["targets"][0], data["restrictions"])
@@ -296,21 +296,21 @@ async def generate_daily_overview(date_str: Optional[str] = None, user_id: int =
 
 
 @router.post("/overview/weekly", response_model=dm.NutritionFeedback)
-async def generate_weekly_overview(user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
+async def generate_weekly_overview(user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
     days = get_current_week_dates()
-    meals = {str(day): database_service.get_daily_meals(day, user_id) for day in days}
+    meals = {str(day): database_service.meals.get_daily_meals(day, user_id) for day in days}
     data = _get_user_nutritional_data_for_dates(user_id, days, database_service)
     feedback = await assistants.weekly_io_analysis(meals, data["targets"], data["restrictions"])
     return feedback
 
 
 @router.post("/suggestions/{nutrient}", response_model=dm.Recommendations)
-async def get_nutrient_suggestions(nutrient: str, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
+async def get_nutrient_suggestions(nutrient: str, user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
     today = datetime.today().date()
-    daily_nutrition = database_service.get_daily_cumulative_nutrition(today, user_id)
+    daily_nutrition = database_service.meals.get_daily_cumulative_nutrition(today, user_id)
     data = _get_user_nutritional_data_for_dates(user_id, [today], database_service)
-    user_preferences = await assistants.summarize_user_preferences(database_service.get_all_meal_summaries(user_id))
-    kitchen_inventory = database_service.get_inventory(user_id)
+    user_preferences = await assistants.summarize_user_preferences(database_service.meals.get_all_meal_summaries(user_id))
+    kitchen_inventory = database_service.inventory.get_inventory(user_id)
     recs = await assistants.make_recommendations(
         consumption=daily_nutrition,
         targets=data["targets"][0],
@@ -348,9 +348,9 @@ def _dm_from_meal_item(mi: MealItem) -> dm.NutritionalInformation | dm.MealBreak
     )
 
 
-def _get_user_nutritional_data_for_dates(user_id: int, days: list[datetime.date], database_service: PostgresDatabaseService):
+def _get_user_nutritional_data_for_dates(user_id: int, days: list[datetime.date], database_service: Database):
     # NOTE: Tracker calories_burned not available server-side here; defaulting to 2000.
-    weight_goal = WeightGoal(database_service.get_weight_goal(user_id))
+    weight_goal = WeightGoal(database_service.profile.get_weight_goal(user_id))
     calories_burned = [2000 for _ in days]
     targets = [calculate_macro_targets(cb, weight_goal) for cb in calories_burned]
     micronutrient_goals = MICRO_GOALS["male"]  # TODO: get gender from user
@@ -358,8 +358,8 @@ def _get_user_nutritional_data_for_dates(user_id: int, days: list[datetime.date]
         target.update(micronutrient_goals)
     return {
         "targets": targets,
-        "daily_nutrition": [database_service.get_daily_cumulative_nutrition(day, user_id) for day in days],
+        "daily_nutrition": [database_service.meals.get_daily_cumulative_nutrition(day, user_id) for day in days],
         "weight_goal": weight_goal,
-        "restrictions": database_service.get_dietary_restrictions(user_id),
+        "restrictions": database_service.profile.get_dietary_restrictions(user_id),
         "calories_burned": calories_burned,
     }

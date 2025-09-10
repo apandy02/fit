@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 import fit.ai.performance.assistants as assistants
 from fit.backend.auth import get_current_user_id
 from fit.backend.services.tracker_service import get_primary_tracker_for_user
-from fit.backend.database.postgres_service import PostgresDatabaseService
+from fit.backend.database.database import Database
 from fit.backend.app.deps import get_database_service
 from fit.backend.app.api.models.performance import (
     PerformanceDailyInfoResponse,
@@ -20,7 +20,7 @@ router = APIRouter(tags=["performance"], prefix="/performance")
 
 
 @router.get("/daily-info", response_model=PerformanceDailyInfoResponse)
-def get_daily_info(user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
+def get_daily_info(user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
     t = get_primary_tracker_for_user(database_service, user_id)
     today = datetime.date.today()
     if t.tracker_type == "whoop":
@@ -39,7 +39,7 @@ def get_daily_info(user_id: int = Depends(get_current_user_id), database_service
 
 
 @router.post("/overview", response_model=PerformanceOverviewResponse)
-def generate_overview(user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
+def generate_overview(user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
     try:
         t = get_primary_tracker_for_user(database_service, user_id)
         today = datetime.date.today()
@@ -56,7 +56,7 @@ def generate_overview(user_id: int = Depends(get_current_user_id), database_serv
                 "max_heart_rate": 100,
             }
         workouts = t.get_daily_workouts(today)
-        daily_nutrition = database_service.get_daily_cumulative_nutrition(today, user_id)
+        daily_nutrition = database_service.meals.get_daily_cumulative_nutrition(today, user_id)
         caloric_consumption = daily_nutrition.calories
         caloric_target = calculate_caloric_target(daily_nutrition, WeightGoal.MAINTAIN)
         workout_trend_summary = assistants.summarize_workout_trends(workouts)

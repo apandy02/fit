@@ -3,7 +3,7 @@ import datetime
 from fastapi import HTTPException
 
 from fit.backend.trackers.manager import tracker_factory
-from fit.backend.database.postgres_service import PostgresDatabaseService
+from fit.backend.database.database import Database
 
 
 def _is_expired(expires_at: str | None) -> bool:
@@ -15,8 +15,8 @@ def _is_expired(expires_at: str | None) -> bool:
         return False
 
 
-def get_primary_tracker_for_user(database_service: PostgresDatabaseService, user_id: int):
-    acct = database_service.get_tracker_account(user_id, provider=None, primary_only=True)
+def get_primary_tracker_for_user(database_service: Database, user_id: int):
+    acct = database_service.accounts.get_tracker_account(user_id, provider=None, primary_only=True)
     if not acct:
         raise HTTPException(status_code=409, detail="No tracker linked")
     # TODO: implement refresh if _is_expired(acct["expires_at"]) and refresh_token present

@@ -7,7 +7,7 @@ from fastapi.responses import RedirectResponse
 
 from fit.backend.auth import get_current_user_id
 from fit.backend.trackers.app_client_factory import extract_provider_user_id, make_app_client
-from fit.backend.database.postgres_service import PostgresDatabaseService
+from fit.backend.database.database import Database
 from fit.backend.app.deps import get_database_service
 
 
@@ -19,7 +19,7 @@ def _redirect_base() -> str:
 
 
 @router.post("/{provider}/start")
-def oauth_start(provider: str, redirect_to: str | None = None, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
+def oauth_start(provider: str, redirect_to: str | None = None, user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
     try:
         client = make_app_client(provider)
     except Exception as e:
@@ -30,7 +30,7 @@ def oauth_start(provider: str, redirect_to: str | None = None, user_id: int = De
     exp = now + timedelta(minutes=10)
     redirect_uri = f"{_redirect_base()}/oauth/{provider}/callback"
 
-    database_service.create_oauth_state(
+    database_service.accounts.create_oauth_state(
         state=state,
         code_verifier=client.code_verifier,
         provider=provider,
@@ -45,8 +45,8 @@ def oauth_start(provider: str, redirect_to: str | None = None, user_id: int = De
 
 
 @router.get("/{provider}/callback")
-def oauth_callback(provider: str, code: str, state: str, database_service: PostgresDatabaseService = Depends(get_database_service)):
-    st = database_service.consume_oauth_state(state)
+def oauth_callback(provider: str, code: str, state: str, database_service: Database = Depends(get_database_service)):
+    st = database_service.accounts.consume_oauth_state(state)
     if not st or st.get("provider") != provider:
         raise HTTPException(status_code=400, detail="Invalid or expired state")
     try:
@@ -64,9 +64,9 @@ def oauth_callback(provider: str, code: str, state: str, database_service: Postg
         if user_id is None:
             # Create/find user by provider id
             # For now, ensure a user row exists; your existing DB has users table with provider + provider_user_id
-            uid = database_service.get_user_id(provider_user_id, provider)
+            uid = database_service.accounts.get_user_id(provider_user_id, provider)
             if uid is None:
-                uid = database_service.insert_new_user({
+                uid = database_service.accounts.insert_new_user({
                     "user_id": None,  # autogen if your schema supports
                     "email": profile.get("email"),
                     "provider": provider,
@@ -74,7 +74,7 @@ def oauth_callback(provider: str, code: str, state: str, database_service: Postg
                 })
             user_id = uid
 
-        database_service.upsert_tracker_account(
+        database_service.accounts.upsert_tracker_account(
             user_id=user_id,
             provider=provider,
             provider_user_id=provider_user_id,
@@ -91,23 +91,23 @@ def oauth_callback(provider: str, code: str, state: str, database_service: Postg
 
 
 @router.delete("/{provider}")
-def oauth_unlink(provider: str, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
-    acct = database_service.get_tracker_account(user_id, provider=provider, primary_only=False)
+def oauth_unlink(provider: str, user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
+    acct = database_service.accounts.get_tracker_account(user_id, provider=provider, primary_only=False)
     if not acct:
         raise HTTPException(status_code=404, detail="Not linked")
     # Simple unlink by clearing tokens
-    database_service.update_tracker_tokens(user_id, provider, access_token="", refresh_token=None, expires_at=None)
+    database_service.accounts.update_tracker_tokens(user_id, provider, access_token="", refresh_token=None, expires_at=None)
     return {"status": "unlinked"}
 
 
 @router.get("/me/trackers")
-def list_linked_trackers(user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
-    return database_service.list_tracker_accounts(user_id)
+def list_linked_trackers(user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
+    return database_service.accounts.list_tracker_accounts(user_id)
 
 
 @router.patch("/me/trackers/primary")
-def set_primary(provider: str, user_id: int = Depends(get_current_user_id), database_service: PostgresDatabaseService = Depends(get_database_service)):
-    database_service.set_primary_tracker(user_id, provider)
+def set_primary(provider: str, user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
+    database_service.accounts.set_primary_tracker(user_id, provider)
     return {"status": "ok"}
 
 
