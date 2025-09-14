@@ -30,7 +30,7 @@ Note: The previous FastHTML-based web UI has been deprecated. A new frontend (li
 - FastAPI (backend API)
 - Pydantic (data models and validation)
 - SQLite (database)
-- ell (language model programming and evals) for the analysis modules under `src/fit/ai`
+- Pydantic AI for the analysis modules under `src/fit/ai`
 - Tooling: uv, ruff, unittest, coverage
 - Docker
 
