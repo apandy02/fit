@@ -12,7 +12,8 @@ from fit.backend.app.api.models.performance import (
     PerformanceOverviewResponse,
 )
 from fit.ai.nutrition.targets import WeightGoal, calculate_caloric_target
-from fit.utils.conversions import kj_to_kcal
+from fit.utils.conversions import convert_nutrient_unit, NutrientUnit
+
 
 
 
@@ -26,7 +27,7 @@ def get_daily_info(user_id: int = Depends(get_current_user_id), database_service
     if t.tracker_type == "whoop":
         cycle = t.get_cycle_for_day(today)
         daily_stats = cycle["score"]
-        daily_stats["calories"] = kj_to_kcal(daily_stats["kilojoule"])
+        daily_stats["calories"] = convert_nutrient_unit(daily_stats["kilojoule"], NutrientUnit.kJ, NutrientUnit.kcal)
     else:
         _ = t.get_intraday_heart_rate(today)
         daily_stats = {
@@ -47,7 +48,7 @@ def generate_overview(user_id: int = Depends(get_current_user_id), database_serv
         if t.tracker_type == "whoop":
             cycle = t.get_cycle_for_day(today)
             daily_stats = cycle["score"]
-            daily_stats["calories"] = kj_to_kcal(daily_stats["kilojoule"])
+            daily_stats["calories"] = convert_nutrient_unit(daily_stats["kilojoule"], NutrientUnit.kJ, NutrientUnit.kcal)
         else:
             _ = t.get_intraday_heart_rate(today)
             daily_stats = {

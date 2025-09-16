@@ -4,12 +4,6 @@ import fit.utils.conversions as conversions
 
 
 class TestConversions(unittest.TestCase):
-    def test_kj_to_kcal(self):
-        self.assertAlmostEqual(conversions.kj_to_kcal(4.184), 1.0)
-        self.assertEqual(conversions.kj_to_kcal(0), 0)
-        self.assertAlmostEqual(conversions.kj_to_kcal(418.4), 100.0)    
-        self.assertAlmostEqual(conversions.kj_to_kcal(-4.184), -1.0)
-
     def test_lbs_to_kg(self):
         self.assertAlmostEqual(conversions.lbs_to_kg(1), 0.453592)
         self.assertEqual(conversions.lbs_to_kg(0), 0)
@@ -33,9 +27,3 @@ class TestConversions(unittest.TestCase):
         self.assertEqual(conversions.oz_to_ml(0), 0)
         self.assertAlmostEqual(conversions.oz_to_ml(0.033814), 1.0, places=5)
         self.assertAlmostEqual(conversions.oz_to_ml(-1), -29.5735)
-
-    def test_kcal_to_kj(self):
-        self.assertAlmostEqual(conversions.kcal_to_kj(1), 4.184)
-        self.assertEqual(conversions.kcal_to_kj(0), 0)
-        self.assertAlmostEqual(conversions.kcal_to_kj(4.184), 17.5, places=1)
-        self.assertAlmostEqual(conversions.kcal_to_kj(-1), -4.184)

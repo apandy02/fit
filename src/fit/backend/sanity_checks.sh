@@ -8,7 +8,7 @@
 
 set -u -o pipefail
 
-BASE=${BASE:-http://localhost:5002}
+BASE=${BASE:-http://localhost:5003}
 echo "Using BASE=$BASE"
 
 tmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'fit_sanity')
