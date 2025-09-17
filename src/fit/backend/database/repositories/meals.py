@@ -15,7 +15,10 @@ class MealsRepository:
         sql = text(
             """
             SELECT id, llm_summary, ingredients, meal_time, calories, protein, carbohydrates,
-                   fat, fiber, vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium, sodium, creatine
+                   fat, fiber, vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium, sodium, creatine,
+                   calories_unit, protein_unit, carbohydrates_unit, fat_unit, fiber_unit,
+                   vitamin_a_unit, vitamin_c_unit, vitamin_d_unit, calcium_unit, iron_unit,
+                   potassium_unit, sodium_unit, creatine_unit
             FROM meals
             WHERE date_entered = :d AND is_supplement = false AND user_id = :u
             ORDER BY meal_time ASC
@@ -92,11 +95,17 @@ class MealsRepository:
             INSERT INTO meals (
               user_id, date_entered, meal_time, user_description, llm_summary, ingredients,
               calories, protein, carbohydrates, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
-              calcium, iron, potassium, sodium, creatine, is_supplement
+              calcium, iron, potassium, sodium, creatine, is_supplement,
+              calories_unit, protein_unit, carbohydrates_unit, fat_unit, fiber_unit,
+              vitamin_a_unit, vitamin_c_unit, vitamin_d_unit, calcium_unit, iron_unit,
+              potassium_unit, sodium_unit, creatine_unit
             ) VALUES (
               :user_id, :date_entered, :meal_time, :user_description, :llm_summary, :ingredients,
               :calories, :protein, :carbohydrates, :fat, :fiber, :vitamin_a, :vitamin_c, :vitamin_d,
-              :calcium, :iron, :potassium, :sodium, :creatine, :is_supplement
+              :calcium, :iron, :potassium, :sodium, :creatine, :is_supplement,
+              :calories_unit, :protein_unit, :carbohydrates_unit, :fat_unit, :fiber_unit,
+              :vitamin_a_unit, :vitamin_c_unit, :vitamin_d_unit, :calcium_unit, :iron_unit,
+              :potassium_unit, :sodium_unit, :creatine_unit
             ) RETURNING id
             """
         )
@@ -121,6 +130,20 @@ class MealsRepository:
             "sodium": meal.micronutrients.sodium,
             "creatine": getattr(meal.conditional_nutrients, "creatine", 0),
             "is_supplement": is_supplement,
+            # canonical units
+            "calories_unit": "kcal",
+            "protein_unit": "g",
+            "carbohydrates_unit": "g",
+            "fat_unit": "g",
+            "fiber_unit": "g",
+            "vitamin_a_unit": "ug",
+            "vitamin_c_unit": "mg",
+            "vitamin_d_unit": "ug",
+            "calcium_unit": "mg",
+            "iron_unit": "mg",
+            "potassium_unit": "mg",
+            "sodium_unit": "mg",
+            "creatine_unit": "g",
         }
         with self._engine.begin() as conn:
             conn.execute(sql, params).scalar_one()

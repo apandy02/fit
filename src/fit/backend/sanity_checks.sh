@@ -8,7 +8,7 @@
 
 set -u -o pipefail
 
-BASE=${BASE:-http://localhost:5002}
+BASE=${BASE:-http://localhost:5003}
 echo "Using BASE=$BASE"
 
 tmpdir=$(mktemp -d 2>/dev/null || mktemp -d -t 'fit_sanity')
@@ -93,6 +93,9 @@ fi
 header "Nutrition: analyze meal (LLM)"
 call "analyze_meal" POST "$BASE/nutrition/analyze-meal" -H 'Content-Type: application/json' \
   -d '{"text":"grilled chicken with rice and broccoli"}'
+
+header "Nutrition: barcode lookup"
+call "barcode_lookup" GET "$BASE/nutrition/barcode/3017620422003"
 
 header "Nutrition: analyze meal image (skipped if file missing)"
 if [[ -n "${FOOD_IMG:-}" && -f "$FOOD_IMG" ]]; then

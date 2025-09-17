@@ -42,9 +42,9 @@ class Macronutrients(BaseModel):
 
 class Micronutrients(BaseModel):
     """A dataclass that contains the micronutrients for a food."""
-    vitamin_a: float = Field(description="the amount of vitamin A in IU")
+    vitamin_a: float = Field(description="vitamin A in ug")
     vitamin_c: float = Field(description="vitamin C in mg")
-    vitamin_d: float = Field(description="vitamin D in IU")
+    vitamin_d: float = Field(description="vitamin D in ug")
     calcium: float = Field(description="calcium in mg")
     iron: float = Field(description="iron in mg")
     potassium: float = Field(description="potassium in mg")

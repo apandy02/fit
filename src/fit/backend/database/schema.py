@@ -28,6 +28,20 @@ class Meal:
     potassium: float
     sodium: float
     creatine: float
+    # unit fields
+    calories_unit: str
+    protein_unit: str
+    carbohydrates_unit: str
+    fat_unit: str
+    fiber_unit: str
+    vitamin_a_unit: str
+    vitamin_c_unit: str
+    vitamin_d_unit: str
+    calcium_unit: str
+    iron_unit: str
+    potassium_unit: str
+    sodium_unit: str
+    creatine_unit: str
     is_supplement: bool
     user_id: int
 
@@ -48,6 +62,19 @@ class Supplement:
     iron: float
     potassium: float
     sodium: float
+    # unit fields
+    calories_unit: str
+    protein_unit: str
+    carbohydrates_unit: str
+    fat_unit: str
+    fiber_unit: str
+    vitamin_a_unit: str
+    vitamin_c_unit: str
+    vitamin_d_unit: str
+    calcium_unit: str
+    iron_unit: str
+    potassium_unit: str
+    sodium_unit: str
 
 @dataclass
 class Measurement:

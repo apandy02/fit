@@ -5,6 +5,7 @@ import io
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from PIL import Image
 
+import openfoodfacts
 import fit.ai.nutrition.assistants as assistants
 import fit.ai.nutrition.data_models as dm
 from fit.backend.auth import get_current_user_id
@@ -76,6 +77,62 @@ async def analyze_image(
         potassium=result.micronutrients.potassium,
         sodium=result.micronutrients.sodium,
         creatine=result.conditional_nutrients.creatine,
+    )
+
+
+@router.get("/barcode/{code}", response_model=AnalysisResult)
+def lookup_by_barcode(code: str, user_id: int = Depends(get_current_user_id)):
+    api = openfoodfacts.API(user_agent="fit/1.0")
+    try:
+        product = api.product.get(code=code)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"OpenFoodFacts error: {str(e)}")
+    if not product or "nutriments" not in product or not product.get("nutrition_data", False):
+        raise HTTPException(status_code=404, detail="Product not found or nutrition data unavailable")
+
+    nutriments: dict = product.get("nutriments", {})
+    nutrition_data_per = product["nutrition_data_per"]
+
+    # Macros and calories
+    calories = nutriments[f"energy-kcal_{nutrition_data_per}"] or 0.0
+    protein = nutriments.get("proteins", 0.0)
+    carbohydrates = nutriments.get(f"carbohydrates_{nutrition_data_per}", 0.0) or nutriments.get("carbohydrates", 0.0)
+    fat = nutriments.get(f"fat_{nutrition_data_per}", 0.0) or nutriments.get("fat", 0.0)
+    fiber = nutriments.get(f"fiber_{nutrition_data_per}", 0.0) or nutriments.get("fiber", 0.0)
+
+    # Assume all micronutrients are already in mg
+    vitamin_a = nutriments.get(f"vitamin-a_{nutrition_data_per}", 0.0)
+    vitamin_c = nutriments.get(f"vitamin-c_{nutrition_data_per}", 0.0)
+    vitamin_d = nutriments.get(f"vitamin-d_{nutrition_data_per}", 0.0)
+    calcium = nutriments.get(f"calcium_{nutrition_data_per}", 0.0)
+    iron = nutriments.get(f"iron_{nutrition_data_per}", 0.0)
+    potassium = nutriments.get(f"potassium_{nutrition_data_per}", 0.0)
+    sodium = nutriments.get(f"sodium_{nutrition_data_per}", 0.0)  # TODO: Rearchitect with more modular approach
+
+    title = product.get("product_name") or product.get("brands") or "Unknown product"
+    ingredients = (
+        product.get("ingredients_text_en")
+        or product.get("ingredients_text")
+        or product.get("generic_name_en")
+        or ""
+    )
+
+    return AnalysisResult(
+        title=title,
+        ingredients=ingredients,
+        calories=calories,
+        protein=protein,
+        carbohydrates=carbohydrates,
+        fat=fat,
+        fiber=fiber,
+        vitamin_a=vitamin_a,
+        vitamin_c=vitamin_c,
+        vitamin_d=vitamin_d,
+        calcium=calcium,
+        iron=iron,
+        potassium=potassium,
+        sodium=sodium,
+        creatine=0.0,
     )
 
 

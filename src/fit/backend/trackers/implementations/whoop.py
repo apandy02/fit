@@ -8,7 +8,7 @@ from typing import Any
 import httpx
 
 from fit.backend.trackers.base import FitnessTracker, FitnessTrackerClient
-from fit.utils.conversions import kj_to_kcal
+from fit.utils.conversions import convert_nutrient_unit, NutrientUnit
 
 json_path = os.path.join(os.path.dirname(__file__), "config/whoop_sports.json")
 
@@ -160,7 +160,7 @@ class Whoop(FitnessTracker):
         if cycle_dict is None:
             return 0.0
 
-        calories = kj_to_kcal(cycle_dict["score"]["kilojoule"])
+        calories = convert_nutrient_unit(cycle_dict["score"]["kilojoule"], NutrientUnit.kJ, NutrientUnit.kcal)
         return calories
 
     def get_daily_sleep(self, day: datetime.date) -> float:
@@ -187,7 +187,7 @@ class Whoop(FitnessTracker):
                 formatted_workout = {
                     "type": SPORTS_MAP.get(str(workout["sport_id"]), "Unknown"),
                     "duration": workout["score"].get("duration", 0),
-                    "calories": kj_to_kcal(workout["score"].get("kilojoule", 0)),
+                    "calories": convert_nutrient_unit(workout["score"].get("kilojoule", 0), NutrientUnit.kJ, NutrientUnit.kcal),
                     "distance": workout["score"].get("distance_meter", 0),
                 }
                 formatted_workouts.append(formatted_workout)

@@ -1,25 +1,49 @@
 from datetime import date
 from typing import Optional
 
+from enum import Enum
+
 from pydantic import BaseModel, Field
 
+
+class NutrientUnit(Enum):
+    kcal = "kcal"
+    kJ = "kJ"
+    g = "g"
+    mg = "mg"
+    ug = "ug"
+    ml = "ml"
+    IU = "IU"
 
 class MealItem(BaseModel):
     title: str
     ingredients: str = ""
     calories: float
+    calories_unit: NutrientUnit = NutrientUnit.kcal
     protein: float
+    protein_unit: NutrientUnit = NutrientUnit.g
     carbohydrates: float
+    carbohydrates_unit: NutrientUnit = NutrientUnit.g
     fat: float
+    fat_unit: NutrientUnit = NutrientUnit.g
     fiber: float = 0.0
+    fiber_unit: NutrientUnit = NutrientUnit.g
     vitamin_a: float = 0.0
+    vitamin_a_unit: NutrientUnit = NutrientUnit.ug
     vitamin_c: float = 0.0
+    vitamin_c_unit: NutrientUnit = NutrientUnit.mg
     vitamin_d: float = 0.0
+    vitamin_d_unit: NutrientUnit = NutrientUnit.ug
     calcium: float = 0.0
+    calcium_unit: NutrientUnit = NutrientUnit.mg
     iron: float = 0.0
+    iron_unit: NutrientUnit = NutrientUnit.mg
     potassium: float = 0.0
+    potassium_unit: NutrientUnit = NutrientUnit.mg
     sodium: float = 0.0
+    sodium_unit: NutrientUnit = NutrientUnit.mg
     creatine: float = 0.0
+    creatine_unit: NutrientUnit = NutrientUnit.g
     meal_time: str = Field(description="HH:MM")
     date_entered: Optional[date] = None
 
@@ -56,17 +80,29 @@ class SupplementCreate(BaseModel):
     title: str
     time_consumed: str = Field(description="HH:MM or HH:MM:SS")
     calories: float
+    calories_unit: NutrientUnit = NutrientUnit.kcal
     protein: float
+    protein_unit: NutrientUnit = NutrientUnit.g
     carbohydrates: float
+    carbohydrates_unit: NutrientUnit = NutrientUnit.g
     fat: float
+    fat_unit: NutrientUnit = NutrientUnit.g
     fiber: float = 0.0
+    fiber_unit: NutrientUnit = NutrientUnit.g
     vitamin_a: float = 0.0
+    vitamin_a_unit: NutrientUnit = NutrientUnit.ug
     vitamin_c: float = 0.0
+    vitamin_c_unit: NutrientUnit = NutrientUnit.mg
     vitamin_d: float = 0.0
+    vitamin_d_unit: NutrientUnit = NutrientUnit.ug
     calcium: float = 0.0
+    calcium_unit: NutrientUnit = NutrientUnit.mg
     iron: float = 0.0
+    iron_unit: NutrientUnit = NutrientUnit.mg
     potassium: float = 0.0
+    potassium_unit: NutrientUnit = NutrientUnit.mg
     sodium: float = 0.0
+    sodium_unit: NutrientUnit = NutrientUnit.mg
     date_entered: Optional[date] = None
 
 

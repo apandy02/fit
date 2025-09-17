@@ -16,10 +16,16 @@ class SupplementsRepository:
             """
             INSERT INTO supplements (
               user_id, name, calories, protein, carbohydrates, fat, fiber,
-              vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium, sodium
+              vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium, sodium,
+              calories_unit, protein_unit, carbohydrates_unit, fat_unit, fiber_unit,
+              vitamin_a_unit, vitamin_c_unit, vitamin_d_unit, calcium_unit, iron_unit,
+              potassium_unit, sodium_unit
             ) VALUES (
               :user_id, :name, :calories, :protein, :carbohydrates, :fat, :fiber,
-              :vitamin_a, :vitamin_c, :vitamin_d, :calcium, :iron, :potassium, :sodium
+              :vitamin_a, :vitamin_c, :vitamin_d, :calcium, :iron, :potassium, :sodium,
+              :calories_unit, :protein_unit, :carbohydrates_unit, :fat_unit, :fiber_unit,
+              :vitamin_a_unit, :vitamin_c_unit, :vitamin_d_unit, :calcium_unit, :iron_unit,
+              :potassium_unit, :sodium_unit
             ) ON CONFLICT (user_id, name) DO NOTHING
             """
         )
@@ -38,6 +44,19 @@ class SupplementsRepository:
             "iron": nutritional_info.micronutrients.iron,
             "potassium": nutritional_info.micronutrients.potassium,
             "sodium": nutritional_info.micronutrients.sodium,
+            # canonical units
+            "calories_unit": "kcal",
+            "protein_unit": "g",
+            "carbohydrates_unit": "g",
+            "fat_unit": "g",
+            "fiber_unit": "g",
+            "vitamin_a_unit": "ug",
+            "vitamin_c_unit": "mg",
+            "vitamin_d_unit": "ug",
+            "calcium_unit": "mg",
+            "iron_unit": "mg",
+            "potassium_unit": "mg",
+            "sodium_unit": "mg",
         }
         with self._engine.begin() as conn:
             conn.execute(sql, params)
@@ -46,7 +65,10 @@ class SupplementsRepository:
         sql = text(
             """
             SELECT calories, protein, carbohydrates, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
-                   calcium, iron, potassium, sodium
+                   calcium, iron, potassium, sodium,
+                   calories_unit, protein_unit, carbohydrates_unit, fat_unit, fiber_unit,
+                   vitamin_a_unit, vitamin_c_unit, vitamin_d_unit, calcium_unit, iron_unit,
+                   potassium_unit, sodium_unit
             FROM supplements WHERE name = :n AND user_id = :u
             LIMIT 1
             """
@@ -80,7 +102,10 @@ class SupplementsRepository:
     def get_all_supplements(self, user_id: int) -> list[tuple[str, str, dm.NutritionalInformation]]:
         sql = text(
             """
-            SELECT name, description, calories, protein, carbohydrates, fat, fiber, vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium, sodium
+            SELECT name, description, calories, protein, carbohydrates, fat, fiber, vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium, sodium,
+                   calories_unit, protein_unit, carbohydrates_unit, fat_unit, fiber_unit,
+                   vitamin_a_unit, vitamin_c_unit, vitamin_d_unit, calcium_unit, iron_unit,
+                   potassium_unit, sodium_unit
             FROM supplements WHERE user_id = :u
             """
         )
