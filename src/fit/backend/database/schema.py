@@ -8,6 +8,7 @@ class User:
     provider: str
     provider_user_id: str
 
+
 @dataclass
 class Meal:
     date_entered: str
@@ -45,6 +46,7 @@ class Meal:
     is_supplement: bool
     user_id: int
 
+
 @dataclass
 class Supplement:
     user_id: int
@@ -76,6 +78,7 @@ class Supplement:
     potassium_unit: str
     sodium_unit: str
 
+
 @dataclass
 class Measurement:
     datetime: str
@@ -83,12 +86,14 @@ class Measurement:
     weight: float
     user_id: int
 
+
 @dataclass
 class Water:
     date: str
     user_id: int
     time: str
     water_consumed_ml: float
+
 
 @dataclass
 class Profile:
@@ -104,6 +109,7 @@ class Profile:
     fitness_goal: str
     onboarding_stage: int
 
+
 @dataclass
 class Inventory:
     user_id: int
@@ -111,6 +117,7 @@ class Inventory:
     quantity: float
     unit: str
     category: str
+
 
 @dataclass
 class SupplementEntry:

@@ -3,31 +3,35 @@ import datetime
 
 
 from fit.ai.performance.data_models import PerformanceStats
-from fit.ai.common import natural_language_agent, DEFAULT_LARGE_MODEL, DEFAULT_SMALL_MODEL
+from fit.ai.common import (
+    natural_language_agent,
+    DEFAULT_LARGE_MODEL,
+    DEFAULT_SMALL_MODEL,
+)
 
 
 def early_daily_performance_overview(
-      daily_stats: PerformanceStats,
-      activities: list,
-      caloric_target: float,
-      caloric_consumption: float,
-      workout_trend_summary: str,
-      time: datetime.time,
-      time_cutoff: datetime.time,
-   ) -> str:
-   if time.hour < time_cutoff.hour:
-      workout_recommendation_string = """
+    daily_stats: PerformanceStats,
+    activities: list,
+    caloric_target: float,
+    caloric_consumption: float,
+    workout_trend_summary: str,
+    time: datetime.time,
+    time_cutoff: datetime.time,
+) -> str:
+    if time.hour < time_cutoff.hour:
+        workout_recommendation_string = """
       - If they've exceeded their caloric target, recommend an appropriate workout
       - The workout suggestion should be calibrated to help burn the specific caloric excess
       - Consider their fitness level and exercise history when making recommendations
       """
-   else:
-      workout_recommendation_string = """
+    else:
+        workout_recommendation_string = """
       - If they've exceeded their caloric target, recommend that they either consume less
       - or workout more in the future. You can suggest a new workout or an adjustment to their
       - existing workout.
       """
-   system_message = f"""
+    system_message = f"""
    You are a digital health and fitness assistant.
     Analyze the user's daily performance metrics and provide personalized feedback and recommendations.
     You will receive:
@@ -51,14 +55,15 @@ def early_daily_performance_overview(
     while maintaining a professional tone.
     avoid all salutations and be to the point. 
     """
-   user_string = f"""
+    user_string = f"""
    Here are my daily stats: {daily_stats}\n, Here are my activities: {activities}\n
    Here is my caloric target: {caloric_target}\n, Here is my caloric consumption: {caloric_consumption}\n
    Here is my workout trend summary: {workout_trend_summary}
    """
-   agent = natural_language_agent(DEFAULT_LARGE_MODEL, system_message)
-   res = agent.run(user_string)
-   return res.text
+    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system_message)
+    res = agent.run(user_string)
+    return res.text
+
 
 def summarize_workout_trends(workouts: list) -> str:
     system = """

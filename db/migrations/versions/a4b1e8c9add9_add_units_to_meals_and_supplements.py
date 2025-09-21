@@ -19,34 +19,84 @@ depends_on = None
 def upgrade():
     # Meals unit columns
     with op.batch_alter_table("meals") as batch_op:
-        batch_op.add_column(sa.Column("calories_unit", sa.Text, nullable=False, server_default="kcal"))
-        batch_op.add_column(sa.Column("protein_unit", sa.Text, nullable=False, server_default="g"))
-        batch_op.add_column(sa.Column("carbohydrates_unit", sa.Text, nullable=False, server_default="g"))
-        batch_op.add_column(sa.Column("fat_unit", sa.Text, nullable=False, server_default="g"))
-        batch_op.add_column(sa.Column("fiber_unit", sa.Text, nullable=False, server_default="g"))
-        batch_op.add_column(sa.Column("vitamin_a_unit", sa.Text, nullable=False, server_default="ug"))
-        batch_op.add_column(sa.Column("vitamin_c_unit", sa.Text, nullable=False, server_default="mg"))
-        batch_op.add_column(sa.Column("vitamin_d_unit", sa.Text, nullable=False, server_default="ug"))
-        batch_op.add_column(sa.Column("calcium_unit", sa.Text, nullable=False, server_default="mg"))
-        batch_op.add_column(sa.Column("iron_unit", sa.Text, nullable=False, server_default="mg"))
-        batch_op.add_column(sa.Column("potassium_unit", sa.Text, nullable=False, server_default="mg"))
-        batch_op.add_column(sa.Column("sodium_unit", sa.Text, nullable=False, server_default="mg"))
-        batch_op.add_column(sa.Column("creatine_unit", sa.Text, nullable=False, server_default="g"))
+        batch_op.add_column(
+            sa.Column("calories_unit", sa.Text, nullable=False, server_default="kcal")
+        )
+        batch_op.add_column(
+            sa.Column("protein_unit", sa.Text, nullable=False, server_default="g")
+        )
+        batch_op.add_column(
+            sa.Column("carbohydrates_unit", sa.Text, nullable=False, server_default="g")
+        )
+        batch_op.add_column(
+            sa.Column("fat_unit", sa.Text, nullable=False, server_default="g")
+        )
+        batch_op.add_column(
+            sa.Column("fiber_unit", sa.Text, nullable=False, server_default="g")
+        )
+        batch_op.add_column(
+            sa.Column("vitamin_a_unit", sa.Text, nullable=False, server_default="ug")
+        )
+        batch_op.add_column(
+            sa.Column("vitamin_c_unit", sa.Text, nullable=False, server_default="mg")
+        )
+        batch_op.add_column(
+            sa.Column("vitamin_d_unit", sa.Text, nullable=False, server_default="ug")
+        )
+        batch_op.add_column(
+            sa.Column("calcium_unit", sa.Text, nullable=False, server_default="mg")
+        )
+        batch_op.add_column(
+            sa.Column("iron_unit", sa.Text, nullable=False, server_default="mg")
+        )
+        batch_op.add_column(
+            sa.Column("potassium_unit", sa.Text, nullable=False, server_default="mg")
+        )
+        batch_op.add_column(
+            sa.Column("sodium_unit", sa.Text, nullable=False, server_default="mg")
+        )
+        batch_op.add_column(
+            sa.Column("creatine_unit", sa.Text, nullable=False, server_default="g")
+        )
 
     # Supplements unit columns (no creatine in supplements table)
     with op.batch_alter_table("supplements") as batch_op:
-        batch_op.add_column(sa.Column("calories_unit", sa.Text, nullable=False, server_default="kcal"))
-        batch_op.add_column(sa.Column("protein_unit", sa.Text, nullable=False, server_default="g"))
-        batch_op.add_column(sa.Column("carbohydrates_unit", sa.Text, nullable=False, server_default="g"))
-        batch_op.add_column(sa.Column("fat_unit", sa.Text, nullable=False, server_default="g"))
-        batch_op.add_column(sa.Column("fiber_unit", sa.Text, nullable=False, server_default="g"))
-        batch_op.add_column(sa.Column("vitamin_a_unit", sa.Text, nullable=False, server_default="ug"))
-        batch_op.add_column(sa.Column("vitamin_c_unit", sa.Text, nullable=False, server_default="mg"))
-        batch_op.add_column(sa.Column("vitamin_d_unit", sa.Text, nullable=False, server_default="ug"))
-        batch_op.add_column(sa.Column("calcium_unit", sa.Text, nullable=False, server_default="mg"))
-        batch_op.add_column(sa.Column("iron_unit", sa.Text, nullable=False, server_default="mg"))
-        batch_op.add_column(sa.Column("potassium_unit", sa.Text, nullable=False, server_default="mg"))
-        batch_op.add_column(sa.Column("sodium_unit", sa.Text, nullable=False, server_default="mg"))
+        batch_op.add_column(
+            sa.Column("calories_unit", sa.Text, nullable=False, server_default="kcal")
+        )
+        batch_op.add_column(
+            sa.Column("protein_unit", sa.Text, nullable=False, server_default="g")
+        )
+        batch_op.add_column(
+            sa.Column("carbohydrates_unit", sa.Text, nullable=False, server_default="g")
+        )
+        batch_op.add_column(
+            sa.Column("fat_unit", sa.Text, nullable=False, server_default="g")
+        )
+        batch_op.add_column(
+            sa.Column("fiber_unit", sa.Text, nullable=False, server_default="g")
+        )
+        batch_op.add_column(
+            sa.Column("vitamin_a_unit", sa.Text, nullable=False, server_default="ug")
+        )
+        batch_op.add_column(
+            sa.Column("vitamin_c_unit", sa.Text, nullable=False, server_default="mg")
+        )
+        batch_op.add_column(
+            sa.Column("vitamin_d_unit", sa.Text, nullable=False, server_default="ug")
+        )
+        batch_op.add_column(
+            sa.Column("calcium_unit", sa.Text, nullable=False, server_default="mg")
+        )
+        batch_op.add_column(
+            sa.Column("iron_unit", sa.Text, nullable=False, server_default="mg")
+        )
+        batch_op.add_column(
+            sa.Column("potassium_unit", sa.Text, nullable=False, server_default="mg")
+        )
+        batch_op.add_column(
+            sa.Column("sodium_unit", sa.Text, nullable=False, server_default="mg")
+        )
 
 
 def downgrade():
@@ -79,5 +129,3 @@ def downgrade():
         batch_op.drop_column("carbohydrates_unit")
         batch_op.drop_column("protein_unit")
         batch_op.drop_column("calories_unit")
-
-

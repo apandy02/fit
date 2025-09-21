@@ -15,6 +15,7 @@ json_path = os.path.join(os.path.dirname(__file__), "config/whoop_sports.json")
 with open(json_path, "r") as f:
     SPORTS_MAP = json.load(f)["sports"]
 
+
 class WhoopAppClient(FitnessTrackerClient):
     """
     A PKCE-capable client for WHOOP.
@@ -100,6 +101,7 @@ class Whoop(FitnessTracker):
         BASE_URL (str): Base URL for API requests.
         INFO_URL (str): URL for user profile info.
     """
+
     BASE_URL = "https://api.prod.whoop.com/developer"
     INFO_URL = "https://api.prod.whoop.com/developer/v1/user/profile/basic"
 
@@ -160,7 +162,9 @@ class Whoop(FitnessTracker):
         if cycle_dict is None:
             return 0.0
 
-        calories = convert_nutrient_unit(cycle_dict["score"]["kilojoule"], NutrientUnit.kJ, NutrientUnit.kcal)
+        calories = convert_nutrient_unit(
+            cycle_dict["score"]["kilojoule"], NutrientUnit.kJ, NutrientUnit.kcal
+        )
         return calories
 
     def get_daily_sleep(self, day: datetime.date) -> float:
@@ -187,7 +191,11 @@ class Whoop(FitnessTracker):
                 formatted_workout = {
                     "type": SPORTS_MAP.get(str(workout["sport_id"]), "Unknown"),
                     "duration": workout["score"].get("duration", 0),
-                    "calories": convert_nutrient_unit(workout["score"].get("kilojoule", 0), NutrientUnit.kJ, NutrientUnit.kcal),
+                    "calories": convert_nutrient_unit(
+                        workout["score"].get("kilojoule", 0),
+                        NutrientUnit.kJ,
+                        NutrientUnit.kcal,
+                    ),
                     "distance": workout["score"].get("distance_meter", 0),
                 }
                 formatted_workouts.append(formatted_workout)

@@ -30,5 +30,3 @@ def extract_provider_user_id(provider: str, profile: dict) -> str:
     if provider == "fitbit":
         return profile["user"]["encodedId"]
     raise ValueError("Unknown provider")
-
-

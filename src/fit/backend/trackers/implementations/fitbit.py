@@ -20,9 +20,7 @@ class FitbitAppClient(FitnessTrackerClient):
     def tracker_type(self) -> str:
         return "fitbit"
 
-    def login_link(
-        self, redirect_uri: str, state: str = None
-    ) -> str:
+    def login_link(self, redirect_uri: str, state: str = None) -> str:
         """Create the Fitbit login link with PKCE parameters."""
         if not state:
             state = self.state

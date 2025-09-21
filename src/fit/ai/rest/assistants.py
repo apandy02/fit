@@ -4,14 +4,15 @@ from datetime import datetime
 from fit.ai.nutrition.data_models import MealBreakdown
 from fit.ai.common import natural_language_agent, DEFAULT_LARGE_MODEL
 
+
 def analyze_rest_patterns(
-      sleep_data: list[dict],
-      meals: list[tuple[datetime, MealBreakdown]],
-      activities: list[tuple[datetime, str, float]],
-      sleep_targets: float,
-      recovery_metrics: dict[str, float]
-   ) -> str:
-   system_message = """
+    sleep_data: list[dict],
+    meals: list[tuple[datetime, MealBreakdown]],
+    activities: list[tuple[datetime, str, float]],
+    sleep_targets: float,
+    recovery_metrics: dict[str, float],
+) -> str:
+    system_message = """
    You are a digital health and fitness assistant.
    Analyze the user's rest and recovery patterns in relation to their daily activities and habits.
 
@@ -39,11 +40,11 @@ def analyze_rest_patterns(
    and specific recommendations for improvement.
    avoid all salutations and be to the point. 
    """
-   user_string = f"""
+    user_string = f"""
    Here is my sleep data: {sleep_data}\n, Here are my meals: {meals}\n
    Here are my activities: {activities}\n, Here are my sleep targets: {sleep_targets}\n
    Here are my recovery metrics: {recovery_metrics}
    """
-   agent = natural_language_agent(DEFAULT_LARGE_MODEL, system_message)
-   res = agent.run(user_string)
-   return res.text
+    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system_message)
+    res = agent.run(user_string)
+    return res.text

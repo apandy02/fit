@@ -27,7 +27,10 @@ def nutritional_info_from_row(result: dict[str, Any]) -> dm.NutritionalInformati
         macronutrients=dm.Macronutrients(
             protein=data["protein"],
             carbohydrates=dm.Carbohydrates(
-                total=data["carbohydrates"], fiber=data["fiber"], total_sugar=0, added_sugar=0
+                total=data["carbohydrates"],
+                fiber=data["fiber"],
+                total_sugar=0,
+                added_sugar=0,
             ),
             fat=dm.Fats(total=data["fat"], saturated=0, trans=0),
         ),
@@ -42,5 +45,3 @@ def nutritional_info_from_row(result: dict[str, Any]) -> dm.NutritionalInformati
         ),
         conditional_nutrients=dm.ConditionalNutrients(creatine=data.get("creatine", 0)),
     )
-
-

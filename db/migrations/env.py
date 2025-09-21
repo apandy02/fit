@@ -25,7 +25,9 @@ target_metadata = None
 def get_database_url() -> str:
     url = os.getenv("FIT_DATABASE_URL")
     if not url:
-        raise RuntimeError("FIT_DATABASE_URL is not set; export it before running Alembic.")
+        raise RuntimeError(
+            "FIT_DATABASE_URL is not set; export it before running Alembic."
+        )
     return url
 
 

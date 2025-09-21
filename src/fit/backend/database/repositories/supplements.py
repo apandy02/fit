@@ -11,7 +11,9 @@ class SupplementsRepository:
     def __init__(self, engine):
         self._engine = engine
 
-    def insert_supplement(self, name: str, nutritional_info: dm.NutritionalInformation, user_id: int):
+    def insert_supplement(
+        self, name: str, nutritional_info: dm.NutritionalInformation, user_id: int
+    ):
         sql = text(
             """
             INSERT INTO supplements (
@@ -61,7 +63,9 @@ class SupplementsRepository:
         with self._engine.begin() as conn:
             conn.execute(sql, params)
 
-    def get_supplement(self, name: str, user_id: int) -> dm.NutritionalInformation | None:
+    def get_supplement(
+        self, name: str, user_id: int
+    ) -> dm.NutritionalInformation | None:
         sql = text(
             """
             SELECT calories, protein, carbohydrates, fat, fiber, vitamin_a, vitamin_c, vitamin_d,
@@ -82,8 +86,12 @@ class SupplementsRepository:
         with self._engine.connect() as conn:
             return [r[0] for r in conn.execute(sql, {"u": user_id}).fetchall()]
 
-    def log_supplement_consumption(self, user_id: int, supplement_name: str, servings: float, time_consumed: str):
-        sql_id = text("SELECT id FROM supplements WHERE user_id = :u AND name = :n LIMIT 1")
+    def log_supplement_consumption(
+        self, user_id: int, supplement_name: str, servings: float, time_consumed: str
+    ):
+        sql_id = text(
+            "SELECT id FROM supplements WHERE user_id = :u AND name = :n LIMIT 1"
+        )
         with self._engine.connect() as conn:
             row = conn.execute(sql_id, {"u": user_id, "n": supplement_name}).fetchone()
         if not row:
@@ -97,9 +105,20 @@ class SupplementsRepository:
             """
         )
         with self._engine.begin() as conn:
-            conn.execute(sql, {"u": user_id, "sid": supp_id, "d": datetime.today().date(), "t": time_consumed, "s": servings})
+            conn.execute(
+                sql,
+                {
+                    "u": user_id,
+                    "sid": supp_id,
+                    "d": datetime.today().date(),
+                    "t": time_consumed,
+                    "s": servings,
+                },
+            )
 
-    def get_all_supplements(self, user_id: int) -> list[tuple[str, str, dm.NutritionalInformation]]:
+    def get_all_supplements(
+        self, user_id: int
+    ) -> list[tuple[str, str, dm.NutritionalInformation]]:
         sql = text(
             """
             SELECT name, description, calories, protein, carbohydrates, fat, fiber, vitamin_a, vitamin_c, vitamin_d, calcium, iron, potassium, sodium,
@@ -111,9 +130,14 @@ class SupplementsRepository:
         )
         with self._engine.connect() as conn:
             rows = conn.execute(sql, {"u": user_id}).fetchall()
-        return [(r.name, r.description, nutritional_info_from_row(dict(r._mapping))) for r in rows]
+        return [
+            (r.name, r.description, nutritional_info_from_row(dict(r._mapping)))
+            for r in rows
+        ]
 
-    def get_daily_supplement_entries(self, user_id: int, date: datetime) -> list[tuple[str, float, str]]:
+    def get_daily_supplement_entries(
+        self, user_id: int, date: datetime
+    ) -> list[tuple[str, float, str]]:
         sql = text(
             """
             SELECT s.name AS supplement_name, e.servings, e.time_consumed
@@ -126,5 +150,3 @@ class SupplementsRepository:
         with self._engine.connect() as conn:
             rows = conn.execute(sql, {"u": user_id, "d": date}).fetchall()
         return [(r.supplement_name, r.servings, r.time_consumed) for r in rows]
-
-

@@ -54,7 +54,9 @@ class MealsRepository:
         with self._engine.connect() as conn:
             return [r[0] for r in conn.execute(sql, {"u": user_id}).fetchall()]
 
-    def get_daily_cumulative_nutrition(self, date: datetime, user_id: int) -> dm.NutritionalInformation:
+    def get_daily_cumulative_nutrition(
+        self, date: datetime, user_id: int
+    ) -> dm.NutritionalInformation:
         sql = text(
             """
             SELECT 
@@ -153,5 +155,3 @@ class MealsRepository:
         with self._engine.begin() as conn:
             res = conn.execute(sql, {"id": meal_id})
             return res.rowcount > 0
-
-

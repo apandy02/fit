@@ -15,6 +15,7 @@ class NutrientUnit(Enum):
     ml = "ml"
     IU = "IU"
 
+
 class MealItem(BaseModel):
     title: str
     ingredients: str = ""
@@ -123,6 +124,3 @@ class RegenerateAnalysisRequest(BaseModel):
     feedback: str
     # Original breakdown from previous analysis
     original_breakdown: dict
-
-
-

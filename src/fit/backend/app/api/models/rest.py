@@ -10,5 +10,3 @@ class RestOverviewResponse(BaseModel):
 class RestDailyInfoResponse(BaseModel):
     recovery: Dict[str, Any] | None
     sleep: List[Dict[str, Any]] | Dict[str, Any]
-
-

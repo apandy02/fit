@@ -3,23 +3,24 @@ from fit.ai.nutrition.data_models import WeightGoal
 MICRO_GOALS = {
     "male": {
         "vitamin_a": 900,
-        "vitamin_c": 90, 
+        "vitamin_c": 90,
         "vitamin_d": 15,
         "calcium": 1000,
         "iron": 18,
         "potassium": 3400,
-        "sodium": 1500
+        "sodium": 1500,
     },
     "female": {
         "vitamin_a": 700,
         "vitamin_c": 75,
-        "vitamin_d": 15, 
+        "vitamin_d": 15,
         "calcium": 1000,
         "iron": 18,
         "potassium": 2600,
-        "sodium": 1500
-    }
+        "sodium": 1500,
+    },
 }
+
 
 def calculate_caloric_target(calories_burned: float, goal: WeightGoal) -> float:
     """
@@ -33,65 +34,68 @@ def calculate_caloric_target(calories_burned: float, goal: WeightGoal) -> float:
     else:
         return calories_burned
 
+
 def calculate_protein_target(caloric_target: float) -> float:
     """Calculate daily protein target (30% of calories)."""
     protein_calories = caloric_target * 0.3
     return protein_calories / 4
+
 
 def calculate_fat_target(caloric_target: float) -> float:
     """Calculate daily fat target (30% of calories)."""
     fat_calories = caloric_target * 0.3
     return fat_calories / 9
 
+
 def calculate_carb_target(caloric_target: float) -> float:
     """Calculate daily carbohydrate target (40% of calories)."""
     carb_calories = caloric_target * 0.4
     return carb_calories / 4
 
+
 def calculate_macro_targets(calories_burned: float, goal: WeightGoal) -> dict:
     """
     Calculate all nutritional targets based on calories burned and goal.
-    
+
     Args:
         calories_burned: Total daily calories burned
         goal: Goal enum indicating whether to gain, maintain, or lose
-        
+
     Returns:
         dict: Dictionary containing all daily targets:
             - calories, protein, fat, carbohydrates
     """
     caloric_target = calculate_caloric_target(calories_burned, goal)
-    
+
     return {
         "calories": round(caloric_target),
         "protein": round(calculate_protein_target(caloric_target)),
         "fat": round(calculate_fat_target(caloric_target)),
-        "carbohydrates": round(calculate_carb_target(caloric_target))
+        "carbohydrates": round(calculate_carb_target(caloric_target)),
     }
 
+
 def estimate_daily_water_intake(
-        user_measurements: dict,
-        user_info: dict,
-        daily_calories_burned: float
-    ) -> float:
+    user_measurements: dict, user_info: dict, daily_calories_burned: float
+) -> float:
     """
     Estimates daily water intake in milliliters (mL).
-    
+
     Args:
         weight_kg (float): Person's weight in kilograms.
         gender (str): "male" or "female".
         daily_calories_burned (float): Estimated total daily calorie burn (TDEE).
         hot_environment (bool): If True, adds an extra ~250-500 mL for heat/humidity.
-    
+
     Returns:
         float: Estimated daily water intake in mL.
     """
     if user_measurements is None or user_info is None:
         return 3000
-    
+
     weight_lbs = user_measurements["weight"]
     gender = user_info["gender"]
-    
+
     weight_kg = weight_lbs * 0.453592
     base_water = weight_kg * 35
     activity_calories = max(0, daily_calories_burned - 2000)

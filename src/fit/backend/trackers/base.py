@@ -15,15 +15,18 @@ class FitnessTrackerClient(WebApplicationClient, ABC):
     This will handle interaction with the tracker-specific
     API to retrieve a standardized set of metrics.
     """
+
     def __init__(self, client_id, code=None, scope=None, **kwargs):
         super().__init__(client_id, code=code, scope=scope, **kwargs)
-        self.code_verifier, self.code_challenge = self.make_code_verifier_and_challenge()
-    
+        self.code_verifier, self.code_challenge = (
+            self.make_code_verifier_and_challenge()
+        )
+
     @property
     @abstractmethod
     def tracker_type(self) -> str:
         pass
-    
+
     @abstractmethod
     def login_link(self, redirect_uri, state=None):
         pass
@@ -37,10 +40,13 @@ class FitnessTrackerClient(WebApplicationClient, ABC):
         pass
 
     def make_code_verifier_and_challenge(self):
-        code_verifier = base64.urlsafe_b64encode(os.urandom(64)).decode("utf-8").rstrip("=")
+        code_verifier = (
+            base64.urlsafe_b64encode(os.urandom(64)).decode("utf-8").rstrip("=")
+        )
         sha256 = hashlib.sha256(code_verifier.encode("utf-8")).digest()
         code_challenge = base64.urlsafe_b64encode(sha256).decode("utf-8").rstrip("=")
         return code_verifier, code_challenge
+
 
 class FitnessTracker(ABC):
     """
@@ -58,7 +64,7 @@ class FitnessTracker(ABC):
         except Exception as e:
             logging.error(f"Error authenticating: {e}")
             raise e
-    
+
     @property
     @abstractmethod
     def tracker_type(self) -> str:

@@ -15,5 +15,3 @@ class PerformanceOverviewResponse(BaseModel):
 class PerformanceDailyInfoResponse(BaseModel):
     daily_stats: Dict[str, Any]
     workouts: List[dict]
-
-

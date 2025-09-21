@@ -31,5 +31,3 @@ class ActivitySelectionRequest(BaseModel):
 
 class GoalsSelectionRequest(BaseModel):
     weight_goal: str
-
-

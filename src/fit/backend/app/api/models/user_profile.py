@@ -37,5 +37,3 @@ class RestrictionChangeRequest(BaseModel):
 
 class RestrictionListResponse(BaseModel):
     restrictions: List[str]
-
-

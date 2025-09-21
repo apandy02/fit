@@ -92,5 +92,3 @@ class ProfileRepository:
                 return "gain"
             return "maintain"
         return "maintain"
-
-

@@ -29,7 +29,9 @@ def _parse_token(token: str) -> Tuple[int, int]:
         user_id_str, exp_str, _ = token.split(":", 2)
         return int(user_id_str), int(exp_str)
     except Exception:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        )
 
 
 def create_token_pair(user_id: int) -> tuple[str, str, int]:
@@ -41,17 +43,23 @@ def create_token_pair(user_id: int) -> tuple[str, str, int]:
 def refresh_tokens(refresh_token: str) -> tuple[str, str, int]:
     user_id, exp = _parse_token(refresh_token)
     if _now() >= exp:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh expired")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh expired"
+        )
     return create_token_pair(user_id)
 
 
-def get_current_user_id(credentials: Optional[HTTPAuthorizationCredentials] = Depends(SECURITY_SCHEME)) -> int:
+def get_current_user_id(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(SECURITY_SCHEME),
+) -> int:
     if credentials is None or credentials.scheme.lower() != "bearer":
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )
     token = credentials.credentials
     user_id, exp = _parse_token(token)
     if _now() >= exp:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
+        )
     return user_id
-
-

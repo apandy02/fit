@@ -20,5 +20,3 @@ class Database:
         self.water = WaterRepository(engine)
         self.measurements = MeasurementsRepository(engine)
         self.accounts = AccountsRepository(engine)
-
-

@@ -39,5 +39,3 @@ class GroceryListItem(BaseModel):
 
 class GroceryList(BaseModel):
     items: List[GroceryListItem]
-
-

@@ -15,7 +15,10 @@ router = APIRouter(tags=["rest"], prefix="/rest")
 
 
 @router.get("/daily-info", response_model=RestDailyInfoResponse)
-def get_daily_info(user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
+def get_daily_info(
+    user_id: int = Depends(get_current_user_id),
+    database_service: Database = Depends(get_database_service),
+):
     t = get_primary_tracker_for_user(database_service, user_id)
     today = datetime.date.today()
     if t.tracker_type == "whoop":
@@ -40,13 +43,19 @@ def get_daily_info(user_id: int = Depends(get_current_user_id), database_service
 
 
 @router.post("/overview", response_model=RestOverviewResponse)
-def generate_overview(user_id: int = Depends(get_current_user_id), database_service: Database = Depends(get_database_service)):
+def generate_overview(
+    user_id: int = Depends(get_current_user_id),
+    database_service: Database = Depends(get_database_service),
+):
     try:
         t = get_primary_tracker_for_user(database_service, user_id)
         yesterday = datetime.date.today() - datetime.timedelta(days=1)
         sleep_data = t.get_daily_sleep(yesterday)
         meals = database_service.meals.get_daily_meals(yesterday, user_id)
-        formatted_meals = [(datetime.datetime.combine(yesterday, m["meal_time"]), m["meal"]) for m in meals]
+        formatted_meals = [
+            (datetime.datetime.combine(yesterday, m["meal_time"]), m["meal"])
+            for m in meals
+        ]
         activities = t.get_daily_workouts(yesterday)
         formatted_activities = [(a.start_time, a.type, a.intensity) for a in activities]
         if isinstance(t, Whoop):
@@ -59,7 +68,11 @@ def generate_overview(user_id: int = Depends(get_current_user_id), database_serv
                     "hrv": scores["hrv_rmssd_milli"],
                 }
             else:
-                recovery_metrics = {"recovery_score": None, "resting_heart_rate": None, "hrv": None}
+                recovery_metrics = {
+                    "recovery_score": None,
+                    "resting_heart_rate": None,
+                    "hrv": None,
+                }
         else:
             recovery_metrics = {
                 "resting_heart_rate": t.get_daily_resting_heart_rate(yesterday),
@@ -77,5 +90,3 @@ def generate_overview(user_id: int = Depends(get_current_user_id), database_serv
         return RestOverviewResponse(analysis=str(analysis))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-

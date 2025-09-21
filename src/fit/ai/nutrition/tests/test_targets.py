@@ -1,10 +1,14 @@
 import unittest
 
 from fit.ai.nutrition.data_models import WeightGoal
-from fit.ai.nutrition.targets import (MICRO_GOALS, calculate_caloric_target,
-                                   calculate_carb_target, calculate_fat_target,
-                                   calculate_macro_targets,
-                                   calculate_protein_target)
+from fit.ai.nutrition.targets import (
+    MICRO_GOALS,
+    calculate_caloric_target,
+    calculate_carb_target,
+    calculate_fat_target,
+    calculate_macro_targets,
+    calculate_protein_target,
+)
 
 
 class TestTargets(unittest.TestCase):
@@ -35,13 +39,13 @@ class TestTargets(unittest.TestCase):
         self.assertEqual(result["protein"], 165)
         self.assertEqual(result["fat"], 73)
         self.assertEqual(result["carbohydrates"], 220)
-        
+
         result = calculate_macro_targets(2000, WeightGoal.LOSE)
         self.assertEqual(result["calories"], 1800)
         self.assertEqual(result["protein"], 135)
         self.assertEqual(result["fat"], 60)
         self.assertEqual(result["carbohydrates"], 180)
-        
+
         result = calculate_macro_targets(2000, WeightGoal.MAINTAIN)
         self.assertEqual(result["calories"], 2000)
         self.assertEqual(result["protein"], 150)
@@ -51,11 +55,19 @@ class TestTargets(unittest.TestCase):
     def test_micro_goals(self):
         self.assertIn("male", MICRO_GOALS)
         self.assertIn("female", MICRO_GOALS)
-        
-        required_micros = {"vitamin_a", "vitamin_c", "vitamin_d", "calcium", "iron", "potassium", "sodium"}
+
+        required_micros = {
+            "vitamin_a",
+            "vitamin_c",
+            "vitamin_d",
+            "calcium",
+            "iron",
+            "potassium",
+            "sodium",
+        }
         for micro in required_micros:
             self.assertIn(micro, MICRO_GOALS["male"])
             self.assertIn(micro, MICRO_GOALS["female"])
-        
+
         self.assertEqual(MICRO_GOALS["male"]["vitamin_c"], 90)
         self.assertEqual(MICRO_GOALS["female"]["vitamin_c"], 75)

@@ -15,7 +15,9 @@ def _make_breakdown() -> dm.MealBreakdown:
         calories=600.0,
         macronutrients=dm.Macronutrients(
             protein=45.0,
-            carbohydrates=dm.Carbohydrates(total=60.0, fiber=5.0, total_sugar=0.0, added_sugar=0.0),
+            carbohydrates=dm.Carbohydrates(
+                total=60.0, fiber=5.0, total_sugar=0.0, added_sugar=0.0
+            ),
             fat=dm.Fats(total=18.0, saturated=0.0, trans=0.0),
         ),
         micronutrients=dm.Micronutrients(
@@ -46,13 +48,18 @@ class TestApiEndpoints(unittest.TestCase):
         data = resp.json()
         self.assertIn("access_token", data)
         self.assertIn("refresh_token", data)
-        r2 = self.client.post("/auth/refresh", json={"refresh_token": data["refresh_token"]})
+        r2 = self.client.post(
+            "/auth/refresh", json={"refresh_token": data["refresh_token"]}
+        )
         self.assertEqual(r2.status_code, 200)
         self.assertIn("access_token", r2.json())
 
     @patch("fit.api.app.database_service")
     def test_get_me(self, mock_db):
-        mock_db.get_profile_data.return_value = {"email": "john@example.com", "name": "John"}
+        mock_db.get_profile_data.return_value = {
+            "email": "john@example.com",
+            "name": "John",
+        }
         resp = self.client.get("/me", headers=self.auth)
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.json()["email"], "john@example.com")
@@ -64,8 +71,12 @@ class TestApiEndpoints(unittest.TestCase):
         breakdown = _make_breakdown()
         parsed_holder = MagicMock()
         parsed_holder.parsed = breakdown
-        mock_assistants.natural_language_nutritional_breakdown.return_value = MagicMock(content=[parsed_holder])
-        resp = self.client.post("/nutrition/analyze", headers=self.auth, json={"text": "chicken and rice"})
+        mock_assistants.natural_language_nutritional_breakdown.return_value = MagicMock(
+            content=[parsed_holder]
+        )
+        resp = self.client.post(
+            "/nutrition/analyze", headers=self.auth, json={"text": "chicken and rice"}
+        )
         self.assertEqual(resp.status_code, 200)
         body = resp.json()
         self.assertEqual(body["title"], "Chicken Bowl")
@@ -79,18 +90,31 @@ class TestApiEndpoints(unittest.TestCase):
         def fake_get_daily_meals(d, uid):
             result = []
             for idx, r in enumerate(records, 1):
-                result.append({
-                    "meal": r["meal"],
-                    "meal_time": r["meal_time"],
-                    "rowid": idx,
-                })
+                result.append(
+                    {
+                        "meal": r["meal"],
+                        "meal_time": r["meal_time"],
+                        "rowid": idx,
+                    }
+                )
             return result
 
-        def fake_insert_meal(meal_description, meal, meal_date, meal_time, user_id, summary=None, ingredients=None, is_supplement=False):
-            records.append({
-                "meal": meal,
-                "meal_time": datetime.strptime(meal_time, "%H:%M").time(),
-            })
+        def fake_insert_meal(
+            meal_description,
+            meal,
+            meal_date,
+            meal_time,
+            user_id,
+            summary=None,
+            ingredients=None,
+            is_supplement=False,
+        ):
+            records.append(
+                {
+                    "meal": meal,
+                    "meal_time": datetime.strptime(meal_time, "%H:%M").time(),
+                }
+            )
 
         mock_db.get_daily_meals.side_effect = fake_get_daily_meals
         mock_db.insert_meal.side_effect = fake_insert_meal
@@ -133,5 +157,3 @@ class TestApiEndpoints(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
