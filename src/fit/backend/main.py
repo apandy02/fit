@@ -22,6 +22,7 @@ origins = [
     "exp+fit://127.0.0.1:19000",
     "exp://localhost:19000",
     "exp+fit://localhost:19000",
+    "http://localhost:5173",  # Vite origin
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -30,7 +31,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 @app.get("/me", response_model=User)
 def get_me(user_id: int = Depends(get_current_user_id), database_service = Depends(get_database_service)):

@@ -68,31 +68,31 @@ class AccountsRepository:
                 conn.execute(text("UPDATE tracker_accounts SET access_token = :a, refresh_token = :r, expires_at = :e, scopes = :s WHERE id = :id"), {"a": access_token, "r": refresh_token, "e": expires_at, "s": scopes, "id": existing[0]})
             else:
                 conn.execute(text("""
-                    INSERT INTO tracker_accounts (user_id, provider, provider_user_id, access_token, refresh_token, expires_at, scopes, primary, linked_at)
+                    INSERT INTO tracker_accounts (user_id, provider, provider_user_id, access_token, refresh_token, expires_at, scopes, is_primary_tracker, linked_at)
                     VALUES (:u, :p, :puid, :a, :r, :e, :s, :pri, :lnk)
                 """), {"u": user_id, "p": provider, "puid": provider_user_id, "a": access_token, "r": refresh_token, "e": expires_at, "s": scopes, "pri": primary, "lnk": datetime.now().isoformat()})
             if primary:
-                conn.execute(text("UPDATE tracker_accounts SET primary = false WHERE user_id = :u AND provider != :p"), {"u": user_id, "p": provider})
+                conn.execute(text("UPDATE tracker_accounts SET is_primary_tracker = false WHERE user_id = :u AND provider != :p"), {"u": user_id, "p": provider})
 
     def get_tracker_account(self, user_id: int, provider: str | None = None, primary_only: bool = True) -> dict | None:
         with self._engine.connect() as conn:
             if provider:
-                row = conn.execute(text("SELECT * FROM tracker_accounts WHERE user_id = :u AND provider = :p ORDER BY primary DESC LIMIT 1"), {"u": user_id, "p": provider}).fetchone()
+                row = conn.execute(text("SELECT * FROM tracker_accounts WHERE user_id = :u AND provider = :p ORDER BY is_primary_tracker DESC LIMIT 1"), {"u": user_id, "p": provider}).fetchone()
             elif primary_only:
-                row = conn.execute(text("SELECT * FROM tracker_accounts WHERE user_id = :u AND primary = true LIMIT 1"), {"u": user_id}).fetchone()
+                row = conn.execute(text("SELECT * FROM tracker_accounts WHERE user_id = :u AND is_primary_tracker = true LIMIT 1"), {"u": user_id}).fetchone()
             else:
                 row = conn.execute(text("SELECT * FROM tracker_accounts WHERE user_id = :u ORDER BY linked_at DESC LIMIT 1"), {"u": user_id}).fetchone()
             return None if not row else dict(row._mapping)
 
     def list_tracker_accounts(self, user_id: int) -> list[dict]:
         with self._engine.connect() as conn:
-            rows = conn.execute(text("SELECT provider, provider_user_id, expires_at, scopes, primary, linked_at FROM tracker_accounts WHERE user_id = :u"), {"u": user_id}).fetchall()
+            rows = conn.execute(text("SELECT provider, provider_user_id, expires_at, scopes, is_primary_tracker, linked_at FROM tracker_accounts WHERE user_id = :u"), {"u": user_id}).fetchall()
             return [dict(r._mapping) for r in rows]
 
     def set_primary_tracker(self, user_id: int, provider: str):
         with self._engine.begin() as conn:
-            conn.execute(text("UPDATE tracker_accounts SET primary = false WHERE user_id = :u"), {"u": user_id})
-            conn.execute(text("UPDATE tracker_accounts SET primary = true WHERE user_id = :u AND provider = :p"), {"u": user_id, "p": provider})
+            conn.execute(text("UPDATE tracker_accounts SET is_primary_tracker = false WHERE user_id = :u"), {"u": user_id})
+            conn.execute(text("UPDATE tracker_accounts SET is_primary_tracker = true WHERE user_id = :u AND provider = :p"), {"u": user_id, "p": provider})
 
     def update_tracker_tokens(self, user_id: int, provider: str, access_token: str, refresh_token: str | None, expires_at: str | None):
         with self._engine.begin() as conn:
