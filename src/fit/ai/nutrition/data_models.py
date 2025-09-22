@@ -5,8 +5,7 @@ from pydantic import BaseModel, Field
 
 
 class MealType(Enum):
-    """An enum that contains the different types of meals."""
-
+    """An enum that contains the different types of meals."""  
     BREAKFAST = "breakfast"
     LUNCH = "lunch"
     DINNER = "dinner"
@@ -15,7 +14,6 @@ class MealType(Enum):
 
 class WeightGoal(Enum):
     """An enum that contains the user's nutrition and fitness goals."""
-
     LOSE = "lose"
     GAIN = "gain"
     MAINTAIN = "maintain"
@@ -23,7 +21,6 @@ class WeightGoal(Enum):
 
 class Carbohydrates(BaseModel):
     """A dataclass that contains the carbohydrates for a food."""
-
     total: float = Field(description="carbohydrates in grams")
     fiber: float = Field(description="fiber in grams")
     total_sugar: float = Field(description="total sugar in grams")
@@ -32,15 +29,12 @@ class Carbohydrates(BaseModel):
 
 class Fats(BaseModel):
     """A dataclass that contains the fats for a food."""
-
     total: float = Field(description="fats in grams")
     saturated: float = Field(description="saturated fats in grams")
     trans: float = Field(description="trans fats in grams")
 
-
 class Macronutrients(BaseModel):
     """A dataclass that contains the macronutrients for a food."""
-
     protein: float = Field(description="protein in grams")
     carbohydrates: Carbohydrates = Field(description="carbohydrates in grams")
     fat: Fats = Field(description="fats in grams")
@@ -60,13 +54,11 @@ class Micronutrients(BaseModel):
 
 class ConditionalNutrients(BaseModel):
     """A dataclass that contains the conditional nutrients for a food."""
-
     creatine: float = Field(description="the amount of creatine in the food")
 
 
 class MealBreakdown(BaseModel):
     """A dataclass that contains the nutritional information for a food."""
-
     title: str = Field(description="a title for the food description")
     ingredients: str = Field(
         description="predicted ingredients in the food and their amounts"
@@ -81,7 +73,6 @@ class MealBreakdown(BaseModel):
 
 class NutritionFeedback(BaseModel):
     """A dataclass that contains the feedback for the user's nutrition."""
-
     summary: str = Field(
         description="a summary of the feedback for the user's nutrition based on the provided information"
     )
@@ -124,7 +115,6 @@ class NutritionalInformation(BaseModel):
 
 class MealRecommendation(BaseModel):
     """A dataclass that contains the meal recommendation for a food."""
-
     # TODO: Maybe I want an explanation of why this meal is being recommended?
     title: str = Field(
         description="a title for the food. this would be the dish's name if it were on a menu"
@@ -139,7 +129,6 @@ class MealRecommendation(BaseModel):
 
 class Recommendations(BaseModel):
     """A dataclass that contains the meal recommendations for a food."""
-
     meals: List[MealRecommendation] = Field(
         description="A list of 5 meals to be recommended to the user"
     )
@@ -147,7 +136,6 @@ class Recommendations(BaseModel):
 
 class MealTypeRecommendations(BaseModel):
     """A dataclass that contains meal recommendations for a specific meal type."""
-
     meal_type: MealType = Field(
         description="the type of meal these recommendations are for"
     )
@@ -168,7 +156,6 @@ KITCHEN_ITEM_CATEGORIES = [
 
 class KitchenItem(BaseModel):
     """A dataclass that contains the kitchen item for a food."""
-
     name: str = Field(description="the name of the kitchen item")
     quantity: float = Field(description="the quantity of the kitchen item")
     unit: str = Field(description="the unit of the quantity of the kitchen item")
@@ -179,13 +166,11 @@ class KitchenItem(BaseModel):
 
 class KitchenInventory(BaseModel):
     """A dataclass that contains the kitchen inventory for a food."""
-
     items: List[KitchenItem] = Field(description="the items in the kitchen inventory")
 
 
 class GroceryListItem(BaseModel):
     """A dataclass that contains the grocery item for a food."""
-
     name: str = Field(description="the name of the kitchen item")
     quantity: float = Field(description="the quantity of the kitchen item")
     unit: str = Field(description="the unit of the quantity of the kitchen item")
@@ -199,7 +184,6 @@ class GroceryListItem(BaseModel):
 
 class GroceryList(BaseModel):
     """A dataclass that contains the grocery list for a food."""
-
     items: List[GroceryListItem] = Field(
         description="a list of 5 - 15 items on a grocery list recommended to a user"
     )
@@ -207,7 +191,6 @@ class GroceryList(BaseModel):
 
 class NutrientPerformance(BaseModel):
     """A dataclass that contains the user's performance for a nutrient."""
-
     nutrient: str = Field(description="name of the nutrient")
     average_intake: float = Field(description="average daily intake")
     target: float = Field(description="daily target")
@@ -216,7 +199,6 @@ class NutrientPerformance(BaseModel):
 
 class UserPerformance(BaseModel):
     """A dataclass that contains the user's overall nutritional performance."""
-
     period_days: int = Field(description="number of days this performance data covers")
     nutrients: List[NutrientPerformance] = Field(
         description="performance data for each tracked nutrient"
