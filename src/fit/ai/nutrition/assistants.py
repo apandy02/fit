@@ -256,37 +256,6 @@ def summarize_daily_meals_and_targets(
     return meals_str, targets_str
 
 
-def nutrient_analysis(
-    nutrient: str, unit: str, intake: float, target: float, multiple_days: bool = False
-) -> str:
-    """Analyze if user is over/under their target for a specific nutrient.
-
-    Args:
-        nutrient: The nutrient being analyzed
-        intake: The user's intake for this nutrient
-        target: The target amount for this nutrient
-        multiple_days: Whether the data is for multiple days
-    Returns:
-        A string indicating if user is over/under target and by how much
-    """
-    nutrient = nutrient.lower()
-    difference = intake - target
-    nutrient = "caloric" if nutrient == "calories" else nutrient
-    nutrient = "carbohydrate" if nutrient == "carbohydrates" else nutrient
-    prefix = "You have been" if multiple_days else "You are currently"
-
-    if difference > 0:
-        analysis = f"{abs(difference):.1f}{unit} over your {nutrient} target"
-    elif difference < 0:
-        analysis = f"{abs(difference):.1f}{unit} under your {nutrient} target"
-    else:
-        analysis = f"in line with your {nutrient} target"
-
-    analysis = f"{analysis} on average" if multiple_days else analysis
-
-    return f"{prefix} {analysis}"
-
-
 async def decipher_inventory(inventory_str: str) -> dm.KitchenInventory:
     system = """
     The user will describe their kitchen inventory in natural language.
