@@ -2,9 +2,9 @@ from pydantic_ai import Agent
 from pydantic import BaseModel
 from typing import Type
 
-STRUCTURED_MODELS = ["gpt-4o-2024-08-06"]
-DEFAULT_LARGE_MODEL = "gpt-4o-2024-08-06"
-DEFAULT_SMALL_MODEL = "gpt-4o-mini-2024-07-18"
+STRUCTURED_MODELS = ["gpt-4.1"]
+DEFAULT_LARGE_MODEL = "gpt-4.1"
+DEFAULT_SMALL_MODEL = "gpt-5-mini"
 
 
 def natural_language_agent(

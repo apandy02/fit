@@ -13,7 +13,6 @@ from fit.ai.common import (
 
 import fit.ai.nutrition.data_models as dm
 from fit.ai.nutrition.errors import NoMealsLoggedError
-from fit.utils.lmp_utils import retry
 
 
 async def natural_language_nutritional_breakdown(food: str) -> dm.MealBreakdown:
@@ -167,7 +166,6 @@ async def _daily_io_analysis_pydantic(
     return res.output
 
 
-@retry(dm.NutritionFeedback)
 async def daily_io_analysis_simple(sys_message: str, user_data: str) -> str:
     system = (
         sys_message
