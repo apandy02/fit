@@ -1,29 +1,25 @@
+import io
 from datetime import datetime
 from typing import Optional
 
-import io
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+import openfoodfacts
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from PIL import Image
 
-import openfoodfacts
 import fit.ai.nutrition.assistants as assistants
 import fit.ai.nutrition.data_models as dm
-from fit.backend.auth import get_current_user_id
-from fit.backend.app.api.models.nutrition import (
-    AnalysisRequest,
-    AnalysisResult,
-    MealItem,
-    MealLog,
-    SupplementCreate,
-    SupplementLogRequest,
-    WaterLogRequest,
-    RegenerateAnalysisRequest,
-)
-from fit.backend.database.database import Database
-from fit.backend.app.deps import get_database_service
-from fit.ai.nutrition.targets import MICRO_GOALS
-from fit.ai.nutrition.targets import calculate_macro_targets
 from fit.ai.nutrition.data_models import WeightGoal
+from fit.ai.nutrition.targets import MICRO_GOALS, calculate_macro_targets
+from fit.backend.app.api.models.nutrition import (AnalysisRequest,
+                                                  AnalysisResult, MealItem,
+                                                  MealLog,
+                                                  RegenerateAnalysisRequest,
+                                                  SupplementCreate,
+                                                  SupplementLogRequest,
+                                                  WaterLogRequest)
+from fit.backend.app.deps import get_database_service
+from fit.backend.auth import get_current_user_id
+from fit.backend.database.database import Database
 from fit.utils.calendar import get_current_week_dates
 
 router = APIRouter(tags=["nutrition"], prefix="/nutrition")

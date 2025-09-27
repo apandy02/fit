@@ -1,13 +1,9 @@
 # src/fit/ai/performance/assistants.py
 import datetime
 
-
+from fit.ai.common import (DEFAULT_LARGE_MODEL, DEFAULT_SMALL_MODEL,
+                           natural_language_agent)
 from fit.ai.performance.data_models import PerformanceStats
-from fit.ai.common import (
-    natural_language_agent,
-    DEFAULT_LARGE_MODEL,
-    DEFAULT_SMALL_MODEL,
-)
 
 
 def early_daily_performance_overview(

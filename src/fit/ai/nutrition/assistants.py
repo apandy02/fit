@@ -1,17 +1,12 @@
+import base64
+import io
 from datetime import datetime
 
 from PIL import Image
-import base64
-import io
-
-from fit.ai.common import (
-    natural_language_agent,
-    DEFAULT_LARGE_MODEL,
-    DEFAULT_SMALL_MODEL,
-    STRUCTURED_MODELS,
-)
 
 import fit.ai.nutrition.data_models as dm
+from fit.ai.common import (DEFAULT_LARGE_MODEL, DEFAULT_SMALL_MODEL,
+                           natural_language_agent)
 from fit.ai.nutrition.errors import NoMealsLoggedError
 
 
@@ -126,6 +121,15 @@ async def daily_io_analysis(
     Format all fields as plain text paragraphs. Do not use markdown or bullets. Speak directly as their nutritionist.
     """
     current_time = datetime.now().time()
+    if current_time.hour > 20:
+        system += """
+        Give the user feedback in hindsight. It is past 8PM, so be wary of asking them to eat heavy or working out.
+        Small suggestions are reasonable"""
+    else:
+        system += """
+        Give the user feedback in real-time. It is before 8PM, so you can ask them to eat to make up deficits or workout to 
+        burn a surplus (if any of those are needed). Based on what the exact time (how late) is , exercise reasonable
+        caution in your suggestions."""
 
     meals_str_prefix = (
         f"As of {current_time} are the meals the user has logged today:\n"
@@ -141,37 +145,8 @@ async def daily_io_analysis(
         + targets_str
         + restrictions_str
     )
-    if DEFAULT_LARGE_MODEL in STRUCTURED_MODELS:
-        return await _daily_io_analysis_pydantic(system, user_data)
-    else:
-        return dm.NutritionFeedback.model_validate_json(
-            await _daily_io_analysis_simple(system, user_data)
-        )
 
-
-async def _daily_io_analysis_simple(
-    system: str, user_data: str, error_context: str | None = None
-) -> str:
-    system += f"You must absolutely respond in this format as a json string with no exceptions: {dm.NutritionFeedback.model_json_schema()}"
-    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system, str)
-    res = await agent.run(user_data)
-    return res.output
-
-
-async def _daily_io_analysis_pydantic(
-    system: str, user_data: str
-) -> dm.NutritionFeedback:
     agent = natural_language_agent(DEFAULT_LARGE_MODEL, system, dm.NutritionFeedback)
-    res = await agent.run(user_data)
-    return res.output
-
-
-async def daily_io_analysis_simple(sys_message: str, user_data: str) -> str:
-    system = (
-        sys_message
-        + f"You must absolutely respond in this format as a json string with no exceptions: {dm.NutritionFeedback.model_json_schema()}"
-    )
-    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system)
     res = await agent.run(user_data)
     return res.output
 
@@ -209,26 +184,8 @@ async def weekly_io_analysis(
         )
 
     user_data += f"The user's dietary restrictions are: {restrictions}"
-    if DEFAULT_LARGE_MODEL in STRUCTURED_MODELS:
-        analysis = await _weekly_io_analysis_pydantic(system, user_data)
-    else:
-        analysis_text = await _weekly_io_analysis_simple(system, user_data)
-        analysis = dm.NutritionFeedback.model_validate_json(analysis_text)
 
-    return analysis
-
-
-async def _weekly_io_analysis_pydantic(
-    system: str, user_data: str
-) -> dm.NutritionFeedback:
     agent = natural_language_agent(DEFAULT_LARGE_MODEL, system, dm.NutritionFeedback)
-    res = await agent.run(user_data)
-    return res.output
-
-
-async def _weekly_io_analysis_simple(system: str, user_data: str) -> str:
-    system += f"You must absolutely respond in this format with no exceptions. {dm.NutritionFeedback.model_json_schema()}"
-    agent = natural_language_agent(DEFAULT_LARGE_MODEL, system)
     res = await agent.run(user_data)
     return res.output
 

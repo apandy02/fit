@@ -4,19 +4,15 @@ from typing import Optional
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from PIL import Image
 
-from fit.backend.auth import get_current_user_id
-from fit.backend.app.api.models.kitchen import (
-    AddInventoryItemRequest,
-    AddInventoryItemsRequest,
-    GroceryList,
-    InventoryFromTextRequest,
-    InventoryItem,
-    InventoryList,
-)
 from fit.ai.nutrition import assistants
-from fit.backend.database.database import Database
+from fit.backend.app.api.models.kitchen import (AddInventoryItemRequest,
+                                                AddInventoryItemsRequest,
+                                                GroceryList,
+                                                InventoryFromTextRequest,
+                                                InventoryItem, InventoryList)
 from fit.backend.app.deps import get_database_service
-
+from fit.backend.auth import get_current_user_id
+from fit.backend.database.database import Database
 
 router = APIRouter(tags=["kitchen"], prefix="/kitchen")
 

@@ -8,7 +8,7 @@ from typing import Any
 import httpx
 
 from fit.backend.trackers.base import FitnessTracker, FitnessTrackerClient
-from fit.utils.conversions import convert_nutrient_unit, NutrientUnit
+from fit.utils.conversions import NutrientUnit, convert_nutrient_unit
 
 json_path = os.path.join(os.path.dirname(__file__), "config/whoop_sports.json")
 

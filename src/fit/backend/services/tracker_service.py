@@ -2,8 +2,8 @@ import datetime
 
 from fastapi import HTTPException
 
-from fit.backend.trackers.manager import tracker_factory
 from fit.backend.database.database import Database
+from fit.backend.trackers.manager import tracker_factory
 
 
 def _is_expired(expires_at: str | None) -> bool:

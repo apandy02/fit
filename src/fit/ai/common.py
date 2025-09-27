@@ -1,6 +1,7 @@
-from pydantic_ai import Agent
-from pydantic import BaseModel
 from typing import Type
+
+from pydantic import BaseModel
+from pydantic_ai import Agent
 
 STRUCTURED_MODELS = ["gpt-4.1"]
 DEFAULT_LARGE_MODEL = "gpt-4.1"

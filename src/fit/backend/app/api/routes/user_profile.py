@@ -1,15 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from fit.backend.app.api.models.user_profile import (
-    ProfileResponse,
-    ProfileUpdateRequest,
-    RestrictionChangeRequest,
-    RestrictionListResponse,
-)
+from fit.backend.app.api.models.user_profile import (ProfileResponse,
+                                                     ProfileUpdateRequest,
+                                                     RestrictionChangeRequest,
+                                                     RestrictionListResponse)
+from fit.backend.app.deps import get_database_service
 from fit.backend.auth import get_current_user_id
 from fit.backend.database.database import Database
-from fit.backend.app.deps import get_database_service
-
 
 router = APIRouter(tags=["profile"], prefix="/profile")
 

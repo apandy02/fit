@@ -3,13 +3,13 @@ import datetime
 from fastapi import APIRouter, Depends, HTTPException
 
 import fit.ai.rest.assistants as assistants
-from fit.backend.auth import get_current_user_id
-from fit.backend.services.tracker_service import get_primary_tracker_for_user
-from fit.backend.app.api.models.rest import RestDailyInfoResponse, RestOverviewResponse
-from fit.backend.trackers.implementations.whoop import Whoop
-from fit.backend.database.database import Database
+from fit.backend.app.api.models.rest import (RestDailyInfoResponse,
+                                             RestOverviewResponse)
 from fit.backend.app.deps import get_database_service
-
+from fit.backend.auth import get_current_user_id
+from fit.backend.database.database import Database
+from fit.backend.services.tracker_service import get_primary_tracker_for_user
+from fit.backend.trackers.implementations.whoop import Whoop
 
 router = APIRouter(tags=["rest"], prefix="/rest")
 

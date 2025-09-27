@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+
 from sqlalchemy import text
 
 import fit.ai.nutrition.data_models as dm

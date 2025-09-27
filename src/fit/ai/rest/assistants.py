@@ -1,8 +1,7 @@
 from datetime import datetime
 
-
+from fit.ai.common import DEFAULT_LARGE_MODEL, natural_language_agent
 from fit.ai.nutrition.data_models import MealBreakdown
-from fit.ai.common import natural_language_agent, DEFAULT_LARGE_MODEL
 
 
 def analyze_rest_patterns(

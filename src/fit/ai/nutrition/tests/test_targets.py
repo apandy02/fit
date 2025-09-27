@@ -1,14 +1,11 @@
 import unittest
 
 from fit.ai.nutrition.data_models import WeightGoal
-from fit.ai.nutrition.targets import (
-    MICRO_GOALS,
-    calculate_caloric_target,
-    calculate_carb_target,
-    calculate_fat_target,
-    calculate_macro_targets,
-    calculate_protein_target,
-)
+from fit.ai.nutrition.targets import (MICRO_GOALS, calculate_caloric_target,
+                                      calculate_carb_target,
+                                      calculate_fat_target,
+                                      calculate_macro_targets,
+                                      calculate_protein_target)
 
 
 class TestTargets(unittest.TestCase):
