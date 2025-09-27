@@ -21,6 +21,18 @@ class WeightGoal(Enum):
     MAINTAIN = "maintain"
 
 
+class RecommendationType(Enum):
+    real_time = "real time"
+    hind_sight = "hind sight"
+
+
+class Recommendation(BaseModel):
+    recommendation_type: RecommendationType = Field(
+        description="the type of recommendation"
+    )
+    recommendation: str = Field(description="the recommendation")
+
+
 class Carbohydrates(BaseModel):
     """A dataclass that contains the carbohydrates for a food."""
 
@@ -82,6 +94,10 @@ class MealBreakdown(BaseModel):
 class NutritionFeedback(BaseModel):
     """A dataclass that contains the feedback for the user's nutrition."""
 
+    score: int = Field(
+        description="a score out of 100 rating the user's intake relative to their output and goals"
+    )
+
     summary: str = Field(
         description="a summary of the feedback for the user's nutrition based on the provided information"
     )
@@ -91,7 +107,9 @@ class NutritionFeedback(BaseModel):
     micronutrients: str = Field(
         description="Specific feedback on the user's diet relative to their micronutrient intake"
     )
-    suggestions: str = Field(description="the suggestions for the user's nutrition")
+    suggestions: List[Recommendation] = Field(
+        description="the suggestions for the user's nutrition"
+    )
 
 
 CARB_DEFAULT = Carbohydrates(total=0, fiber=0, total_sugar=0, added_sugar=0)
@@ -125,7 +143,6 @@ class NutritionalInformation(BaseModel):
 class MealRecommendation(BaseModel):
     """A dataclass that contains the meal recommendation for a food."""
 
-    # TODO: Maybe I want an explanation of why this meal is being recommended?
     title: str = Field(
         description="a title for the food. this would be the dish's name if it were on a menu"
     )
@@ -135,6 +152,7 @@ class MealRecommendation(BaseModel):
     is_explorative: bool = Field(
         description="whether the meal is explorative or not. ie, is it a meal that the user would not typically eat"
     )
+    reason: str = Field(description="a reason for the recommendation")
 
 
 class Recommendations(BaseModel):
