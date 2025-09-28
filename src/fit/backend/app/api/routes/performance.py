@@ -5,7 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException
 import fit.ai.performance.assistants as assistants
 from fit.ai.nutrition.targets import WeightGoal, calculate_caloric_target
 from fit.backend.app.api.models.performance import (
-    PerformanceDailyInfoResponse, PerformanceOverviewResponse)
+    PerformanceDailyInfoResponse,
+    PerformanceOverviewResponse,
+)
 from fit.backend.app.deps import get_database_service
 from fit.backend.auth import get_current_user_id
 from fit.backend.database.database import Database

@@ -1,18 +1,25 @@
 import io
+import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from PIL import Image
 
 from fit.ai.nutrition import assistants
-from fit.backend.app.api.models.kitchen import (AddInventoryItemRequest,
-                                                AddInventoryItemsRequest,
-                                                GroceryList,
-                                                InventoryFromTextRequest,
-                                                InventoryItem, InventoryList)
+from fit.backend.app.api.models.kitchen import (
+    AddInventoryItemRequest,
+    AddInventoryItemsRequest,
+    GroceryList,
+    InstacartShoppingListLinkRequest,
+    InstacartShoppingListLinkResponse,
+    InventoryFromTextRequest,
+    InventoryItem,
+    InventoryList,
+)
 from fit.backend.app.deps import get_database_service
 from fit.backend.auth import get_current_user_id
 from fit.backend.database.database import Database
+from fit.backend.grocery_apis.instacart import InstacartClient, InstacartError
 
 router = APIRouter(tags=["kitchen"], prefix="/kitchen")
 
@@ -114,3 +121,20 @@ async def generate_grocery_list(
         user_preferences, current_inventory, dietary_restrictions
     )
     return result
+
+
+@router.post(
+    "/grocery-list/instacart", response_model=InstacartShoppingListLinkResponse
+)
+async def generate_shopping_list_link_instacart(
+    line_items: InstacartShoppingListLinkRequest,
+) -> InstacartShoppingListLinkResponse:
+    instacart_client = InstacartClient(api_key=os.getenv("INSTACART_API_KEY"))
+    try:
+        products_link_url = instacart_client.create_shopping_list_page(
+            title="User's Grocery List", line_items=line_items
+        )
+    except InstacartError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return InstacartShoppingListLinkResponse(link=products_link_url)

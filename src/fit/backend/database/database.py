@@ -4,8 +4,7 @@ from fit.backend.database.pg import get_engine
 from fit.backend.database.repositories.accounts import AccountsRepository
 from fit.backend.database.repositories.inventory import InventoryRepository
 from fit.backend.database.repositories.meals import MealsRepository
-from fit.backend.database.repositories.measurements import \
-    MeasurementsRepository
+from fit.backend.database.repositories.measurements import MeasurementsRepository
 from fit.backend.database.repositories.profile import ProfileRepository
 from fit.backend.database.repositories.supplements import SupplementsRepository
 from fit.backend.database.repositories.water import WaterRepository
