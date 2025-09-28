@@ -10,14 +10,9 @@ import numpy as np
 import pandas as pd
 
 from fit.ai.nutrition.assistants import natural_language_nutritional_breakdown
-from fit.ai.nutrition.data_models import (
-    Carbohydrates,
-    ConditionalNutrients,
-    Fats,
-    Macronutrients,
-    MealBreakdown,
-    Micronutrients,
-)
+from fit.ai.nutrition.data_models import (Carbohydrates, ConditionalNutrients,
+                                          Fats, Macronutrients, MealBreakdown,
+                                          Micronutrients)
 
 ell.init(store="./logdir")
 

@@ -10,16 +10,13 @@ import fit.ai.nutrition.assistants as assistants
 import fit.ai.nutrition.data_models as dm
 from fit.ai.nutrition.data_models import WeightGoal
 from fit.ai.nutrition.targets import MICRO_GOALS, calculate_macro_targets
-from fit.backend.app.api.models.nutrition import (
-    AnalysisRequest,
-    AnalysisResult,
-    MealItem,
-    MealLog,
-    RegenerateAnalysisRequest,
-    SupplementCreate,
-    SupplementLogRequest,
-    WaterLogRequest,
-)
+from fit.backend.app.api.models.nutrition import (AnalysisRequest,
+                                                  AnalysisResult, MealItem,
+                                                  MealLog,
+                                                  RegenerateAnalysisRequest,
+                                                  SupplementCreate,
+                                                  SupplementLogRequest,
+                                                  WaterLogRequest)
 from fit.backend.app.deps import get_database_service
 from fit.backend.auth import get_current_user_id
 from fit.backend.database.database import Database
@@ -198,10 +195,10 @@ def create_meal(
     # Normalize time to HH:MM:SS for DB compatibility
     mt = item.meal_time
     try:
-        t = datetime.strptime(mt, "%H:%M").time()
+        t = datetime.strptime(mt, "%H:%M:%S").time()
     except ValueError:
         try:
-            t = datetime.strptime(mt, "%H:%M:%S").time()
+            t = datetime.strptime(mt, "%H:%M").time()
         except ValueError:
             # Fallback if an ISO datetime string gets passed
             t = datetime.fromisoformat(mt).time()
@@ -221,13 +218,14 @@ def create_meal(
             m
             for m in meals
             if m["meal"].title == item.title
-            and m["meal_time"].strftime("%H:%M") == item.meal_time
+            and m["meal_time"].strftime("%H:%M:%S") == mt_str
         ),
         None,
     )
     if created is None:
         raise HTTPException(status_code=500, detail="Meal not created")
-    return MealLog(id=created["rowid"], meal_time=item.meal_time, item=item)
+    return MealLog(id=created["rowid"], meal_time=mt_str, item=item)
+
 
 
 @router.delete("/meals/{meal_id}", status_code=204)
@@ -405,6 +403,7 @@ async def generate_daily_overview(
             meals, data["targets"][0], data["restrictions"]
         )
     except Exception as e:
+        print(f"Error in daily_io_analysis: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     return feedback
 

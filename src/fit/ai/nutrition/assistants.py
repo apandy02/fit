@@ -5,11 +5,8 @@ from datetime import datetime
 from PIL import Image
 
 import fit.ai.nutrition.data_models as dm
-from fit.ai.common import (
-    DEFAULT_LARGE_MODEL,
-    DEFAULT_SMALL_MODEL,
-    natural_language_agent,
-)
+from fit.ai.common import (DEFAULT_LARGE_MODEL, DEFAULT_SMALL_MODEL,
+                           natural_language_agent)
 from fit.ai.nutrition.errors import NoMealsLoggedError
 
 

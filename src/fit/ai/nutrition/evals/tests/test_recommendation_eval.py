@@ -1,11 +1,9 @@
 import unittest
 
-from fit.ai.nutrition.evals.recommendation_eval import (
-    calculate_final_totals,
-    calculate_penalty,
-    calculate_target_score,
-    prepare_eval_data,
-)
+from fit.ai.nutrition.evals.recommendation_eval import (calculate_final_totals,
+                                                        calculate_penalty,
+                                                        calculate_target_score,
+                                                        prepare_eval_data)
 
 
 class TestRecommendationEval(unittest.TestCase):
