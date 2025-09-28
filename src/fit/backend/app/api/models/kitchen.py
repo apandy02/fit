@@ -29,6 +29,14 @@ class InventoryFromTextRequest(BaseModel):
     items_description: str
 
 
+class InstacartShoppingListLinkRequest(BaseModel):
+    items: List[dict]
+
+
+class InstacartShoppingListLinkResponse(BaseModel):
+    link: str
+
+
 class GroceryListItem(BaseModel):
     name: str
     quantity: float

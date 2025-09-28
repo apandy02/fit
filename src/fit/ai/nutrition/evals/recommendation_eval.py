@@ -12,9 +12,10 @@ import numpy as np
 from pydantic import BaseModel, Field
 
 from fit.ai.nutrition.assistants import (
-    make_recommendations, natural_language_nutritional_breakdown)
-from fit.ai.nutrition.data_models import (MealRecommendation,
-                                          NutritionalInformation)
+    make_recommendations,
+    natural_language_nutritional_breakdown,
+)
+from fit.ai.nutrition.data_models import MealRecommendation, NutritionalInformation
 
 ell.init(store="./logdir")
 

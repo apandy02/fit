@@ -4,11 +4,14 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from fit.backend.app.api.main import api_router
-from fit.backend.app.api.models.auth import (LoginRequest, RefreshRequest,
-                                             TokenPair, User)
+from fit.backend.app.api.models.auth import (
+    LoginRequest,
+    RefreshRequest,
+    TokenPair,
+    User,
+)
 from fit.backend.app.deps import get_database_service
-from fit.backend.auth import (create_token_pair, get_current_user_id,
-                              refresh_tokens)
+from fit.backend.auth import create_token_pair, get_current_user_id, refresh_tokens
 from fit.backend.database.database import Database
 
 app = FastAPI(title="Fit JSON API")

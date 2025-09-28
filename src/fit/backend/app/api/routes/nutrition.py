@@ -10,13 +10,16 @@ import fit.ai.nutrition.assistants as assistants
 import fit.ai.nutrition.data_models as dm
 from fit.ai.nutrition.data_models import WeightGoal
 from fit.ai.nutrition.targets import MICRO_GOALS, calculate_macro_targets
-from fit.backend.app.api.models.nutrition import (AnalysisRequest,
-                                                  AnalysisResult, MealItem,
-                                                  MealLog,
-                                                  RegenerateAnalysisRequest,
-                                                  SupplementCreate,
-                                                  SupplementLogRequest,
-                                                  WaterLogRequest)
+from fit.backend.app.api.models.nutrition import (
+    AnalysisRequest,
+    AnalysisResult,
+    MealItem,
+    MealLog,
+    RegenerateAnalysisRequest,
+    SupplementCreate,
+    SupplementLogRequest,
+    WaterLogRequest,
+)
 from fit.backend.app.deps import get_database_service
 from fit.backend.auth import get_current_user_id
 from fit.backend.database.database import Database
