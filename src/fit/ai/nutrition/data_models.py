@@ -229,11 +229,13 @@ class GroceryListItem(BaseModel):
     value: str = Field(
         description="one sentence about why this item is good for the user"
     )
+    priority: RecommendationPriority = Field(description="the priority of the item on the grocery list: low (0), medium (1), high (2)")
 
 
 class GroceryList(BaseModel):
     """A dataclass that contains the grocery list for a food."""
 
+    overview: str = Field(description="a short few sentences overview of the grocery list")
     items: List[GroceryListItem] = Field(
         description="a list of 5 - 15 items on a grocery list recommended to a user"
     )

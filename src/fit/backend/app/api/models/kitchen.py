@@ -43,7 +43,9 @@ class GroceryListItem(BaseModel):
     unit: str
     category: str
     value: str
+    priority: int = Field(description="priority: low (0), medium (1), high (2)")
 
 
 class GroceryList(BaseModel):
+    overview: str
     items: List[GroceryListItem]
