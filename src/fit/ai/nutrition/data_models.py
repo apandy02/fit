@@ -37,10 +37,14 @@ class Recommendation(BaseModel):
         description="the priority of the recommendation: low (0), medium (1), high (2)"
     )
     recommendation_title: str = Field(description="the title of the recommendation")
-    recommendation_description: str = Field(description="the description of the recommendation")
+    recommendation_description: str = Field(
+        description="the description of the recommendation"
+    )
+
 
 class Recommendations(BaseModel):
     """A dataclass that contains the recommendations for the user's nutrition."""
+
     recommendations_type: RecommendationType = Field(
         description="the type of recommendations, real time or hind sight"
     )
@@ -50,6 +54,7 @@ class Recommendations(BaseModel):
     recommendations: List[Recommendation] = Field(
         description="A list of 0-4 concrete recommendations. Determine how many based on how much feedback they need."
     )
+
 
 class NutritionFeedback(BaseModel):
     """A dataclass that contains the feedback for the user's nutrition."""
@@ -70,6 +75,8 @@ class NutritionFeedback(BaseModel):
     suggestions: Recommendations = Field(
         description="the suggestions for the user's nutrition"
     )
+
+
 class Carbohydrates(BaseModel):
     """A dataclass that contains the carbohydrates for a food."""
 
@@ -229,13 +236,17 @@ class GroceryListItem(BaseModel):
     value: str = Field(
         description="one sentence about why this item is good for the user"
     )
-    priority: RecommendationPriority = Field(description="the priority of the item on the grocery list: low (0), medium (1), high (2)")
+    priority: RecommendationPriority = Field(
+        description="the priority of the item on the grocery list: low (0), medium (1), high (2)"
+    )
 
 
 class GroceryList(BaseModel):
     """A dataclass that contains the grocery list for a food."""
 
-    overview: str = Field(description="a short few sentences overview of the grocery list")
+    overview: str = Field(
+        description="a short few sentences overview of the grocery list"
+    )
     items: List[GroceryListItem] = Field(
         description="a list of 5 - 15 items on a grocery list recommended to a user"
     )
