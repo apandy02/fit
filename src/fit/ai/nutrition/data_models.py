@@ -26,13 +26,50 @@ class RecommendationType(Enum):
     hind_sight = "hind sight"
 
 
+class RecommendationPriority(Enum):
+    low = 0
+    medium = 1
+    high = 2
+
+
 class Recommendation(BaseModel):
-    recommendation_type: RecommendationType = Field(
-        description="the type of recommendation"
+    recommendation_priority: RecommendationPriority = Field(
+        description="the priority of the recommendation: low (0), medium (1), high (2)"
     )
-    recommendation: str = Field(description="the recommendation")
+    recommendation_title: str = Field(description="the title of the recommendation")
+    recommendation_description: str = Field(description="the description of the recommendation")
 
+class Recommendations(BaseModel):
+    """A dataclass that contains the recommendations for the user's nutrition."""
+    recommendations_type: RecommendationType = Field(
+        description="the type of recommendations, real time or hind sight"
+    )
+    recommendations_intro_text: str = Field(
+        description="A short introduction to the recommendations (overview statement)"
+    )
+    recommendations: List[Recommendation] = Field(
+        description="A list of 0-4 concrete recommendations. Determine how many based on how much feedback they need."
+    )
 
+class NutritionFeedback(BaseModel):
+    """A dataclass that contains the feedback for the user's nutrition."""
+
+    score: int = Field(
+        description="a score out of 100 rating the user's intake relative to their output and goals"
+    )
+
+    summary: str = Field(
+        description="a summary of the feedback for the user's nutrition based on the provided information"
+    )
+    macronutrients: str = Field(
+        description="Specific feedback on the user's diet relative to their macronutrient intake"
+    )
+    micronutrients: str = Field(
+        description="Specific feedback on the user's diet relative to their micronutrient intake"
+    )
+    suggestions: Recommendations = Field(
+        description="the suggestions for the user's nutrition"
+    )
 class Carbohydrates(BaseModel):
     """A dataclass that contains the carbohydrates for a food."""
 
@@ -88,27 +125,6 @@ class MealBreakdown(BaseModel):
     micronutrients: Micronutrients = Field(description="micronutrients")
     conditional_nutrients: ConditionalNutrients = Field(
         description="conditional nutrients"
-    )
-
-
-class NutritionFeedback(BaseModel):
-    """A dataclass that contains the feedback for the user's nutrition."""
-
-    score: int = Field(
-        description="a score out of 100 rating the user's intake relative to their output and goals"
-    )
-
-    summary: str = Field(
-        description="a summary of the feedback for the user's nutrition based on the provided information"
-    )
-    macronutrients: str = Field(
-        description="Specific feedback on the user's diet relative to their macronutrient intake"
-    )
-    micronutrients: str = Field(
-        description="Specific feedback on the user's diet relative to their micronutrient intake"
-    )
-    suggestions: List[Recommendation] = Field(
-        description="the suggestions for the user's nutrition"
     )
 
 

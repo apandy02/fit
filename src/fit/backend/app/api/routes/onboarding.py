@@ -3,13 +3,8 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 
 from fit.backend.app.api.models.onboarding import (
-    ActivitySelectionRequest,
-    DietaryCompletionRequest,
-    GoalsSelectionRequest,
-    MeasurementsCompletionRequest,
-    OnboardingStatus,
-    ProfileCompletionRequest,
-)
+    ActivitySelectionRequest, DietaryCompletionRequest, GoalsSelectionRequest,
+    MeasurementsCompletionRequest, OnboardingStatus, ProfileCompletionRequest)
 from fit.backend.app.deps import get_database_service
 from fit.backend.auth import get_current_user_id
 from fit.backend.database.database import Database

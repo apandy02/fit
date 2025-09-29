@@ -8,10 +8,8 @@ from fastapi.responses import RedirectResponse
 from fit.backend.app.deps import get_database_service
 from fit.backend.auth import get_current_user_id
 from fit.backend.database.database import Database
-from fit.backend.trackers.app_client_factory import (
-    extract_provider_user_id,
-    make_app_client,
-)
+from fit.backend.trackers.app_client_factory import (extract_provider_user_id,
+                                                     make_app_client)
 
 router = APIRouter(tags=["oauth"], prefix="/oauth")
 
